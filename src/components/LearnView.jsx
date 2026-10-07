@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { HINDI_LESSONS, ENGLISH_LESSONS } from '../data/lessonsData';
 import { useTypingEngine } from '../hooks/useTypingEngine';
-import HandsDisplay from './HandsDisplay';
-import VirtualKeyboard from './VirtualKeyboard';
+import IntegratedKeyboardHands from './IntegratedKeyboardHands';
 import AdBanner from './AdBanner';
 import { checkNewBadges } from '../data/badgeSystem';
-import { ArrowLeft, RotateCcw, ArrowRight, Star, Award, Zap, Target, AlertCircle, Sparkles, Keyboard } from 'lucide-react';
+import { ArrowLeft, RotateCcw, ArrowRight, Star, Award, Zap, Target, AlertCircle, Sparkles, Keyboard, ChevronRight, Layers } from 'lucide-react';
 
 export default function LearnView({
   language,
@@ -18,6 +17,7 @@ export default function LearnView({
 
   const [activeLessonId, setActiveLessonId] = useState(null);
   const [inputMode, setInputMode] = useState('mapper'); // 'mapper' | 'native'
+  const [activeStageFilter, setActiveStageFilter] = useState('All');
   const [completionResult, setCompletionResult] = useState(null);
 
   const activeLesson = lessons.find((l) => l.id === activeLessonId) || null;
@@ -36,11 +36,10 @@ export default function LearnView({
       ...stats,
       stars,
       lessonId: activeLesson.id,
-      isExam: activeLesson.level >= 13,
+      isExam: activeLesson.level >= 26,
     };
     setCompletionResult(result);
 
-    // Save to userStats
     const updatedStats = {
       ...userStats,
       completedLessons: {
@@ -73,6 +72,7 @@ export default function LearnView({
     currentAccuracy,
     targetChar,
     targetKeyInfo,
+    upcomingSequence,
     lastPressedPhysicalKey,
     handleKeyDown,
     progressPercent,
@@ -83,7 +83,7 @@ export default function LearnView({
     onComplete: handleLessonComplete,
   });
 
-  // Keep focus on typing container
+  // Focus container
   useEffect(() => {
     if (activeLesson && inputContainerRef.current) {
       inputContainerRef.current.focus();
@@ -108,37 +108,62 @@ export default function LearnView({
     }
   };
 
-  // If no lesson is selected, show curriculum level grid (TypingClub style)
+  // Group lessons by Stages
+  const stageFilters = language === 'hindi'
+    ? ['All', 'गृह पंक्ति (Home Row)', 'मात्राएँ (Matras)', 'ऊपरी पंक्ति (Top Row)', 'निचली पंक्ति (Bottom Row)', 'शिफ्ट कुँजी (Shift Keys)', 'परीक्षा (Exams)']
+    : ['All', 'Home Row', 'Top Row', 'Bottom Row', 'Shift & Capitals', 'Numbers & Punctuation', 'Speed Tests'];
+
+  const filterLesson = (lesson) => {
+    if (activeStageFilter === 'All') return true;
+    const l = lesson.level;
+    if (language === 'hindi') {
+      if (activeStageFilter === 'गृह पंक्ति (Home Row)') return l <= 3;
+      if (activeStageFilter === 'मात्राएँ (Matras)') return (l >= 4 && l <= 6) || (l >= 10 && l <= 11);
+      if (activeStageFilter === 'ऊपरी पंक्ति (Top Row)') return l >= 10 && l <= 14;
+      if (activeStageFilter === 'निचली पंक्ति (Bottom Row)') return (l >= 7 && l <= 8) || l === 15;
+      if (activeStageFilter === 'शिफ्ट कुँजी (Shift Keys)') return l >= 17 && l <= 24;
+      if (activeStageFilter === 'परीक्षा (Exams)') return l >= 25;
+    } else {
+      if (activeStageFilter === 'Home Row') return l <= 6;
+      if (activeStageFilter === 'Top Row') return l >= 7 && l <= 12;
+      if (activeStageFilter === 'Bottom Row') return l >= 13 && l <= 17;
+      if (activeStageFilter === 'Shift & Capitals') return l === 18;
+      if (activeStageFilter === 'Numbers & Punctuation') return l >= 19 && l <= 22;
+      if (activeStageFilter === 'Speed Tests') return l >= 23;
+    }
+    return true;
+  };
+
+  const filteredLessons = lessons.filter(filterLesson);
+
+  // LEVEL SELECTION DASHBOARD
   if (!activeLesson) {
     return (
-      <div className="w-full max-w-7xl mx-auto px-4 py-6 sm:py-8 space-y-6">
-        {/* Banner Ad Slot */}
+      <div className="w-full max-w-7xl mx-auto px-4 py-6 sm:py-8 space-y-6 select-none">
         <AdBanner position="header" onOpenSettings={onOpenAdSettings} />
 
-        {/* Section Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-400 text-xs font-semibold mb-2 border border-indigo-500/20">
-              <Sparkles size={14} /> {language === 'hindi' ? 'क्रमबद्ध टंकण पाठ्यक्रम' : 'Step-by-Step Curriculum'}
+              <Sparkles size={14} /> {language === 'hindi' ? '28 स्तरों का वैज्ञानिक पाठ्यक्रम' : '26 Granular Micro-Lessons'}
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white">
-              {language === 'hindi' ? 'हिंदी इनस्क्रिप्ट टाइपिंग ट्यूटर' : 'English Touch Typing Tutor'}
+            <h1 className="text-2xl sm:text-3xl font-black text-white">
+              {language === 'hindi' ? 'हिंदी इनस्क्रिप्ट टंकण ट्यूटर (InScript Master)' : 'English Touch Typing Mastery'}
             </h1>
-            <p className="text-sm text-slate-400 mt-1 max-w-2xl font-hindi">
+            <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl font-hindi">
               {language === 'hindi'
-                ? 'सरकारी परीक्षाओं (CPCT, SSC, High Court) एवं दैनिक कार्य हेतु 10-उँगलियों से मानक इनस्क्रिप्ट कीबोर्ड सीखें।'
-                : 'Master touch typing with all 10 fingers. Progress from Home Row foundations to high-speed fluency.'}
+                ? 'सरकारी परीक्षाओं (CPCT, SSC, High Court) हेतु मानक इनस्क्रिप्ट कीबोर्ड सीखें। गृह पंक्ति से लेकर महाप्राण व्यंजन और संयुक्ताक्षर तक।'
+                : 'Touch typing curriculum with integrated 10-finger feedback on the keyboard chassis. Build enduring muscle memory.'}
             </p>
           </div>
 
-          {/* Quick Stats Pill */}
           <div className="flex items-center gap-3 bg-slate-900/80 border border-slate-800 p-3 rounded-2xl">
             <div className="text-center px-3 border-r border-slate-800">
               <span className="text-[11px] text-slate-400 uppercase font-bold block">Levels</span>
               <span className="text-lg font-black text-indigo-400">{lessons.length}</span>
             </div>
             <div className="text-center px-3 border-r border-slate-800">
-              <span className="text-[11px] text-slate-400 uppercase font-bold block">Best WPM</span>
+              <span className="text-[11px] text-slate-400 uppercase font-bold block">Peak WPM</span>
               <span className="text-lg font-black text-emerald-400">{userStats.highestWpm || 0}</span>
             </div>
             <div className="text-center px-3">
@@ -150,12 +175,29 @@ export default function LearnView({
           </div>
         </div>
 
-        {/* Level Cards Grid */}
+        {/* Stage Filter Chips */}
+        <div className="flex flex-wrap items-center gap-1.5 pb-2">
+          {stageFilters.map((stg) => (
+            <button
+              key={stg}
+              onClick={() => setActiveStageFilter(stg)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
+                activeStageFilter === stg
+                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30'
+                  : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
+              }`}
+            >
+              {stg}
+            </button>
+          ))}
+        </div>
+
+        {/* Lessons Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {lessons.map((lesson) => {
+          {filteredLessons.map((lesson) => {
             const progress = userStats.completedLessons?.[lesson.id];
             const stars = progress?.stars || 0;
-            const isCompleted = !!progress;
+            const isDone = !!progress;
 
             return (
               <div
@@ -164,19 +206,18 @@ export default function LearnView({
                   setActiveLessonId(lesson.id);
                   setCompletionResult(null);
                 }}
-                className={`group relative rounded-2xl p-5 border transition-all duration-200 cursor-pointer flex flex-col justify-between ${
-                  isCompleted
+                className={`group relative rounded-2xl p-4 sm:p-5 border transition-all duration-200 cursor-pointer flex flex-col justify-between ${
+                  isDone
                     ? 'bg-slate-900/90 border-slate-700/80 hover:border-indigo-500 hover:shadow-xl hover:shadow-indigo-500/10'
                     : 'bg-slate-950/70 border-slate-800/80 hover:border-slate-700 hover:bg-slate-900/50'
                 }`}
               >
                 <div>
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center justify-between mb-2.5">
                     <span className="w-8 h-8 rounded-xl bg-indigo-500/20 text-indigo-300 font-extrabold flex items-center justify-center text-xs border border-indigo-500/30">
                       {lesson.level}
                     </span>
 
-                    {/* Star Rating Display */}
                     <div className="flex items-center gap-1">
                       {[1, 2, 3].map((s) => (
                         <Star
@@ -199,15 +240,13 @@ export default function LearnView({
                   </p>
                 </div>
 
-                <div className="mt-5 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] bg-slate-800 px-2 py-0.5 rounded text-slate-300 font-medium">
-                      🎯 {lesson.targetWpm} WPM
-                    </span>
-                  </div>
+                <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+                  <span className="text-[11px] bg-slate-800 px-2 py-0.5 rounded text-slate-300 font-medium">
+                    🎯 {lesson.targetWpm} WPM
+                  </span>
 
-                  {isCompleted ? (
-                    <span className="text-emerald-400 font-semibold text-[11px] flex items-center gap-1">
+                  {isDone ? (
+                    <span className="text-emerald-400 font-semibold text-[11px]">
                       ✓ {progress.wpm} WPM
                     </span>
                   ) : (
@@ -221,13 +260,12 @@ export default function LearnView({
           })}
         </div>
 
-        {/* Bottom Banner */}
         <AdBanner position="lesson-bottom" onOpenSettings={onOpenAdSettings} />
       </div>
     );
   }
 
-  // ACTIVE LESSON VIEW
+  // ACTIVE LESSON VIEW WITH INTEGRATED KEYBOARD AND HANDS
   return (
     <div
       ref={inputContainerRef}
@@ -235,7 +273,7 @@ export default function LearnView({
       onKeyDown={handleKeyDown}
       className="w-full max-w-7xl mx-auto px-4 py-4 sm:py-6 space-y-4 focus:outline-none select-none"
     >
-      {/* Lesson Header Navigation */}
+      {/* Lesson Header Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900/80 border border-slate-800 rounded-2xl p-3 sm:p-4 backdrop-blur-sm">
         <div className="flex items-center gap-3">
           <button
@@ -246,7 +284,7 @@ export default function LearnView({
             className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer flex items-center gap-1 text-xs font-medium"
           >
             <ArrowLeft size={16} />
-            <span className="hidden sm:inline">पाठ सूची (All Lessons)</span>
+            <span className="hidden sm:inline">पाठ सूची (All Levels)</span>
           </button>
 
           <div>
@@ -264,9 +302,9 @@ export default function LearnView({
           </div>
         </div>
 
-        {/* Input Mode Toggle (Hindi only) */}
+        {/* Input Mode Toggle (Hindi) */}
         {language === 'hindi' && (
-          <div className="flex items-center gap-2 bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
+          <div className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
             <button
               onClick={() => setInputMode('mapper')}
               className={`px-3 py-1.5 rounded-lg font-semibold transition cursor-pointer flex items-center gap-1.5 ${
@@ -274,7 +312,6 @@ export default function LearnView({
                   ? 'bg-indigo-600 text-white shadow-sm'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
-              title="Automatically maps your English keyboard keystrokes to InScript Hindi characters without any OS setup!"
             >
               <Keyboard size={14} />
               <span>इनस्क्रिप्ट मैपर (No Setup)</span>
@@ -286,7 +323,6 @@ export default function LearnView({
                   ? 'bg-indigo-600 text-white shadow-sm'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
-              title="Use Windows/Mac native InScript Hindi keyboard layout"
             >
               <span>सिस्टम कीबोर्ड (OS Native)</span>
             </button>
@@ -302,41 +338,41 @@ export default function LearnView({
         </button>
       </div>
 
-      {/* Live Stats Bar */}
+      {/* Live Stats Ribbon */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="bg-slate-900/90 border border-slate-800/80 rounded-xl p-3 flex items-center gap-3">
+        <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-3 flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
             <Zap size={20} />
           </div>
           <div>
-            <span className="text-[11px] text-slate-400 uppercase font-semibold block">Speed (गति)</span>
+            <span className="text-[11px] text-slate-400 uppercase font-semibold block">Speed</span>
             <span className="text-xl font-black text-white">{currentWpm} <span className="text-xs font-normal text-slate-400">WPM</span></span>
           </div>
         </div>
 
-        <div className="bg-slate-900/90 border border-slate-800/80 rounded-xl p-3 flex items-center gap-3">
+        <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-3 flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center">
             <Target size={20} />
           </div>
           <div>
-            <span className="text-[11px] text-slate-400 uppercase font-semibold block">Accuracy (सटीकता)</span>
+            <span className="text-[11px] text-slate-400 uppercase font-semibold block">Accuracy</span>
             <span className="text-xl font-black text-white">{currentAccuracy}%</span>
           </div>
         </div>
 
-        <div className="bg-slate-900/90 border border-slate-800/80 rounded-xl p-3 flex items-center gap-3">
+        <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-3 flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center">
             <AlertCircle size={20} />
           </div>
           <div>
-            <span className="text-[11px] text-slate-400 uppercase font-semibold block">Errors (त्रुटियाँ)</span>
+            <span className="text-[11px] text-slate-400 uppercase font-semibold block">Errors</span>
             <span className="text-xl font-black text-rose-400">{mistakes}</span>
           </div>
         </div>
 
-        <div className="bg-slate-900/90 border border-slate-800/80 rounded-xl p-3 flex flex-col justify-center">
+        <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-3 flex flex-col justify-center">
           <div className="flex justify-between text-[11px] text-slate-400 font-semibold mb-1">
-            <span>Progress (प्रगति)</span>
+            <span>Progress</span>
             <span>{progressPercent}%</span>
           </div>
           <div className="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
@@ -348,12 +384,12 @@ export default function LearnView({
         </div>
       </div>
 
-      {/* Target Text Box Display */}
-      <div className="relative bg-slate-950/90 border-2 border-indigo-500/30 rounded-2xl p-6 sm:p-8 shadow-2xl min-h-[140px] sm:min-h-[160px] flex items-center justify-center text-center overflow-hidden">
+      {/* Target Typing Viewport */}
+      <div className="relative bg-slate-950/90 border-2 border-indigo-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl min-h-[140px] flex flex-col items-center justify-center text-center overflow-hidden">
         <div className="text-2xl sm:text-3xl lg:text-4xl leading-relaxed tracking-wider font-hindi font-medium select-none">
           {activeLesson.text.split('').map((char, idx) => {
-            let color = 'text-slate-500'; // Upcoming
-            let isCurrent = idx === typedIndex;
+            let color = 'text-slate-500';
+            const isCurrent = idx === typedIndex;
 
             if (idx < typedIndex) {
               const hist = history[idx];
@@ -370,39 +406,41 @@ export default function LearnView({
           })}
         </div>
 
-        {/* Keystroke helper guidance subtitle */}
-        {targetKeyInfo && !isCompleted && (
-          <div className="absolute bottom-2 left-0 right-0 flex items-center justify-center gap-2 text-xs text-indigo-300 font-medium bg-slate-950/80 py-1">
-            <span>
-              दबाएँ: <strong className="text-amber-300 font-mono-custom text-sm font-bold uppercase">{targetKeyInfo.key === ' ' ? 'Spacebar' : targetKeyInfo.key}</strong>
-              {targetKeyInfo.shift && <span className="ml-1 text-amber-400 font-bold">(Shift के साथ)</span>}
-            </span>
+        {/* HINDI INFORMATIVE KEYSTROKE SEQUENCE DECOMPOSITION GUIDE */}
+        {language === 'hindi' && upcomingSequence.length > 0 && !isCompleted && (
+          <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-center gap-3 text-xs text-slate-300">
+            <span className="text-slate-500 font-medium">कुंजी अनुक्रम (Key Sequence):</span>
+            <div className="flex items-center gap-1.5 font-mono-custom">
+              {upcomingSequence.map((item, sIdx) => (
+                <div
+                  key={sIdx}
+                  className={`flex items-center gap-1 px-2 py-0.5 rounded-lg border text-xs ${
+                    sIdx === 0
+                      ? 'bg-indigo-600/30 border-indigo-500 text-white font-bold ring-1 ring-indigo-400'
+                      : 'bg-slate-900 border-slate-800 text-slate-400'
+                  }`}
+                >
+                  <span className="font-hindi text-sm">{item.char === ' ' ? '␣' : item.char}</span>
+                  <span className="text-[10px] text-slate-400">➔</span>
+                  <span className="font-bold text-amber-300 uppercase">
+                    {item.shift ? `Shift+${item.key}` : (item.key === ' ' ? 'Space' : item.key)}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
 
-      {/* 10 Fingers Visualizer & Interactive Virtual Keyboard */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-        {/* 10 Fingers Visualizer */}
-        <div className="lg:col-span-4 flex justify-center">
-          <HandsDisplay
-            activeFinger={targetKeyInfo?.finger || null}
-            language={language}
-          />
-        </div>
+      {/* INTEGRATED KEYBOARD WITH 10 FINGERS DIRECTLY POSITIONED ON IT */}
+      <IntegratedKeyboardHands
+        targetKey={targetKeyInfo?.key || null}
+        targetShift={targetKeyInfo?.shift || false}
+        language={language}
+        pressedKey={lastPressedPhysicalKey}
+      />
 
-        {/* Virtual Keyboard */}
-        <div className="lg:col-span-8 flex justify-center">
-          <VirtualKeyboard
-            targetKey={targetKeyInfo?.key || null}
-            targetShift={targetKeyInfo?.shift || false}
-            language={language}
-            pressedKey={lastPressedPhysicalKey}
-          />
-        </div>
-      </div>
-
-      {/* Completion Modal Result Overlay */}
+      {/* Completion Modal */}
       {completionResult && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
           <div className="bg-slate-900 border-2 border-indigo-500/50 rounded-3xl p-6 sm:p-8 max-w-lg w-full text-center shadow-2xl relative space-y-6">
@@ -424,7 +462,6 @@ export default function LearnView({
               </p>
             </div>
 
-            {/* Scorecard grid */}
             <div className="grid grid-cols-3 gap-3 p-4 rounded-2xl bg-slate-950 border border-slate-800">
               <div className="text-center">
                 <span className="text-[11px] text-slate-400 uppercase font-semibold block">Speed</span>
@@ -443,10 +480,8 @@ export default function LearnView({
               </div>
             </div>
 
-            {/* In-Card Ad Unit */}
             <AdBanner position="practice-complete" onOpenSettings={onOpenAdSettings} />
 
-            {/* Buttons */}
             <div className="flex items-center gap-3 pt-2">
               <button
                 onClick={handleRestart}

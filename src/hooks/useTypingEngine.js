@@ -19,7 +19,6 @@ export function useTypingEngine({
   const [currentWpm, setCurrentWpm] = useState(0);
   const [currentAccuracy, setCurrentAccuracy] = useState(100);
 
-  // Timer reference for periodic WPM updates
   const timerRef = useRef(null);
 
   // Reset state when targetText changes
@@ -36,7 +35,7 @@ export function useTypingEngine({
     if (timerRef.current) clearInterval(timerRef.current);
   }, [targetText, language]);
 
-  // Periodic WPM calculator
+  // Periodic WPM calculation
   useEffect(() => {
     if (startTime && !endTime && !isCompleted) {
       timerRef.current = setInterval(() => {
@@ -57,23 +56,36 @@ export function useTypingEngine({
 
   const targetChar = targetText[typedIndex] || '';
 
-  // Determine which physical key should be pressed next
+  // Calculate upcoming 4 characters and their keys for sequence guidance
+  const upcomingSequence = [];
+  if (targetText && !isCompleted) {
+    for (let i = typedIndex; i < Math.min(targetText.length, typedIndex + 4); i++) {
+      const ch = targetText[i];
+      const info = findKeyForChar(ch, language);
+      upcomingSequence.push({
+        char: ch,
+        key: info.key,
+        shift: info.shift,
+        finger: info.finger,
+      });
+    }
+  }
+
   const targetKeyInfo = targetChar ? findKeyForChar(targetChar, language) : null;
 
   const handleKeyDown = useCallback(
     (e) => {
       if (isCompleted || !targetText) return;
 
-      // Ignore modifier keys alone
+      // Ignore lone modifier keys
       if (['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Tab'].includes(e.key)) {
         return;
       }
 
-      // Visual physical key feedback
       setLastPressedPhysicalKey({ key: e.key, code: e.code });
       setTimeout(() => setLastPressedPhysicalKey(null), 140);
 
-      // Handle Backspace
+      // Backspace handling
       if (e.key === 'Backspace') {
         e.preventDefault();
         if (typedIndex > 0) {
@@ -90,11 +102,10 @@ export function useTypingEngine({
 
       setTotalKeystrokes((prev) => prev + 1);
 
-      // Determine what character was typed based on mode
       let producedChar = e.key;
 
       if (language === 'hindi' && inputMode === 'mapper') {
-        e.preventDefault(); // Prevent standard English character in mapper mode
+        e.preventDefault();
         if (e.shiftKey) {
           producedChar = INSCRIPT_SHIFT[e.key] || INSCRIPT_SHIFT[e.code] || e.key;
         } else {
@@ -103,7 +114,12 @@ export function useTypingEngine({
       }
 
       const expectedChar = targetText[typedIndex];
-      const isCorrect = producedChar === expectedChar;
+
+      // Smart InScript tolerance:
+      // If expected is Purna Viram '।' (danda), accept standard InScript Shift+. / > or '.'
+      const isDandaMatch = expectedChar === '।' && (producedChar === '।' || producedChar === '>' || (e.shiftKey && e.key === '.'));
+
+      const isCorrect = producedChar === expectedChar || isDandaMatch;
 
       if (isCorrect) {
         soundManager.playClick();
@@ -124,13 +140,11 @@ export function useTypingEngine({
       const nextIndex = typedIndex + 1;
       setTypedIndex(nextIndex);
 
-      // Calculate accuracy
       const totalKeys = totalKeystrokes + 1;
       const totalErrors = isCorrect ? mistakes : mistakes + 1;
       const acc = Math.max(0, Math.round(((totalKeys - totalErrors) / totalKeys) * 100));
       setCurrentAccuracy(acc);
 
-      // Check if finished
       if (nextIndex >= targetText.length) {
         const now = Date.now();
         setEndTime(now);
@@ -177,6 +191,7 @@ export function useTypingEngine({
     currentAccuracy,
     targetChar,
     targetKeyInfo,
+    upcomingSequence,
     lastPressedPhysicalKey,
     handleKeyDown,
     progressPercent: targetText.length > 0 ? Math.min(100, Math.round((typedIndex / targetText.length) * 100)) : 0,

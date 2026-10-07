@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { HINDI_PRACTICE, ENGLISH_PRACTICE } from '../data/practiceData';
 import { useTypingEngine } from '../hooks/useTypingEngine';
-import HandsDisplay from './HandsDisplay';
-import VirtualKeyboard from './VirtualKeyboard';
+import IntegratedKeyboardHands from './IntegratedKeyboardHands';
 import AdBanner from './AdBanner';
 import { checkNewBadges } from '../data/badgeSystem';
-import { BookOpen, RotateCcw, Sparkles, Zap, Target, Clock, AlertCircle, Eye, EyeOff, FileText, CheckCircle, Keyboard } from 'lucide-react';
+import { BookOpen, RotateCcw, Sparkles, Zap, Target, Clock, AlertCircle, Eye, EyeOff, FileText, CheckCircle, Keyboard, Bookmark, Type } from 'lucide-react';
 
 export default function PracticeView({
   language,
@@ -23,9 +22,9 @@ export default function PracticeView({
   const [inputMode, setInputMode] = useState('mapper'); // 'mapper' | 'native'
   const [showKeyboardGuide, setShowKeyboardGuide] = useState(true);
   const [activeCategory, setActiveCategory] = useState('All');
+  const [fontSize, setFontSize] = useState('normal'); // 'normal' | 'large'
   const [completionResult, setCompletionResult] = useState(null);
 
-  // Identify current passage text
   let currentPassage = passages.find((p) => p.id === selectedPassageId);
   if (!currentPassage && selectedPassageId === 'custom' && customText) {
     currentPassage = {
@@ -80,6 +79,7 @@ export default function PracticeView({
     currentAccuracy,
     targetChar,
     targetKeyInfo,
+    upcomingSequence,
     lastPressedPhysicalKey,
     handleKeyDown,
     progressPercent,
@@ -121,27 +121,25 @@ export default function PracticeView({
       onKeyDown={handleKeyDown}
       className="w-full max-w-7xl mx-auto px-4 py-6 space-y-6 focus:outline-none select-none"
     >
-      {/* Top Banner Ad */}
       <AdBanner position="header" onOpenSettings={onOpenAdSettings} />
 
-      {/* TypeLit-Style Header & Book Shelf */}
-      <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 sm:p-5 backdrop-blur-sm space-y-4">
+      {/* Book Shelf & Control Ribbon */}
+      <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-4 sm:p-6 backdrop-blur-sm space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-500/10 text-violet-400 text-xs font-semibold mb-1 border border-violet-500/20">
-              <BookOpen size={14} /> {language === 'hindi' ? 'साहित्य एवं परीक्षा अभ्यास (TypeLit Mode)' : 'Literature & Exam Room'}
+              <Bookmark size={14} /> TypeLit Classical Library
             </div>
             <h1 className="text-xl sm:text-2xl font-black text-white font-hindi">
               {currentPassage?.title}
             </h1>
             <p className="text-xs text-slate-400 font-hindi mt-0.5">
-              रचनाकार / लेखक: <span className="text-slate-200 font-semibold">{currentPassage?.author || 'अज्ञात'}</span> • श्रेणी: {currentPassage?.category}
+              लेखक: <span className="text-slate-200 font-semibold">{currentPassage?.author || 'अज्ञात'}</span> • श्रेणी: {currentPassage?.category}
             </p>
           </div>
 
           {/* Action Toolbar */}
           <div className="flex flex-wrap items-center gap-2">
-            {/* Input Mode Toggle (Hindi) */}
             {language === 'hindi' && (
               <button
                 onClick={() => setInputMode(inputMode === 'mapper' ? 'native' : 'mapper')}
@@ -152,23 +150,31 @@ export default function PracticeView({
               </button>
             )}
 
-            {/* Toggle Keyboard Helper (Zen Mode) */}
+            {/* Toggle Font Size */}
+            <button
+              onClick={() => setFontSize(fontSize === 'normal' ? 'large' : 'normal')}
+              className="p-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 text-xs font-semibold hover:border-slate-700 cursor-pointer transition"
+              title="Toggle Font Size"
+            >
+              <Type size={15} />
+            </button>
+
+            {/* Zen Mode */}
             <button
               onClick={() => setShowKeyboardGuide(!showKeyboardGuide)}
               className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition"
-              title="Toggle Keyboard & Finger visualizer"
             >
               {showKeyboardGuide ? <EyeOff size={14} className="text-amber-400" /> : <Eye size={14} className="text-emerald-400" />}
-              <span>{showKeyboardGuide ? 'Zen Mode (Hide Keys)' : 'Show Keys & Hands'}</span>
+              <span>{showKeyboardGuide ? 'Zen Mode' : 'Show Keyboard'}</span>
             </button>
 
-            {/* Custom Passage Button */}
+            {/* Custom Passage */}
             <button
               onClick={() => setShowCustomModal(true)}
               className="px-3 py-1.5 rounded-xl bg-indigo-600/20 border border-indigo-500/30 hover:bg-indigo-600/30 text-indigo-300 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition"
             >
               <FileText size={14} />
-              <span>{language === 'hindi' ? '+ अपना लेख जोड़ें' : '+ Custom Text'}</span>
+              <span>{language === 'hindi' ? '+ अपना लेख' : '+ Custom Text'}</span>
             </button>
 
             <button
@@ -181,7 +187,7 @@ export default function PracticeView({
           </div>
         </div>
 
-        {/* Category Pills & Passage Quick Selector */}
+        {/* Category Pills & Passage Dropdown */}
         <div className="pt-2 border-t border-slate-800/80 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
           <div className="flex flex-wrap items-center gap-1.5">
             {categories.map((cat) => (
@@ -199,7 +205,6 @@ export default function PracticeView({
             ))}
           </div>
 
-          {/* Quick Passage Dropdown */}
           <select
             value={selectedPassageId}
             onChange={(e) => {
@@ -218,7 +223,7 @@ export default function PracticeView({
         </div>
       </div>
 
-      {/* Live Minimal Stats Ribbon (TypeLit Aesthetic) */}
+      {/* Live Minimal Stats Ribbon */}
       <div className="flex items-center justify-between px-4 py-2.5 bg-slate-900/60 border border-slate-800 rounded-xl text-xs text-slate-400 font-medium">
         <div className="flex items-center gap-6">
           <span className="flex items-center gap-1.5">
@@ -243,9 +248,9 @@ export default function PracticeView({
         </div>
       </div>
 
-      {/* Literature Reading Book Container (Fluid TypeLit Experience) */}
+      {/* TypeLit Literature Book Container */}
       <div className="relative bg-slate-950/95 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl min-h-[220px] max-h-[380px] overflow-y-auto leading-relaxed select-none">
-        <div className="text-xl sm:text-2xl lg:text-3xl font-hindi leading-[2.2] tracking-wide font-normal">
+        <div className={`${fontSize === 'large' ? 'text-2xl sm:text-3xl lg:text-4xl leading-[2.4]' : 'text-xl sm:text-2xl lg:text-3xl leading-[2.2]'} font-hindi tracking-wide font-normal`}>
           {currentPassage?.text.split('').map((char, idx) => {
             let color = 'text-slate-500';
             const isCurrent = idx === typedIndex;
@@ -267,38 +272,41 @@ export default function PracticeView({
           })}
         </div>
 
-        {/* Current Key Cue */}
+        {/* Current Key & Hindi Sequence Breakdown */}
         {targetKeyInfo && !isCompleted && (
-          <div className="sticky bottom-0 mt-6 py-2 px-4 rounded-xl bg-slate-900/90 border border-slate-800 backdrop-blur-sm flex items-center justify-between text-xs text-slate-300">
-            <span>
-              Next Key: <span className="text-amber-300 font-mono-custom font-bold uppercase text-sm ml-1">{targetKeyInfo.key === ' ' ? 'Spacebar' : targetKeyInfo.key}</span>
-              {targetKeyInfo.shift && <span className="ml-1 text-amber-400 font-bold">(+ Shift)</span>}
-            </span>
-            <span className="text-slate-400">
-              Finger: <strong className="text-indigo-300">{targetKeyInfo.finger}</strong>
-            </span>
+          <div className="sticky bottom-0 mt-6 py-2.5 px-4 rounded-xl bg-slate-900/90 border border-slate-800 backdrop-blur-sm flex flex-wrap items-center justify-between text-xs text-slate-300 gap-2">
+            <div className="flex items-center gap-2">
+              <span>Next Key:</span>
+              <span className="text-amber-300 font-mono-custom font-bold uppercase text-sm">
+                {targetKeyInfo.key === ' ' ? 'Spacebar' : targetKeyInfo.key}
+              </span>
+              {targetKeyInfo.shift && <span className="text-amber-400 font-bold">(+ Shift)</span>}
+            </div>
+
+            {/* Upcoming Sequence */}
+            {language === 'hindi' && upcomingSequence.length > 1 && (
+              <div className="hidden sm:flex items-center gap-1.5 font-mono-custom text-[11px]">
+                <span className="text-slate-500">Upcoming:</span>
+                {upcomingSequence.slice(1, 4).map((item, uIdx) => (
+                  <span key={uIdx} className="bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800 text-slate-300">
+                    <span className="font-hindi">{item.char}</span>
+                    <span className="text-slate-500 ml-1 font-bold text-[10px]">({item.key.toUpperCase()})</span>
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
 
-      {/* Optional Virtual Keyboard & 10 Fingers View (Shown unless Zen Mode is on) */}
+      {/* Integrated Keyboard with 10 Fingers Directly Placed on It */}
       {showKeyboardGuide && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start pt-2">
-          <div className="lg:col-span-4 flex justify-center">
-            <HandsDisplay
-              activeFinger={targetKeyInfo?.finger || null}
-              language={language}
-            />
-          </div>
-          <div className="lg:col-span-8 flex justify-center">
-            <VirtualKeyboard
-              targetKey={targetKeyInfo?.key || null}
-              targetShift={targetKeyInfo?.shift || false}
-              language={language}
-              pressedKey={lastPressedPhysicalKey}
-            />
-          </div>
-        </div>
+        <IntegratedKeyboardHands
+          targetKey={targetKeyInfo?.key || null}
+          targetShift={targetKeyInfo?.shift || false}
+          language={language}
+          pressedKey={lastPressedPhysicalKey}
+        />
       )}
 
       {/* Custom Text Modal */}
@@ -353,7 +361,7 @@ export default function PracticeView({
         </div>
       )}
 
-      {/* Completion Modal Result Overlay */}
+      {/* Completion Modal */}
       {completionResult && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
           <div className="bg-slate-900 border-2 border-indigo-500/50 rounded-3xl p-6 sm:p-8 max-w-lg w-full text-center shadow-2xl relative space-y-6">
@@ -369,7 +377,6 @@ export default function PracticeView({
               </p>
             </div>
 
-            {/* Scorecard */}
             <div className="grid grid-cols-3 gap-3 p-4 rounded-2xl bg-slate-950 border border-slate-800">
               <div className="text-center">
                 <span className="text-[11px] text-slate-400 uppercase font-semibold block">Speed</span>
@@ -388,7 +395,6 @@ export default function PracticeView({
               </div>
             </div>
 
-            {/* In-Card Ad Banner */}
             <AdBanner position="practice-complete" onOpenSettings={onOpenAdSettings} />
 
             <div className="flex items-center gap-3 pt-2">
@@ -409,7 +415,6 @@ export default function PracticeView({
         </div>
       )}
 
-      {/* Bottom Banner Ad */}
       <AdBanner position="lesson-bottom" onOpenSettings={onOpenAdSettings} />
     </div>
   );
