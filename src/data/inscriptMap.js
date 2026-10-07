@@ -1,0 +1,249 @@
+// Official Indian Bureau of Standards (BIS) Hindi InScript Keyboard Mapping
+// Used in SSC, CPCT, High Court and all government Hindi typing examinations
+
+export const INSCRIPT_NORMAL = {
+  // Number row
+  '`': '`', '1': '1', '2': '2', '3': '3', '4': '4',
+  '5': '5', '6': '6', '7': '7', '8': '8', '9': '9', '0': '0',
+  '-': '-', '=': 'ृ',
+
+  // Top row
+  'q': 'ौ', // ai matra (au matra)
+  'w': 'ै', // e matra (ai matra)
+  'e': 'ा', // aa matra
+  'r': 'ी', // ee matra
+  't': 'ू', // oo matra
+  'y': 'ब', // ba
+  'u': 'ह', // ha
+  'i': 'ग', // ga
+  'o': 'द', // da
+  'p': 'ज', // ja
+  '[': 'ड', // dda
+  ']': '़', // nukta
+  '\\': '\\',
+
+  // Home row
+  'a': 'ो', // o matra
+  's': 'े', // e matra
+  'd': '्', // halant (virama)
+  'f': 'ि', // i matra
+  'g': 'ु', // u matra
+  'h': 'प', // pa
+  'j': 'र', // ra
+  'k': 'क', // ka
+  'l': 'त', // ta
+  ';': 'च', // cha
+  "'": 'ट', // tta
+
+  // Bottom row
+  'z': 'ॆ', // short e matra
+  'x': 'ं', // anusvara (bindi)
+  'c': 'म', // ma
+  'v': 'न', // na
+  'b': 'व', // va
+  'n': 'ल', // la
+  'm': 'स', // sa
+  ',': ',', // comma
+  '.': '.', // dot / full stop
+  '/': 'य', // ya
+
+  // Space
+  ' ': ' ',
+};
+
+export const INSCRIPT_SHIFT = {
+  // Number row shifted
+  '~': '~',
+  '!': 'ऍ',
+  '@': 'ॅ',
+  '#': '्र', // ra-phalan
+  '$': 'र्', // reph
+  '%': 'ज्ञ',
+  '^': 'त्र',
+  '&': 'क्ष',
+  '*': 'श्र',
+  '(': '(',
+  ')': ')',
+  '_': 'ः', // visarga
+  '+': 'ऋ', // ri vowel
+
+  // Top row shifted
+  'Q': 'औ',
+  'W': 'ऐ',
+  'E': 'आ',
+  'R': 'ई',
+  'T': 'ऊ',
+  'Y': 'भ',
+  'U': 'ङ',
+  'I': 'घ',
+  'O': 'ध',
+  'P': 'झ',
+  '{': 'ढ',
+  '}': 'ञ',
+  '|': '|',
+
+  // Home row shifted
+  'A': 'ओ',
+  'S': 'ए',
+  'D': 'अ',
+  'F': 'इ',
+  'G': 'उ',
+  'H': 'फ',
+  'J': 'ऱ',
+  'K': 'ख',
+  'L': 'थ',
+  ':': 'छ',
+  '"': 'ठ',
+
+  // Bottom row shifted
+  'Z': 'ऒ',
+  'X': 'ँ', // chandrabindu
+  'C': 'ण',
+  'V': 'ऩ',
+  'B': 'ऴ',
+  'N': 'ळ',
+  'M': 'श',
+  '<': 'ष',
+  '>': '।', // purna viram (danda)
+  '?': '?',
+
+  ' ': ' ',
+};
+
+// Finger assignments (1-10 touch typing standard)
+// LP = Left Pinky, LR = Left Ring, LM = Left Middle, LI = Left Index, LT = Left Thumb
+// RT = Right Thumb, RI = Right Index, RM = Right Middle, RR = Right Ring, RP = Right Pinky
+export const FINGER_MAP = {
+  // Left Pinky
+  '`': 'LP', '~': 'LP', '1': 'LP', '!': 'LP', 'q': 'LP', 'Q': 'LP', 'a': 'LP', 'A': 'LP', 'z': 'LP', 'Z': 'LP',
+  // Left Ring
+  '2': 'LR', '@': 'LR', 'w': 'LR', 'W': 'LR', 's': 'LR', 'S': 'LR', 'x': 'LR', 'X': 'LR',
+  // Left Middle
+  '3': 'LM', '#': 'LM', 'e': 'LM', 'E': 'LM', 'd': 'LM', 'D': 'LM', 'c': 'LM', 'C': 'LM',
+  // Left Index
+  '4': 'LI', '$': 'LI', '5': 'LI', '%': 'LI', 'r': 'LI', 'R': 'LI', 't': 'LI', 'T': 'LI',
+  'f': 'LI', 'F': 'LI', 'g': 'LI', 'G': 'LI', 'v': 'LI', 'V': 'LI', 'b': 'LI', 'B': 'LI',
+  // Thumbs
+  ' ': 'SPACE',
+  // Right Index
+  '6': 'RI', '^': 'RI', '7': 'RI', '&': 'RI', 'y': 'RI', 'Y': 'RI', 'u': 'RI', 'U': 'RI',
+  'h': 'RI', 'H': 'RI', 'j': 'RI', 'J': 'RI', 'n': 'RI', 'N': 'RI', 'm': 'RI', 'M': 'RI',
+  // Right Middle
+  '8': 'RM', '*': 'RM', 'i': 'RM', 'I': 'RM', 'k': 'RM', 'K': 'RM', ',': 'RM', '<': 'RM',
+  // Right Ring
+  '9': 'RR', '(': 'RR', 'o': 'RR', 'O': 'RR', 'l': 'RR', 'L': 'RR', '.': 'RR', '>': 'RR',
+  // Right Pinky
+  '0': 'RP', ')': 'RP', '-': 'RP', '_': 'RP', '=': 'RP', '+': 'RP',
+  'p': 'RP', 'P': 'RP', '[': 'RP', '{': 'RP', ']': 'RP', '}': 'RP', '\\': 'RP', '|': 'RP',
+  ';': 'RP', ':': 'RP', "'": 'RP', '"': 'RP', '/': 'RP', '?': 'RP',
+};
+
+// Finger metadata for display
+export const FINGER_INFO = {
+  LP: { name: 'Left Pinky', hindiName: 'बायाँ कनिष्ठिका', color: '#f43f5e', bg: 'bg-rose-500', border: 'border-rose-500', text: 'text-rose-400' },
+  LR: { name: 'Left Ring', hindiName: 'बायाँ अनामिका', color: '#fb923c', bg: 'bg-orange-500', border: 'border-orange-500', text: 'text-orange-400' },
+  LM: { name: 'Left Middle', hindiName: 'बायाँ मध्यमा', color: '#facc15', bg: 'bg-yellow-500', border: 'border-yellow-500', text: 'text-yellow-400' },
+  LI: { name: 'Left Index', hindiName: 'बायाँ तर्जनी', color: '#4ade80', bg: 'bg-green-500', border: 'border-green-500', text: 'text-green-400' },
+  LT: { name: 'Left Thumb', hindiName: 'बायाँ अँगूठा', color: '#38bdf8', bg: 'bg-sky-500', border: 'border-sky-500', text: 'text-sky-400' },
+  RT: { name: 'Right Thumb', hindiName: 'दायाँ अँगूठा', color: '#38bdf8', bg: 'bg-sky-500', border: 'border-sky-500', text: 'text-sky-400' },
+  SPACE: { name: 'Thumb (Space)', hindiName: 'अँगूठा (स्पेस)', color: '#38bdf8', bg: 'bg-sky-500', border: 'border-sky-500', text: 'text-sky-400' },
+  RI: { name: 'Right Index', hindiName: 'दायाँ तर्जनी', color: '#818cf8', bg: 'bg-indigo-500', border: 'border-indigo-500', text: 'text-indigo-400' },
+  RM: { name: 'Right Middle', hindiName: 'दायाँ मध्यमा', color: '#a855f7', bg: 'bg-purple-500', border: 'border-purple-500', text: 'text-purple-400' },
+  RR: { name: 'Right Ring', hindiName: 'दायाँ अनामिका', color: '#ec4899', bg: 'bg-pink-500', border: 'border-pink-500', text: 'text-pink-400' },
+  RP: { name: 'Right Pinky', hindiName: 'दायाँ कनिष्ठिका', color: '#14b8a6', bg: 'bg-teal-500', border: 'border-teal-500', text: 'text-teal-400' },
+};
+
+// Physical keyboard row definitions
+export const KEYBOARD_ROWS = [
+  [
+    { code: 'Backquote', key: '`', shiftKey: '~', inscript: '`', inscriptShift: '~', finger: 'LP' },
+    { code: 'Digit1', key: '1', shiftKey: '!', inscript: '1', inscriptShift: 'ऍ', finger: 'LP' },
+    { code: 'Digit2', key: '2', shiftKey: '@', inscript: '2', inscriptShift: 'ॅ', finger: 'LR' },
+    { code: 'Digit3', key: '3', shiftKey: '#', inscript: '3', inscriptShift: '्र', finger: 'LM' },
+    { code: 'Digit4', key: '4', shiftKey: '$', inscript: '4', inscriptShift: 'र्', finger: 'LI' },
+    { code: 'Digit5', key: '5', shiftKey: '%', inscript: '5', inscriptShift: 'ज्ञ', finger: 'LI' },
+    { code: 'Digit6', key: '6', shiftKey: '^', inscript: '6', inscriptShift: 'त्र', finger: 'RI' },
+    { code: 'Digit7', key: '7', shiftKey: '&', inscript: '7', inscriptShift: 'क्ष', finger: 'RI' },
+    { code: 'Digit8', key: '8', shiftKey: '*', inscript: '8', inscriptShift: 'श्र', finger: 'RM' },
+    { code: 'Digit9', key: '9', shiftKey: '(', inscript: '9', inscriptShift: '(', finger: 'RR' },
+    { code: 'Digit0', key: '0', shiftKey: ')', inscript: '0', inscriptShift: ')', finger: 'RP' },
+    { code: 'Minus', key: '-', shiftKey: '_', inscript: '-', inscriptShift: 'ः', finger: 'RP' },
+    { code: 'Equal', key: '=', shiftKey: '+', inscript: 'ृ', inscriptShift: 'ऋ', finger: 'RP' },
+    { code: 'Backspace', label: 'Backspace', width: 'w-20', special: true, finger: 'RP' },
+  ],
+  [
+    { code: 'Tab', label: 'Tab', width: 'w-16', special: true, finger: 'LP' },
+    { code: 'KeyQ', key: 'q', shiftKey: 'Q', inscript: 'ौ', inscriptShift: 'औ', finger: 'LP' },
+    { code: 'KeyW', key: 'w', shiftKey: 'W', inscript: 'ै', inscriptShift: 'ऐ', finger: 'LR' },
+    { code: 'KeyE', key: 'e', shiftKey: 'E', inscript: 'ा', inscriptShift: 'आ', finger: 'LM' },
+    { code: 'KeyR', key: 'r', shiftKey: 'R', inscript: 'ी', inscriptShift: 'ई', finger: 'LI' },
+    { code: 'KeyT', key: 't', shiftKey: 'T', inscript: 'ू', inscriptShift: 'ऊ', finger: 'LI' },
+    { code: 'KeyY', key: 'y', shiftKey: 'Y', inscript: 'ब', inscriptShift: 'भ', finger: 'RI' },
+    { code: 'KeyU', key: 'u', shiftKey: 'U', inscript: 'ह', inscriptShift: 'ङ', finger: 'RI' },
+    { code: 'KeyI', key: 'i', shiftKey: 'I', inscript: 'ग', inscriptShift: 'घ', finger: 'RM' },
+    { code: 'KeyO', key: 'o', shiftKey: 'O', inscript: 'द', inscriptShift: 'ध', finger: 'RR' },
+    { code: 'KeyP', key: 'p', shiftKey: 'P', inscript: 'ज', inscriptShift: 'झ', finger: 'RP' },
+    { code: 'BracketLeft', key: '[', shiftKey: '{', inscript: 'ड', inscriptShift: 'ढ', finger: 'RP' },
+    { code: 'BracketRight', key: ']', shiftKey: '}', inscript: '़', inscriptShift: 'ञ', finger: 'RP' },
+    { code: 'Backslash', key: '\\', shiftKey: '|', inscript: '\\', inscriptShift: '|', finger: 'RP' },
+  ],
+  [
+    { code: 'CapsLock', label: 'Caps Lock', width: 'w-20', special: true, finger: 'LP' },
+    { code: 'KeyA', key: 'a', shiftKey: 'A', inscript: 'ो', inscriptShift: 'ओ', finger: 'LP' },
+    { code: 'KeyS', key: 's', shiftKey: 'S', inscript: 'े', inscriptShift: 'ए', finger: 'LR' },
+    { code: 'KeyD', key: 'd', shiftKey: 'D', inscript: '्', inscriptShift: 'अ', finger: 'LM' },
+    { code: 'KeyF', key: 'f', shiftKey: 'F', inscript: 'ि', inscriptShift: 'इ', finger: 'LI' },
+    { code: 'KeyG', key: 'g', shiftKey: 'G', inscript: 'ु', inscriptShift: 'उ', finger: 'LI' },
+    { code: 'KeyH', key: 'h', shiftKey: 'H', inscript: 'प', inscriptShift: 'फ', finger: 'RI' },
+    { code: 'KeyJ', key: 'j', shiftKey: 'J', inscript: 'र', inscriptShift: 'ऱ', finger: 'RI' },
+    { code: 'KeyK', key: 'k', shiftKey: 'K', inscript: 'क', inscriptShift: 'ख', finger: 'RM' },
+    { code: 'KeyL', key: 'l', shiftKey: 'L', inscript: 'त', inscriptShift: 'थ', finger: 'RR' },
+    { code: 'Semicolon', key: ';', shiftKey: ':', inscript: 'च', inscriptShift: 'छ', finger: 'RP' },
+    { code: 'Quote', key: "'", shiftKey: '"', inscript: 'ट', inscriptShift: 'ठ', finger: 'RP' },
+    { code: 'Enter', label: 'Enter', width: 'w-24', special: true, finger: 'RP' },
+  ],
+  [
+    { code: 'ShiftLeft', label: 'Shift', width: 'w-24', special: true, finger: 'LP' },
+    { code: 'KeyZ', key: 'z', shiftKey: 'Z', inscript: 'ॆ', inscriptShift: 'ऒ', finger: 'LP' },
+    { code: 'KeyX', key: 'x', shiftKey: 'X', inscript: 'ं', inscriptShift: 'ँ', finger: 'LR' },
+    { code: 'KeyC', key: 'c', shiftKey: 'C', inscript: 'म', inscriptShift: 'ण', finger: 'LM' },
+    { code: 'KeyV', key: 'v', shiftKey: 'V', inscript: 'न', inscriptShift: 'ऩ', finger: 'LI' },
+    { code: 'KeyB', key: 'b', shiftKey: 'B', inscript: 'व', inscriptShift: 'ऴ', finger: 'LI' },
+    { code: 'KeyN', key: 'n', shiftKey: 'N', inscript: 'ल', inscriptShift: 'ळ', finger: 'RI' },
+    { code: 'KeyM', key: 'm', shiftKey: 'M', inscript: 'स', inscriptShift: 'श', finger: 'RI' },
+    { code: 'Comma', key: ',', shiftKey: '<', inscript: ',', inscriptShift: 'ष', finger: 'RM' },
+    { code: 'Period', key: '.', shiftKey: '>', inscript: '.', inscriptShift: '।', finger: 'RR' },
+    { code: 'Slash', key: '/', shiftKey: '?', inscript: 'य', inscriptShift: '?', finger: 'RP' },
+    { code: 'ShiftRight', label: 'Shift', width: 'w-24', special: true, finger: 'RP' },
+  ],
+  [
+    { code: 'Space', key: ' ', shiftKey: ' ', inscript: ' ', inscriptShift: ' ', label: 'Spacebar', width: 'flex-1', special: false, finger: 'SPACE' },
+  ],
+];
+
+// Helper to look up which key generates a specific Hindi character
+const REVERSE_INSCRIPT_MAP = {};
+Object.entries(INSCRIPT_NORMAL).forEach(([k, v]) => {
+  REVERSE_INSCRIPT_MAP[v] = { key: k, shift: false, finger: FINGER_MAP[k] };
+});
+Object.entries(INSCRIPT_SHIFT).forEach(([k, v]) => {
+  REVERSE_INSCRIPT_MAP[v] = { key: k.toLowerCase(), shift: true, finger: FINGER_MAP[k] };
+});
+
+export function findKeyForChar(char, language = 'english') {
+  if (language === 'hindi') {
+    if (char === ' ') return { key: ' ', shift: false, finger: 'SPACE', code: 'Space' };
+    const found = REVERSE_INSCRIPT_MAP[char];
+    if (found) {
+      return found;
+    }
+    // Fallback: If it's a number or English punct
+    return { key: char.toLowerCase(), shift: char !== char.toLowerCase(), finger: FINGER_MAP[char] || 'RI' };
+  } else {
+    // English
+    if (char === ' ') return { key: ' ', shift: false, finger: 'SPACE', code: 'Space' };
+    const isShift = char >= 'A' && char <= 'Z' || '~!@#$%^&*()_+{}|:"<>?'.includes(char);
+    const finger = FINGER_MAP[char] || 'RI';
+    return { key: char.toLowerCase(), shift: isShift, finger };
+  }
+}
