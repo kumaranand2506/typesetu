@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useRef } from 'react';
-import { ShieldAlert, Zap, ArrowRight, CornerDownLeft } from 'lucide-react';
+import { Zap, Target, AlertCircle, RotateCcw, ShieldAlert, Check } from 'lucide-react';
 
 /**
  * Break target text into balanced lines of ~45-55 characters,
@@ -78,7 +78,13 @@ export default function RollingTextDisplay({
   onFocusTypingArea = null,
   fontSize = 'normal', // 'normal' | 'large'
   language = 'hindi',
-  upcomingSequence = [],
+  // Telemetry props for minimal top status pill
+  wpm = null,
+  grossWpm = null,
+  accuracy = null,
+  progressPercent = null,
+  mistakes = null,
+  onRestart = null,
 }) {
   const containerRef = useRef(null);
 
@@ -100,8 +106,8 @@ export default function RollingTextDisplay({
   const activeLine = lines[activeLineIdx] || { text: '', startIndex: 0, endIndex: 0 };
   const nextLine = lines[activeLineIdx + 1] || null;
 
-  // Ensure perpetual focus whenever user clicks the typing viewport
-  const handleViewportClick = (e) => {
+  // Perpetual keyboard focus handler
+  const handleViewportClick = () => {
     if (hiddenInputRef && hiddenInputRef.current) {
       hiddenInputRef.current.focus({ preventScroll: true });
     }
@@ -123,7 +129,7 @@ export default function RollingTextDisplay({
     <div
       ref={containerRef}
       onClick={handleViewportClick}
-      className="relative w-full bg-slate-950/95 dark:bg-slate-950/95 border-2 border-indigo-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl overflow-hidden cursor-text select-none group transition-all duration-200 hover:border-indigo-500/50"
+      className="relative w-full bg-slate-950/95 dark:bg-slate-950/95 border-2 border-indigo-500/30 hover:border-indigo-500/50 rounded-3xl p-5 sm:p-7 shadow-2xl overflow-hidden cursor-text select-none group transition-all duration-200"
     >
       {/* Invisible auto-focus input for perpetual keyboard trapping */}
       {hiddenInputRef && (
@@ -141,20 +147,57 @@ export default function RollingTextDisplay({
         />
       )}
 
-      {/* Top Status & Mode Ribbon */}
-      <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-800/80 text-xs text-slate-400">
-        <div className="flex items-center gap-2">
-          <span className="px-2 py-0.5 rounded-md bg-indigo-950/80 border border-indigo-800/60 text-indigo-300 font-mono text-[11px] font-semibold">
-            Line {activeLineIdx + 1} / {lines.length}
-          </span>
-          <span className="hidden sm:inline text-slate-500">•</span>
-          <span className="text-[11px] text-slate-400">
-            {Math.min(100, Math.round((typedIndex / (targetText.length || 1)) * 100))}% Complete
-          </span>
+      {/* MINIMAL TOP TELEMETRY STATUS PILL (Monkeytype / TypingClub style) */}
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-3.5 mb-4 border-b border-slate-800/80 text-xs">
+        {/* Left: Essential live telemetry */}
+        <div className="flex items-center gap-3 sm:gap-4">
+          {/* Live Net WPM */}
+          <div className="flex items-center gap-1.5 font-bold">
+            <Zap size={14} className="text-emerald-400" />
+            <span className="text-white text-base font-black font-mono">
+              {wpm !== null ? wpm : 0}
+            </span>
+            <span className="text-slate-400 text-[11px] uppercase font-semibold">WPM</span>
+          </div>
+
+          <span className="text-slate-700 font-bold">•</span>
+
+          {/* Live Accuracy */}
+          <div className="flex items-center gap-1.5 font-bold">
+            <Target size={14} className="text-cyan-400" />
+            <span className="text-white text-base font-black font-mono">
+              {accuracy !== null ? accuracy : 100}%
+            </span>
+            <span className="text-slate-400 text-[11px] uppercase font-semibold">ACC</span>
+          </div>
+
+          <span className="text-slate-700 font-bold hidden sm:inline">•</span>
+
+          {/* Progress / Timer */}
+          <div className="items-center gap-1.5 font-mono text-slate-300 hidden sm:flex">
+            <span className="text-indigo-400 font-bold text-[11px]">
+              {progressPercent !== null ? progressPercent : 0}%
+            </span>
+            <span className="text-slate-500 text-[11px]">done</span>
+          </div>
+
+          {/* Mistakes count (if any) */}
+          {mistakes > 0 && (
+            <div className="flex items-center gap-1 text-rose-400 text-[11px] font-bold">
+              <AlertCircle size={13} />
+              <span>{mistakes}</span>
+            </div>
+          )}
         </div>
 
-        {/* Dual Error Handling Mode Badge / Toggle */}
+        {/* Right: Mode Toggle (Casual / Strict) & Restart */}
         <div className="flex items-center gap-2">
+          {/* Line index badge */}
+          <span className="text-slate-500 font-mono text-[11px] hidden md:inline">
+            Line {activeLineIdx + 1}/{lines.length}
+          </span>
+
+          {/* Strict / Casual Mode toggle pill */}
           {onToggleErrorMode && (
             <button
               type="button"
@@ -164,34 +207,49 @@ export default function RollingTextDisplay({
               }}
               className={`px-2.5 py-1 rounded-xl text-[11px] font-bold flex items-center gap-1.5 transition cursor-pointer border ${
                 errorMode === 'strict'
-                  ? 'bg-rose-950/80 border-rose-700/60 text-rose-300 hover:bg-rose-900/60 shadow-sm shadow-rose-900/40'
-                  : 'bg-emerald-950/80 border-emerald-700/60 text-emerald-300 hover:bg-emerald-900/60 shadow-sm shadow-emerald-900/40'
+                  ? 'bg-rose-950/80 border-rose-700/60 text-rose-300 hover:bg-rose-900/60 shadow-sm'
+                  : 'bg-emerald-950/80 border-emerald-700/60 text-emerald-300 hover:bg-emerald-900/60 shadow-sm'
               }`}
-              title="Click to switch between Strict and Casual mode"
+              title="Click to toggle between Casual and Strict error mode"
             >
               {errorMode === 'strict' ? (
                 <>
-                  <ShieldAlert size={13} className="text-rose-400" />
-                  <span>Strict Mode (कठोर)</span>
+                  <ShieldAlert size={12} className="text-rose-400" />
+                  <span>Strict</span>
                 </>
               ) : (
                 <>
-                  <Zap size={13} className="text-emerald-400" />
-                  <span>Casual Mode (सहज)</span>
+                  <Check size={12} className="text-emerald-400" />
+                  <span>Casual</span>
                 </>
               )}
+            </button>
+          )}
+
+          {/* Quick Restart Button */}
+          {onRestart && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRestart();
+              }}
+              className="p-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 transition cursor-pointer"
+              title="पुनः प्रारंभ करें (Restart / Reset)"
+            >
+              <RotateCcw size={14} />
             </button>
           )}
         </div>
       </div>
 
-      {/* TWO-LINE ROLLING CAROUSEL TEXT ENGINE */}
-      <div className="flex flex-col gap-4 min-h-[140px] justify-center">
-        {/* LINE 1: ACTIVE CURRENT LINE */}
+      {/* TWO-LINE ROLLING CAROUSEL TEXT VIEWPORT */}
+      <div className="flex flex-col gap-3 min-h-[130px] justify-center">
+        {/* LINE 1: ACTIVE CURRENT LINE WITH LIVE CHARACTER HIGHLIGHTING & CARET */}
         <div
           key={`line-${activeLineIdx}`}
           className={`
-            font-mono-custom tracking-wider leading-relaxed transition-all duration-300 transform
+            font-mono-custom tracking-wider leading-relaxed transition-all duration-200 transform
             ${fontSize === 'large' ? 'text-2xl sm:text-3xl' : 'text-xl sm:text-2xl'}
             ${isHindi ? 'font-hindi font-medium' : 'font-mono-custom font-semibold'}
           `}
@@ -201,23 +259,23 @@ export default function RollingTextDisplay({
             const isCurrent = globalCharIndex === typedIndex;
             const isTyped = globalCharIndex < typedIndex;
 
-            let charClass = 'text-slate-300 dark:text-slate-200';
+            let charClass = 'text-slate-400 dark:text-slate-300';
 
             if (isTyped) {
               const hist = history[globalCharIndex];
               if (hist?.status === 'correct') {
-                charClass = 'text-emerald-400 dark:text-emerald-400 font-semibold';
+                charClass = 'text-emerald-400 font-semibold';
               } else {
                 charClass =
                   'text-rose-400 bg-rose-500/20 underline decoration-rose-500 decoration-2 font-bold rounded';
               }
             } else if (isCurrent) {
               if (strictError) {
-                // Strict mode error halt
+                // Strict mode error halt: highlighted in red
                 charClass =
                   'bg-rose-600/40 text-white ring-2 ring-rose-400 shadow-lg shadow-rose-500/50 rounded px-1 animate-bounce font-bold';
               } else {
-                // Active bounding box cursor
+                // Smooth active caret bounding cursor
                 charClass =
                   'bg-indigo-600/40 text-white ring-2 ring-indigo-400 shadow-lg shadow-indigo-500/50 rounded px-1 animate-pulse font-bold';
               }
@@ -239,62 +297,26 @@ export default function RollingTextDisplay({
           })}
         </div>
 
-        {/* LINE 2: UPCOMING PREVIEW LINE */}
+        {/* LINE 2: UPCOMING PREVIEW LINE (CLEAN TYPOGRAPHY, NO CLUTTER) */}
         <div
           key={`preview-${activeLineIdx + 1}`}
           className={`
-            font-mono-custom tracking-wider leading-relaxed opacity-45 select-none transition-all duration-300 text-slate-500 dark:text-slate-500
+            font-mono-custom tracking-wider leading-relaxed opacity-50 select-none transition-all duration-200 text-slate-500 dark:text-slate-500
             ${fontSize === 'large' ? 'text-xl sm:text-2xl' : 'text-lg sm:text-xl'}
             ${isHindi ? 'font-hindi font-normal' : 'font-mono-custom font-normal'}
           `}
         >
           {nextLine ? (
-            <div className="flex items-center gap-2">
-              <span className="text-slate-600 text-xs shrink-0 flex items-center gap-1 font-mono">
-                <ArrowRight size={13} className="text-slate-600" />
-                Next:
-              </span>
-              <span>{nextLine.text}</span>
+            <div className="truncate">
+              {nextLine.text}
             </div>
           ) : (
-            <div className="text-xs text-indigo-400/70 font-semibold flex items-center gap-1.5 pt-1">
-              <span>🎉 अंतिम चरण! (Final line of practice)</span>
+            <div className="text-xs text-indigo-400/80 font-semibold pt-1">
+              🎉 अंतिम चरण (Final line of practice)
             </div>
           )}
         </div>
       </div>
-
-      {/* BOTTOM KEYSTROKE SEQUENCE DECOMPOSITION (HINDI) */}
-      {isHindi && upcomingSequence.length > 0 && (
-        <div className="mt-5 pt-3 border-t border-slate-800/80 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
-          <div className="flex items-center gap-2">
-            <span className="text-slate-500 font-medium text-[11px]">कुंजी संकेत (Key Sequence):</span>
-            <div className="flex items-center gap-1.5 font-mono-custom">
-              {upcomingSequence.slice(0, 4).map((item, sIdx) => (
-                <div
-                  key={sIdx}
-                  className={`flex items-center gap-1 px-2 py-0.5 rounded-lg border text-xs ${
-                    sIdx === 0
-                      ? 'bg-indigo-600/30 border-indigo-500 text-white font-bold ring-1 ring-indigo-400'
-                      : 'bg-slate-900 border-slate-800 text-slate-400'
-                  }`}
-                >
-                  <span className="font-hindi text-sm">{item.char === ' ' ? '␣' : item.char}</span>
-                  <span className="text-[10px] text-slate-500">➔</span>
-                  <span className="font-bold text-amber-300 uppercase">
-                    {item.shift ? `Shift+${item.key}` : item.key === ' ' ? 'Space' : item.key}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="text-[11px] text-slate-500 flex items-center gap-1">
-            <CornerDownLeft size={12} />
-            <span>Enter / Space line roll</span>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -3,7 +3,6 @@ import { getAllLessons, STAGES, getStageForLevel } from '../data/lessonsEngine';
 import { useTypingEngine } from '../hooks/useTypingEngine';
 import IntegratedKeyboardHands from './IntegratedKeyboardHands';
 import RollingTextDisplay from './RollingTextDisplay';
-import Speedometer from './Speedometer';
 import AdBanner from './AdBanner';
 import { checkNewBadges } from '../data/badgeSystem';
 import { ArrowLeft, RotateCcw, ArrowRight, Star, Award, Zap, Target, AlertCircle, Sparkles, Keyboard, Search, ChevronLeft, ChevronRight, Layers } from 'lucide-react';
@@ -346,82 +345,53 @@ export default function LearnView({
     >
       <AdBanner position="header" onOpenSettings={onOpenAdSettings} />
 
-      {/* Lesson Header Toolbar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900/80 border border-slate-800 rounded-3xl p-3 sm:p-4 backdrop-blur-sm">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => {
-              setActiveLessonId(null);
-              setCompletionResult(null);
-            }}
-            className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer flex items-center gap-1 text-xs font-medium"
-          >
-            <ArrowLeft size={16} />
-            <span className="hidden sm:inline">All Lessons (300)</span>
-          </button>
+      {/* Sleek Minimal Header: Back to lessons & Lesson Badge */}
+      <div className="flex items-center justify-between gap-3 bg-slate-900/60 border border-slate-800/80 rounded-2xl px-3.5 py-2 backdrop-blur-sm">
+        <button
+          onClick={() => {
+            setActiveLessonId(null);
+            setCompletionResult(null);
+          }}
+          className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer flex items-center gap-1.5 text-xs font-semibold"
+        >
+          <ArrowLeft size={15} />
+          <span>All Lessons (300)</span>
+        </button>
 
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-bold text-xs border border-indigo-500/30">
-                Lvl {activeLesson.level} • Stage {activeLesson.stageId}
-              </span>
-              <h2 className="text-base sm:text-lg font-bold text-white font-hindi">
-                {activeLesson.title}
-              </h2>
-            </div>
-            <p className="text-xs text-slate-400 font-hindi mt-0.5 hidden sm:block">
-              {activeLesson.subtitle} — {activeLesson.description}
-            </p>
-          </div>
+        <div className="flex items-center gap-2">
+          <span className="px-2.5 py-0.5 rounded-lg bg-indigo-500/20 text-indigo-300 font-bold text-xs border border-indigo-500/30">
+            Lvl {activeLesson.level}
+          </span>
+          <h2 className="text-sm sm:text-base font-bold text-white font-hindi truncate max-w-xs sm:max-w-md">
+            {activeLesson.title}
+          </h2>
         </div>
 
-        {/* Input Mode Toggle (Hindi) */}
-        {language === 'hindi' && (
-          <div className="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
+        {language === 'hindi' ? (
+          <div className="flex items-center gap-1 bg-slate-950 p-0.5 rounded-xl border border-slate-800 text-[11px]">
             <button
               onClick={() => setInputMode('mapper')}
-              className={`px-3 py-1.5 rounded-lg font-semibold transition cursor-pointer flex items-center gap-1.5 ${
-                inputMode === 'mapper'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+              className={`px-2.5 py-1 rounded-lg font-medium transition cursor-pointer ${
+                inputMode === 'mapper' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              <Keyboard size={14} />
-              <span>इनस्क्रिप्ट मैपर</span>
+              इनस्क्रिप्ट मैपर
             </button>
             <button
               onClick={() => setInputMode('native')}
-              className={`px-3 py-1.5 rounded-lg font-semibold transition cursor-pointer ${
-                inputMode === 'native'
-                  ? 'bg-indigo-600 text-white shadow-sm'
-                  : 'text-slate-400 hover:text-slate-200'
+              className={`px-2.5 py-1 rounded-lg font-medium transition cursor-pointer ${
+                inputMode === 'native' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400 hover:text-slate-200'
               }`}
             >
-              <span>सिस्टम कीबोर्ड</span>
+              सिस्टम
             </button>
           </div>
+        ) : (
+          <div className="w-16" />
         )}
-
-        <button
-          onClick={handleRestart}
-          className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer"
-          title="पुनः प्रारंभ करें (Restart)"
-        >
-          <RotateCcw size={16} />
-        </button>
       </div>
 
-      {/* Live Speedometer & Metrics */}
-      <Speedometer
-        wpm={currentWpm}
-        grossWpm={currentGrossWpm}
-        cpm={cpm}
-        accuracy={currentAccuracy}
-        mistakes={mistakes}
-        maxWpm={100}
-      />
-
-      {/* TWO-LINE ROLLING CAROUSEL TEXT ENGINE */}
+      {/* TWO-LINE ROLLING CAROUSEL TEXT ENGINE WITH MINIMAL TELEMETRY PILL */}
       <RollingTextDisplay
         targetText={activeLesson ? activeLesson.text : ''}
         typedIndex={typedIndex}
@@ -433,10 +403,15 @@ export default function LearnView({
         onKeyDown={handleKeyDown}
         onFocusTypingArea={focusInput}
         language={language}
-        upcomingSequence={upcomingSequence}
+        wpm={currentWpm}
+        grossWpm={currentGrossWpm}
+        accuracy={currentAccuracy}
+        progressPercent={progressPercent}
+        mistakes={mistakes}
+        onRestart={handleRestart}
       />
 
-      {/* INTEGRATED KEYBOARD WITH 10 FINGERS DIRECTLY POSITIONED ON IT */}
+      {/* INTEGRATED KEYBOARD WITH HIGH-CONTRAST SUPERIMPOSED HANDS & BIS DUAL KEYCAPS */}
       <IntegratedKeyboardHands
         targetKey={targetKeyInfo?.key || null}
         targetShift={targetKeyInfo?.shift || false}

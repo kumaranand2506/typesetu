@@ -4,7 +4,6 @@ import { chunkTextIntoParagraphs, saveBookProgress, getBookProgress, getLastRead
 import { useTypingEngine } from '../hooks/useTypingEngine';
 import IntegratedKeyboardHands from './IntegratedKeyboardHands';
 import RollingTextDisplay from './RollingTextDisplay';
-import Speedometer from './Speedometer';
 import AdBanner from './AdBanner';
 import { checkNewBadges } from '../data/badgeSystem';
 import { BookOpen, Search, ArrowLeft, ArrowRight, RotateCcw, Bookmark, CheckCircle, ChevronLeft, ChevronRight, Eye, EyeOff, Sparkles, Filter, Type, Layers } from 'lucide-react';
@@ -411,16 +410,6 @@ export default function BookPracticeView({
         </div>
       </div>
 
-      {/* Live Speedometer & Metrics */}
-      <Speedometer
-        wpm={currentWpm}
-        grossWpm={currentGrossWpm}
-        cpm={cpm}
-        accuracy={currentAccuracy}
-        mistakes={mistakes}
-        maxWpm={100}
-      />
-
       {/* TYPING CANVAS: 2-LINE ROLLING CAROUSEL OR BOOK CANVAS */}
       {textLayoutMode === 'rolling' ? (
         <RollingTextDisplay
@@ -435,7 +424,14 @@ export default function BookPracticeView({
           onFocusTypingArea={focusInput}
           fontSize={fontSize}
           language={currentBook.language || language}
-          upcomingSequence={upcomingSequence}
+          wpm={currentWpm}
+          grossWpm={currentGrossWpm}
+          accuracy={currentAccuracy}
+          progressPercent={progressPercent}
+          mistakes={mistakes}
+          onRestart={() => {
+            if (typingContainerRef.current) typingContainerRef.current.focus();
+          }}
         />
       ) : (
         /* TypeLit Fluid Book Reading Canvas */

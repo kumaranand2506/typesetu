@@ -41,8 +41,13 @@ export function useTypingEngine({
   const hiddenInputRef = useRef(null);
   const timerRef = useRef(null);
 
-  // Normalize target text with Unicode NFC
-  const normalizedTarget = useMemo(() => (targetText || '').normalize('NFC'), [targetText]);
+  // Normalize target text with Unicode NFC, strip invisible zero-width controls, and normalize NBSP
+  const normalizedTarget = useMemo(() => {
+    return (targetText || '')
+      .normalize('NFC')
+      .replace(/[\u200B-\u200D\uFEFF]/g, '')
+      .replace(/\u00A0/g, ' ');
+  }, [targetText]);
 
   const setErrorMode = useCallback((mode) => {
     setErrorModeState(mode);

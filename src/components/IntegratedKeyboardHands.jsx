@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { KEYBOARD_ROWS, FINGER_INFO } from '../data/inscriptMap';
 import { soundManager } from '../utils/soundEffects';
-import { Volume2, Layers, Sparkles } from 'lucide-react';
+import { Volume2, Eye, Sliders, ShieldCheck } from 'lucide-react';
 
 // Exact Key Coordinates within 940 x 280 SVG coordinate space
 const KEY_COORD_MAP = {
@@ -75,39 +75,43 @@ export default function IntegratedKeyboardHands({
   targetShift = false,
   language = 'hindi',
   pressedKey = null,
-  initialHindiLayout = 'inscript', // 'inscript' | 'remington'
+  initialHindiLayout = 'inscript',
   onLayoutChange = null,
 }) {
   const [hindiLayout, setHindiLayout] = useState(initialHindiLayout);
-  const [handDisplayMode, setHandDisplayMode] = useState(() => {
+
+  // High-Contrast Hand Overlay Mode: 'visible' | 'outline' | 'hidden'
+  const [handMode, setHandMode] = useState(() => {
     try {
-      return localStorage.getItem('typesetu_hand_mode') || 'overlay'; // 'overlay' | 'console' | 'both'
+      return localStorage.getItem('typesetu_hands_mode') || 'visible';
     } catch (e) {
-      return 'overlay';
+      return 'visible';
     }
   });
 
+  // Hand Opacity: 20 to 100
   const [handOpacity, setHandOpacity] = useState(() => {
     try {
-      return localStorage.getItem('typesetu_hand_opacity') || '100';
+      return Number(localStorage.getItem('typesetu_hands_opacity')) || 85;
     } catch (e) {
-      return '100';
+      return 85;
     }
   });
 
   const [switchProfile, setSwitchProfile] = useState(() => soundManager.getSwitchProfile());
 
-  const handleOpacityChange = (val) => {
-    setHandOpacity(val);
+  const handleModeChange = (mode) => {
+    setHandMode(mode);
     try {
-      localStorage.setItem('typesetu_hand_opacity', val);
+      localStorage.setItem('typesetu_hands_mode', mode);
     } catch (e) {}
   };
 
-  const handleModeChange = (mode) => {
-    setHandDisplayMode(mode);
+  const handleOpacityChange = (val) => {
+    const num = Number(val);
+    setHandOpacity(num);
     try {
-      localStorage.setItem('typesetu_hand_mode', mode);
+      localStorage.setItem('typesetu_hands_opacity', String(num));
     } catch (e) {}
   };
 
@@ -116,20 +120,11 @@ export default function IntegratedKeyboardHands({
     setSwitchProfile(profile);
   };
 
-  const handleHindiLayoutToggle = (layout) => {
-    setHindiLayout(layout);
-    if (onLayoutChange) {
-      onLayoutChange(layout);
-    }
-  };
-
   // Find target key coordinates and responsible finger
   let activeFingerId = null;
-  let targetRowIdx = -1;
-  let targetColIdx = -1;
 
-  KEYBOARD_ROWS.forEach((row, rIdx) => {
-    row.forEach((k, cIdx) => {
+  KEYBOARD_ROWS.forEach((row) => {
+    row.forEach((k) => {
       const match =
         targetKey &&
         (k.key?.toLowerCase() === targetKey?.toLowerCase() ||
@@ -137,8 +132,6 @@ export default function IntegratedKeyboardHands({
           (k.key === ' ' && targetKey === ' '));
       if (match) {
         activeFingerId = k.finger;
-        targetRowIdx = rIdx;
-        targetColIdx = cIdx;
       }
     });
   });
@@ -156,114 +149,104 @@ export default function IntegratedKeyboardHands({
   // Coordinates of target key
   const targetKeyCoord = targetKey ? KEY_COORD_MAP[targetKey] || KEY_COORD_MAP[targetKey.toLowerCase()] : null;
 
-  // 10 Minimalist Vector Line-Art Fingers Configuration
-  // Resting Home-Row Coordinates (ASDF + JKL; + Space)
+  // 10 Vector Line-Art Fingers Configuration resting over Home Row
   const leftFingersOverlay = [
-    { id: 'LP', name: 'Pinky', restKey: 'A', restX: 128, restY: 138, kx: 155, ky: 215, defaultColor: '#f43f5e', zone: '1, Q, A, Z' },
-    { id: 'LR', name: 'Ring', restKey: 'S', restX: 184, restY: 138, kx: 195, ky: 210, defaultColor: '#fb923c', zone: '2, W, S, X' },
-    { id: 'LM', name: 'Middle', restKey: 'D', restX: 240, restY: 138, kx: 235, ky: 205, defaultColor: '#facc15', zone: '3, E, D, C' },
-    { id: 'LI', name: 'Index', restKey: 'F', restX: 296, restY: 138, kx: 275, ky: 210, defaultColor: '#4ade80', zone: '4, 5, R, T, F, G, V, B' },
-    { id: 'LT', name: 'Thumb', restKey: '␣', restX: 410, restY: 246, kx: 330, ky: 240, defaultColor: '#38bdf8', zone: 'Spacebar' },
+    { id: 'LP', name: 'Pinky', restKey: 'A', restX: 128, restY: 138, kx: 155, ky: 215 },
+    { id: 'LR', name: 'Ring', restKey: 'S', restX: 184, restY: 138, kx: 195, ky: 210 },
+    { id: 'LM', name: 'Middle', restKey: 'D', restX: 240, restY: 138, kx: 235, ky: 205 },
+    { id: 'LI', name: 'Index', restKey: 'F', restX: 296, restY: 138, kx: 275, ky: 210 },
+    { id: 'LT', name: 'Thumb', restKey: '␣', restX: 410, restY: 246, kx: 330, ky: 240 },
   ];
 
   const rightFingersOverlay = [
-    { id: 'RT', name: 'Thumb', restKey: '␣', restX: 510, restY: 246, kx: 450, ky: 240, defaultColor: '#38bdf8', zone: 'Spacebar' },
-    { id: 'RI', name: 'Index', restKey: 'J', restX: 464, restY: 138, kx: 485, ky: 210, defaultColor: '#818cf8', zone: '6, 7, Y, U, H, J, N, M' },
-    { id: 'RM', name: 'Middle', restKey: 'K', restX: 520, restY: 138, kx: 525, ky: 205, defaultColor: '#a855f7', zone: '8, I, K, ,' },
-    { id: 'RR', name: 'Ring', restKey: 'L', restX: 576, restY: 138, kx: 565, ky: 210, defaultColor: '#ec4899', zone: '9, O, L, .' },
-    { id: 'RP', name: 'Pinky', restKey: ';', restX: 632, restY: 138, kx: 605, ky: 215, defaultColor: '#14b8a6', zone: '0, P, ;, /, Enter, Shift' },
+    { id: 'RT', name: 'Thumb', restKey: '␣', restX: 510, restY: 246, kx: 450, ky: 240 },
+    { id: 'RI', name: 'Index', restKey: 'J', restX: 464, restY: 138, kx: 485, ky: 210 },
+    { id: 'RM', name: 'Middle', restKey: 'K', restX: 520, restY: 138, kx: 525, ky: 205 },
+    { id: 'RR', name: 'Ring', restKey: 'L', restX: 576, restY: 138, kx: 565, ky: 210 },
+    { id: 'RP', name: 'Pinky', restKey: ';', restX: 632, restY: 138, kx: 605, ky: 215 },
   ];
 
-  // Opacity conversion
-  const opacityFloat = handOpacity === '0' ? 0 : handOpacity === '20' ? 0.30 : handOpacity === '50' ? 0.60 : 0.90;
-
-  // Active accent color: high-visibility electric cyan/blue
+  // Active accent color: high-visibility neon cyan
   const ACCENT_COLOR = '#06b6d4'; // Cyan 500
+  const SHIFT_COLOR = '#fbbf24'; // Amber 400
+
+  // Opacity calculation
+  const currentOpacity = handMode === 'hidden' ? 0 : handOpacity / 100;
 
   return (
-    <div className="flex flex-col items-center w-full max-w-5xl mx-auto space-y-3">
-      {/* TOOLBAR CONTROLS */}
-      <div className="w-full flex flex-wrap items-center justify-between gap-3 px-3 py-2 bg-slate-900/90 border border-slate-800 rounded-2xl backdrop-blur-md">
-        {/* Left: Layout & Mode Selector */}
+    <div className="flex flex-col items-center w-full max-w-5xl mx-auto space-y-2.5">
+      {/* TOOLBAR CONTROLS: BIS STANDARD BADGE, HANDS TOGGLE, OPACITY SLIDER, AUDIO */}
+      <div className="w-full flex flex-wrap items-center justify-between gap-2.5 px-3.5 py-2 bg-slate-900/90 border border-slate-800 rounded-2xl backdrop-blur-md text-xs">
+        {/* Left: BIS IS 16350 InScript Standard Indicator */}
         <div className="flex items-center gap-2">
-          {language === 'hindi' && (
-            <div className="flex items-center gap-1 bg-slate-950 border border-slate-800 rounded-xl p-0.5 text-xs font-semibold">
+          {language === 'hindi' ? (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-950 border border-slate-800 text-slate-300">
+              <ShieldCheck size={14} className="text-emerald-400" />
+              <span className="font-bold text-white text-[11px] font-hindi">
+                BIS IS 16350 मानक (InScript Mangal)
+              </span>
+              <span className="text-[10px] text-slate-500 hidden sm:inline">• शासकीय मानक</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-950 border border-slate-800 text-slate-300">
+              <span className="w-2 h-2 rounded-full bg-indigo-500" />
+              <span className="font-bold text-white text-[11px]">Standard QWERTY Layout</span>
+            </div>
+          )}
+        </div>
+
+        {/* Right: Hands Mode (Visible | Outline | Hidden), Opacity Slider, Audio Switch */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Hands Quick Toggle: Visible | Outline | Hidden */}
+          <div className="flex items-center gap-1 bg-slate-950 border border-slate-800 rounded-xl p-0.5 text-[11px]">
+            <span className="text-slate-400 px-1.5 hidden md:inline flex items-center gap-1 font-semibold">
+              <Eye size={12} />
+              Hands:
+            </span>
+            {[
+              { id: 'visible', label: 'Visible' },
+              { id: 'outline', label: 'Outline' },
+              { id: 'hidden', label: 'Hidden' },
+            ].map((m) => (
               <button
+                key={m.id}
                 type="button"
-                onClick={() => handleHindiLayoutToggle('inscript')}
-                className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
-                  hindiLayout === 'inscript'
-                    ? 'bg-indigo-600 text-white shadow-sm'
+                onClick={() => handleModeChange(m.id)}
+                className={`px-2.5 py-1 rounded-lg transition font-medium cursor-pointer ${
+                  handMode === m.id
+                    ? 'bg-indigo-600 text-white font-bold shadow-sm'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
+                title={`Hand Mode: ${m.label}`}
               >
-                इनस्क्रिप्ट (InScript)
+                {m.label}
               </button>
-              <button
-                type="button"
-                onClick={() => handleHindiLayoutToggle('remington')}
-                className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
-                  hindiLayout === 'remington'
-                    ? 'bg-indigo-600 text-white shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                रेमिंगटन गेल (Remington Gail)
-              </button>
+            ))}
+          </div>
+
+          {/* Opacity Slider (When not hidden) */}
+          {handMode !== 'hidden' && (
+            <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1 text-[11px]">
+              <Sliders size={12} className="text-slate-400" />
+              <input
+                type="range"
+                min="20"
+                max="100"
+                step="5"
+                value={handOpacity}
+                onChange={(e) => handleOpacityChange(e.target.value)}
+                className="w-16 sm:w-20 accent-indigo-500 cursor-pointer h-1.5 bg-slate-800 rounded-lg"
+                title={`Hand Opacity: ${handOpacity}%`}
+              />
+              <span className="font-mono text-[10px] text-slate-300 w-7 text-right">
+                {handOpacity}%
+              </span>
             </div>
           )}
 
-          {/* Hand Guide Mode Toggle */}
-          <div className="flex items-center gap-1 bg-slate-950 border border-slate-800 rounded-xl p-0.5 text-[11px] font-medium">
-            <span className="text-slate-400 px-1 hidden sm:inline flex items-center gap-1">
-              <Layers size={12} />
-              Guide:
-            </span>
-            <button
-              type="button"
-              onClick={() => handleModeChange('overlay')}
-              className={`px-2 py-0.5 rounded-lg transition cursor-pointer ${
-                handDisplayMode === 'overlay'
-                  ? 'bg-indigo-600 text-white font-bold'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-              title="Minimalist vector line-art hands overlaid directly on keyboard"
-            >
-              कीबोर्ड पर (On Keys)
-            </button>
-            <button
-              type="button"
-              onClick={() => handleModeChange('console')}
-              className={`px-2 py-0.5 rounded-lg transition cursor-pointer ${
-                handDisplayMode === 'console'
-                  ? 'bg-indigo-600 text-white font-bold'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-              title="Separate hand console under keyboard"
-            >
-              नीचे (Console)
-            </button>
-            <button
-              type="button"
-              onClick={() => handleModeChange('both')}
-              className={`px-2 py-0.5 rounded-lg transition cursor-pointer hidden md:inline ${
-                handDisplayMode === 'both'
-                  ? 'bg-indigo-600 text-white font-bold'
-                  : 'text-slate-400 hover:text-slate-200'
-              }`}
-              title="Show both overlay and console"
-            >
-              दोनों (Both)
-            </button>
-          </div>
-        </div>
-
-        {/* Right: Sound, Opacity, and Active Finger HUD */}
-        <div className="flex items-center gap-2">
           {/* Cherry MX Audio Switch Selector */}
           <div className="flex items-center gap-1 bg-slate-950 border border-slate-800 rounded-xl px-2 py-1 text-[11px]">
             <Volume2 size={13} className={switchProfile === 'off' ? 'text-slate-500' : 'text-emerald-400'} />
-            <span className="text-slate-400 mr-1 hidden sm:inline">Switch:</span>
             {['blue', 'brown', 'red', 'off'].map((p) => (
               <button
                 key={p}
@@ -287,48 +270,28 @@ export default function IntegratedKeyboardHands({
             ))}
           </div>
 
-          {/* Hand Opacity Selector */}
-          <div className="flex items-center gap-1 bg-slate-950 border border-slate-800 rounded-xl px-2 py-1 text-[11px]">
-            <span className="text-slate-400 mr-1 hidden sm:inline">Hands:</span>
-            {['100', '50', '20', '0'].map((op) => (
-              <button
-                key={op}
-                type="button"
-                onClick={() => handleOpacityChange(op)}
-                className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition cursor-pointer ${
-                  handOpacity === op ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
-                }`}
-                title={op === '0' ? 'Hide Hands' : `${op}% Opacity`}
-              >
-                {op === '0' ? 'Hide' : `${op}%`}
-              </button>
-            ))}
-          </div>
-
-          {/* Active Finger Cue */}
+          {/* Active Finger Status Badge */}
           {activeFinger ? (
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-950 border border-slate-800 shadow-inner">
               <span
-                className="w-2.5 h-2.5 rounded-full animate-bounce shadow-md"
-                style={{ backgroundColor: ACCENT_COLOR }}
+                className="w-2.5 h-2.5 rounded-full animate-pulse shadow-md"
+                style={{ backgroundColor: activeFinger.color }}
               />
-              <span className="font-bold text-xs text-cyan-400">
+              <span className="font-bold text-xs text-cyan-300">
                 {language === 'hindi' ? activeFinger.hindiName : activeFinger.name}
               </span>
               {targetShift && (
-                <span className="ml-1 text-[9px] bg-amber-400 text-slate-950 px-1 py-0.2 rounded font-black uppercase animate-pulse">
+                <span className="ml-1 text-[9px] bg-amber-400 text-slate-950 px-1 py-0.5 rounded font-black uppercase">
                   + Shift
                 </span>
               )}
             </div>
-          ) : (
-            <span className="text-slate-500 italic text-xs">Ready</span>
-          )}
+          ) : null}
         </div>
       </div>
 
-      {/* KEYBOARD CHASSIS WITH INTEGRATED VECTOR LINE-ART HANDS OVERLAY */}
-      <div className="relative flex flex-col gap-1.5 w-full min-w-[720px] max-w-[940px] px-2 py-3 bg-slate-950/95 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden select-none">
+      {/* KEYBOARD CHASSIS WITH INTEGRATED DUAL KEYCAPS & SUPERIMPOSED HANDS */}
+      <div className="relative flex flex-col gap-1.5 w-full min-w-[720px] max-w-[940px] px-2.5 py-3 bg-slate-950/95 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden select-none">
         {KEYBOARD_ROWS.map((row, rowIdx) => (
           <div key={rowIdx} className="flex gap-1.5 justify-center">
             {row.map((k) => {
@@ -354,12 +317,8 @@ export default function IntegratedKeyboardHands({
               const engPrimary = k.key || '';
               const engShift = k.shiftKey || '';
 
-              let hindiPrimary = k.inscript || '';
-              let hindiShift = k.inscriptShift || '';
-              if (hindiLayout === 'remington') {
-                hindiPrimary = k.remington || '';
-                hindiShift = k.remingtonShift || '';
-              }
+              const hindiPrimary = k.inscript || '';
+              const hindiShift = k.inscriptShift || '';
 
               const fingerColor = finger ? finger.color : '#334155';
 
@@ -379,13 +338,13 @@ export default function IntegratedKeyboardHands({
                     borderColor: isTargetKey
                       ? ACCENT_COLOR
                       : isTargetShift
-                      ? '#fbbf24'
+                      ? SHIFT_COLOR
                       : isPhysicallyPressed
                       ? '#6366f1'
-                      : `${fingerColor}60`,
+                      : `${fingerColor}55`,
                   }}
                 >
-                  {/* Finger zone indicator */}
+                  {/* Finger color badge dot */}
                   {finger && !k.special && (
                     <span
                       className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full opacity-60"
@@ -393,6 +352,7 @@ export default function IntegratedKeyboardHands({
                     />
                   )}
 
+                  {/* Special keys: Space, Shift, Enter, Backspace */}
                   {k.special ? (
                     <div className="flex items-center justify-center h-full">
                       <span
@@ -404,39 +364,59 @@ export default function IntegratedKeyboardHands({
                       </span>
                     </div>
                   ) : (
-                    <>
-                      <div className="flex items-center justify-between text-[10px] sm:text-[11px] font-mono-custom font-semibold text-slate-400 leading-none">
-                        <span>{engShift}</span>
-                        <span className="text-slate-500 text-[9px] uppercase">{engPrimary}</span>
-                      </div>
+                    /* DUAL KEYCAP: PRIMARY DEVANAGARI + SUBTLE ENGLISH SUBSCRIPT */
+                    <div className="relative flex flex-col justify-between h-full w-full">
+                      {language === 'hindi' ? (
+                        <>
+                          {/* Top row: Shifted Devanagari character */}
+                          <div className="flex items-center justify-start text-[10px] sm:text-[11px] font-hindi leading-none">
+                            <span className={`${targetShift && isTargetKey ? 'text-amber-300 font-bold' : 'text-slate-400 opacity-75'}`}>
+                              {hindiShift}
+                            </span>
+                          </div>
 
-                      <div className="flex items-baseline justify-between mt-auto">
-                        {language === 'hindi' ? (
-                          <>
+                          {/* Center: Prominent Primary Devanagari glyph */}
+                          <div className="flex items-center justify-center -mt-1 sm:-mt-1.5">
                             <span
-                              className={`text-base sm:text-lg font-bold font-hindi leading-none ${
-                                isTargetKey ? 'text-cyan-200' : 'text-amber-300'
+                              className={`text-base sm:text-xl font-bold font-hindi leading-none transition-all ${
+                                isTargetKey ? 'text-cyan-200 scale-110 drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]' : 'text-amber-300'
                               }`}
                             >
-                              {targetShift ? hindiShift || hindiPrimary : hindiPrimary}
+                              {targetShift ? (hindiShift || hindiPrimary) : hindiPrimary}
                             </span>
-                            {hindiShift && (
-                              <span className="text-[10px] font-hindi text-slate-400 opacity-80">
-                                {hindiShift}
-                              </span>
-                            )}
-                          </>
-                        ) : (
-                          <span
-                            className={`text-sm sm:text-base font-bold font-mono-custom leading-none ${
-                              isTargetKey ? 'text-cyan-200' : 'text-slate-100'
-                            }`}
-                          >
-                            {targetShift ? engShift : engPrimary}
-                          </span>
-                        )}
-                      </div>
-                    </>
+                          </div>
+
+                          {/* Bottom-right: Subtle Standard English QWERTY subscript */}
+                          <div className="flex items-center justify-end text-[9px] sm:text-[10px] font-mono-custom font-semibold text-slate-400 leading-none">
+                            <span>{engPrimary.toUpperCase()}</span>
+                          </div>
+                        </>
+                      ) : (
+                        /* Standard English QWERTY keycap */
+                        <>
+                          <div className="flex items-center justify-between text-[10px] sm:text-[11px] font-mono-custom font-semibold text-slate-400 leading-none">
+                            <span>{engShift !== engPrimary ? engShift : ''}</span>
+                          </div>
+
+                          <div className="flex items-center justify-center -mt-1">
+                            <span
+                              className={`text-sm sm:text-base font-bold font-mono-custom leading-none ${
+                                isTargetKey ? 'text-cyan-200 scale-110' : 'text-slate-100'
+                              }`}
+                            >
+                              {targetShift ? engShift : engPrimary.toUpperCase()}
+                            </span>
+                          </div>
+
+                          <div className="h-2" />
+                        </>
+                      )}
+
+                      {/* Tactile Home Row Bumps (F & J) */}
+                      {k.homeBump && (
+                        <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3 h-0.5 bg-slate-500 rounded-full opacity-70" />
+                      )}
+                    </div>
                   )}
                 </div>
               );
@@ -445,38 +425,38 @@ export default function IntegratedKeyboardHands({
         ))}
 
         {/* ====================================================================== */}
-        {/* DYNAMIC MINIMALIST VECTOR LINE-ART HANDS OVERLAY                       */}
+        {/* HIGH-CONTRAST SUPERIMPOSED HAND SILHOUETTE OVERLAY                     */}
         {/* ====================================================================== */}
-        {(handDisplayMode === 'overlay' || handDisplayMode === 'both') && handOpacity !== '0' && (
+        {handMode !== 'hidden' && (
           <svg
             viewBox="0 0 940 280"
             preserveAspectRatio="none"
             className="absolute inset-0 w-full h-full pointer-events-none z-30 transition-opacity duration-200"
-            style={{ opacity: opacityFloat }}
+            style={{ opacity: currentOpacity }}
           >
-            {/* MINIMALIST LEFT PALM & WRIST FRAME CONTOUR */}
+            {/* LEFT PALM & WRIST FRAME SILHOUETTE */}
             <path
               d="M 120 230 C 130 268, 175 276, 230 276 C 285 276, 335 264, 345 230 C 310 215, 150 215, 120 230 Z"
-              fill="rgba(15, 23, 42, 0.35)"
-              stroke="rgba(148, 163, 184, 0.40)"
-              strokeWidth="1.6"
-              strokeDasharray="4 2"
+              fill={handMode === 'visible' ? 'rgba(15, 23, 42, 0.70)' : 'none'}
+              stroke={handMode === 'visible' ? 'rgba(226, 232, 240, 0.60)' : 'rgba(56, 189, 248, 0.75)'}
+              strokeWidth="2"
+              strokeDasharray={handMode === 'outline' ? '4 2' : 'none'}
             />
 
-            {/* MINIMALIST RIGHT PALM & WRIST FRAME CONTOUR */}
+            {/* RIGHT PALM & WRIST FRAME SILHOUETTE */}
             <path
               d="M 450 230 C 460 264, 510 276, 565 276 C 620 276, 665 268, 675 230 C 640 215, 480 215, 450 230 Z"
-              fill="rgba(15, 23, 42, 0.35)"
-              stroke="rgba(148, 163, 184, 0.40)"
-              strokeWidth="1.6"
-              strokeDasharray="4 2"
+              fill={handMode === 'visible' ? 'rgba(15, 23, 42, 0.70)' : 'none'}
+              stroke={handMode === 'visible' ? 'rgba(226, 232, 240, 0.60)' : 'rgba(56, 189, 248, 0.75)'}
+              strokeWidth="2"
+              strokeDasharray={handMode === 'outline' ? '4 2' : 'none'}
             />
 
             {/* LEFT HAND 5 FINGERS (Pinky, Ring, Middle, Index, Thumb) */}
             {leftFingersOverlay.map((f) => {
               const isDirectTarget = activeFingerId === f.id && targetKeyCoord;
               const isShiftTarget = needLeftShift && f.id === 'LP';
-              const isSpaceTarget = isSpaceKey && f.id === 'LT'; // Thumb Space tap
+              const isSpaceTarget = isSpaceKey && f.id === 'LT';
               const isActive = isDirectTarget || isShiftTarget || isSpaceTarget;
 
               let curX = f.restX;
@@ -486,33 +466,49 @@ export default function IntegratedKeyboardHands({
                 curX = targetKeyCoord.x;
                 curY = targetKeyCoord.y;
               } else if (isShiftTarget) {
-                curX = 65; // Left Shift
+                curX = 65; // Left Shift keycap coordinate
                 curY = 192;
               } else if (isSpaceTarget) {
                 curX = f.restX;
-                curY = f.restY + 8; // Animate thumb pressing down toward Spacebar
+                curY = f.restY + 6;
               }
+
+              const strokeCol = isShiftTarget
+                ? SHIFT_COLOR
+                : isActive
+                ? ACCENT_COLOR
+                : handMode === 'visible'
+                ? 'rgba(226, 232, 240, 0.65)'
+                : 'rgba(148, 163, 184, 0.75)';
+
+              const fillCol = isShiftTarget
+                ? 'rgba(251, 191, 36, 0.35)'
+                : isActive
+                ? 'rgba(6, 182, 212, 0.40)'
+                : handMode === 'visible'
+                ? 'rgba(30, 41, 59, 0.70)'
+                : 'none';
 
               return (
                 <g key={f.id} className="transition-all duration-150">
-                  {/* Minimalist Vector Line-Art Finger Stem */}
+                  {/* Finger Contour Stem */}
                   <path
                     d={`M ${f.kx - 7} ${f.ky} Q ${(f.kx + curX) / 2 - 3} ${(f.ky + curY) / 2} ${curX - 6} ${
                       curY + 5
                     } A 7 7 0 0 1 ${curX + 6} ${curY + 5} Q ${(f.kx + curX) / 2 + 3} ${(f.ky + curY) / 2} ${
                       f.kx + 7
                     } ${f.ky} Z`}
-                    fill={isActive ? 'rgba(6, 182, 212, 0.35)' : 'rgba(15, 23, 42, 0.35)'}
-                    stroke={isActive ? ACCENT_COLOR : 'rgba(148, 163, 184, 0.45)'}
-                    strokeWidth={isActive ? '2.5' : '1.4'}
+                    fill={fillCol}
+                    stroke={strokeCol}
+                    strokeWidth={isActive ? '3' : '1.8'}
                   />
 
                   {/* Knuckle Joint Marker */}
                   <circle
                     cx={f.kx}
                     cy={f.ky}
-                    r="3"
-                    fill={isActive ? ACCENT_COLOR : 'rgba(148, 163, 184, 0.5)'}
+                    r="3.5"
+                    fill={isActive ? strokeCol : 'rgba(226, 232, 240, 0.7)'}
                   />
 
                   {/* Pulsing Ripple Halo when Active */}
@@ -522,7 +518,7 @@ export default function IntegratedKeyboardHands({
                       cy={curY}
                       r="22"
                       fill="none"
-                      stroke={ACCENT_COLOR}
+                      stroke={strokeCol}
                       strokeWidth="2.5"
                       className="animate-ping"
                     />
@@ -533,21 +529,21 @@ export default function IntegratedKeyboardHands({
                     cx={curX}
                     cy={curY}
                     r={isActive ? 12 : 8.5}
-                    fill={isActive ? ACCENT_COLOR : 'rgba(15, 23, 42, 0.85)'}
-                    stroke={isActive ? '#ffffff' : 'rgba(148, 163, 184, 0.6)'}
-                    strokeWidth={isActive ? 2.5 : 1.2}
+                    fill={isActive ? strokeCol : 'rgba(15, 23, 42, 0.90)'}
+                    stroke={isActive ? '#ffffff' : 'rgba(226, 232, 240, 0.85)'}
+                    strokeWidth={isActive ? 3 : 1.5}
                   />
 
-                  {/* Fingertip Label */}
+                  {/* Fingertip Rest/Home Marker */}
                   <text
                     x={curX}
                     y={curY + 3.5}
                     textAnchor="middle"
                     fontSize={isActive ? '9.5' : '8'}
                     fontWeight="bold"
-                    fill={isActive ? '#0f172a' : '#94a3b8'}
+                    fill={isActive ? '#0f172a' : '#e2e8f0'}
                   >
-                    {f.restKey}
+                    {isShiftTarget ? '⇧' : f.restKey}
                   </text>
                 </g>
               );
@@ -557,7 +553,7 @@ export default function IntegratedKeyboardHands({
             {rightFingersOverlay.map((f) => {
               const isDirectTarget = activeFingerId === f.id && targetKeyCoord;
               const isShiftTarget = needRightShift && f.id === 'RP';
-              const isSpaceTarget = isSpaceKey && f.id === 'RT'; // Right Thumb Space tap
+              const isSpaceTarget = isSpaceKey && f.id === 'RT';
               const isActive = isDirectTarget || isShiftTarget || isSpaceTarget;
 
               let curX = f.restX;
@@ -567,33 +563,49 @@ export default function IntegratedKeyboardHands({
                 curX = targetKeyCoord.x;
                 curY = targetKeyCoord.y;
               } else if (isShiftTarget) {
-                curX = 790; // Right Shift
+                curX = 790; // Right Shift keycap coordinate
                 curY = 192;
               } else if (isSpaceTarget) {
                 curX = f.restX;
-                curY = f.restY + 8; // Animate thumb pressing down toward Spacebar
+                curY = f.restY + 6;
               }
+
+              const strokeCol = isShiftTarget
+                ? SHIFT_COLOR
+                : isActive
+                ? ACCENT_COLOR
+                : handMode === 'visible'
+                ? 'rgba(226, 232, 240, 0.65)'
+                : 'rgba(148, 163, 184, 0.75)';
+
+              const fillCol = isShiftTarget
+                ? 'rgba(251, 191, 36, 0.35)'
+                : isActive
+                ? 'rgba(6, 182, 212, 0.40)'
+                : handMode === 'visible'
+                ? 'rgba(30, 41, 59, 0.70)'
+                : 'none';
 
               return (
                 <g key={f.id} className="transition-all duration-150">
-                  {/* Minimalist Vector Line-Art Finger Stem */}
+                  {/* Finger Contour Stem */}
                   <path
                     d={`M ${f.kx - 7} ${f.ky} Q ${(f.kx + curX) / 2 - 3} ${(f.ky + curY) / 2} ${curX - 6} ${
                       curY + 5
                     } A 7 7 0 0 1 ${curX + 6} ${curY + 5} Q ${(f.kx + curX) / 2 + 3} ${(f.ky + curY) / 2} ${
                       f.kx + 7
                     } ${f.ky} Z`}
-                    fill={isActive ? 'rgba(6, 182, 212, 0.35)' : 'rgba(15, 23, 42, 0.35)'}
-                    stroke={isActive ? ACCENT_COLOR : 'rgba(148, 163, 184, 0.45)'}
-                    strokeWidth={isActive ? '2.5' : '1.4'}
+                    fill={fillCol}
+                    stroke={strokeCol}
+                    strokeWidth={isActive ? '3' : '1.8'}
                   />
 
                   {/* Knuckle Joint Marker */}
                   <circle
                     cx={f.kx}
                     cy={f.ky}
-                    r="3"
-                    fill={isActive ? ACCENT_COLOR : 'rgba(148, 163, 184, 0.5)'}
+                    r="3.5"
+                    fill={isActive ? strokeCol : 'rgba(226, 232, 240, 0.7)'}
                   />
 
                   {/* Pulsing Ripple Halo when Active */}
@@ -603,7 +615,7 @@ export default function IntegratedKeyboardHands({
                       cy={curY}
                       r="22"
                       fill="none"
-                      stroke={ACCENT_COLOR}
+                      stroke={strokeCol}
                       strokeWidth="2.5"
                       className="animate-ping"
                     />
@@ -614,21 +626,21 @@ export default function IntegratedKeyboardHands({
                     cx={curX}
                     cy={curY}
                     r={isActive ? 12 : 8.5}
-                    fill={isActive ? ACCENT_COLOR : 'rgba(15, 23, 42, 0.85)'}
-                    stroke={isActive ? '#ffffff' : 'rgba(148, 163, 184, 0.6)'}
-                    strokeWidth={isActive ? 2.5 : 1.2}
+                    fill={isActive ? strokeCol : 'rgba(15, 23, 42, 0.90)'}
+                    stroke={isActive ? '#ffffff' : 'rgba(226, 232, 240, 0.85)'}
+                    strokeWidth={isActive ? 3 : 1.5}
                   />
 
-                  {/* Fingertip Label */}
+                  {/* Fingertip Rest/Home Marker */}
                   <text
                     x={curX}
                     y={curY + 3.5}
                     textAnchor="middle"
                     fontSize={isActive ? '9.5' : '8'}
                     fontWeight="bold"
-                    fill={isActive ? '#0f172a' : '#94a3b8'}
+                    fill={isActive ? '#0f172a' : '#e2e8f0'}
                   >
-                    {f.restKey}
+                    {isShiftTarget ? '⇧' : f.restKey}
                   </text>
                 </g>
               );
@@ -636,225 +648,6 @@ export default function IntegratedKeyboardHands({
           </svg>
         )}
       </div>
-
-      {/* ====================================================================== */}
-      {/* SEPARATE HAND CONSOLE (UNDER KEYBOARD)                                  */}
-      {/* ====================================================================== */}
-      {(handDisplayMode === 'console' || handDisplayMode === 'both') && handOpacity !== '0' && (
-        <div
-          className="w-full max-w-[940px] pt-3 flex flex-col sm:flex-row items-center justify-around gap-6 bg-slate-950/70 rounded-2xl border border-slate-800/80 p-3 transition-opacity duration-200"
-          style={{ opacity: opacityFloat }}
-        >
-          {/* Left Hand Console */}
-          <div className="flex flex-col items-center">
-            <div className="flex items-center gap-2 mb-1 text-xs font-bold text-slate-300">
-              <span>बायाँ हाथ (Left Hand)</span>
-              <span className="text-[10px] bg-slate-800 text-cyan-300 px-2 py-0.5 rounded font-mono">
-                A S D F
-              </span>
-            </div>
-
-            <svg width="220" height="150" viewBox="0 0 160 150" className="overflow-visible drop-shadow-2xl">
-              <path
-                d="M 22 92 C 16 128, 40 148, 75 148 C 110 148, 128 128, 124 92 C 114 82, 28 82, 22 92 Z"
-                fill="#1e293b"
-                stroke="#334155"
-                strokeWidth="2.5"
-              />
-
-              {[
-                { id: 'LP', name: 'Pinky', restKey: 'A', x: 28, y: 56, w: 14, h: 54 },
-                { id: 'LR', name: 'Ring', restKey: 'S', x: 49, y: 36, w: 15, h: 74 },
-                { id: 'LM', name: 'Middle', restKey: 'D', x: 71, y: 22, w: 15, h: 88 },
-                { id: 'LI', name: 'Index', restKey: 'F', x: 93, y: 34, w: 15, h: 76 },
-                { id: 'LT', name: 'Thumb', restKey: 'Space', x: 116, y: 84, w: 17, h: 48, rotate: 26 },
-              ].map((f) => {
-                const isCurrent = activeFingerId === f.id;
-                const isShift = needLeftShift && f.id === 'LP';
-                const isSpace = isSpaceKey && f.id === 'LT';
-                const isActive = isCurrent || isShift || isSpace;
-
-                let dx = 0;
-                let dy = 0;
-                if (isCurrent && targetRowIdx >= 0) {
-                  if (targetRowIdx === 0) dy = -50;
-                  else if (targetRowIdx === 1) dy = -25;
-                  else if (targetRowIdx === 2) dy = -4;
-                  else if (targetRowIdx === 3) dy = 25;
-                  else if (targetRowIdx === 4) dy = 14;
-                } else if (isShift) {
-                  dx = -24;
-                  dy = 24;
-                } else if (isSpace) {
-                  dy = 8;
-                }
-
-                return (
-                  <g
-                    key={f.id}
-                    style={{
-                      transform: `translate(${dx}px, ${dy}px) ${f.rotate ? `rotate(${f.rotate}deg)` : ''}`,
-                      transformOrigin: `${f.x + f.w / 2}px ${f.y + f.h}px`,
-                      transition: 'transform 0.16s cubic-bezier(0.2, 0.9, 0.3, 1.2)',
-                    }}
-                  >
-                    {isActive && (
-                      <circle
-                        cx={f.x + f.w / 2}
-                        cy={f.y + 8}
-                        r="14"
-                        fill="none"
-                        stroke={ACCENT_COLOR}
-                        strokeWidth="2"
-                        className="animate-ping"
-                      />
-                    )}
-                    <rect
-                      x={f.x}
-                      y={f.y}
-                      width={f.w}
-                      height={f.h}
-                      rx={f.w / 2}
-                      fill={isActive ? ACCENT_COLOR : '#1e293b'}
-                      stroke={isActive ? '#ffffff' : '#475569'}
-                      strokeWidth={isActive ? '3' : '1.5'}
-                      className="transition-colors duration-150"
-                    />
-                    <circle
-                      cx={f.x + f.w / 2}
-                      cy={f.y + 11}
-                      r="5.5"
-                      fill={isActive ? '#ffffff' : '#0f172a'}
-                      stroke={isActive ? ACCENT_COLOR : '#64748b'}
-                      strokeWidth="1.2"
-                    />
-                    <text
-                      x={f.x + f.w / 2}
-                      y={f.y + 14}
-                      textAnchor="middle"
-                      fontSize="7"
-                      fontWeight="bold"
-                      fill={isActive ? '#0f172a' : '#94a3b8'}
-                    >
-                      {f.restKey === 'Space' ? '␣' : f.restKey}
-                    </text>
-                  </g>
-                );
-              })}
-            </svg>
-          </div>
-
-          {/* Center Touch-Typing Pedagogy Advice */}
-          <div className="hidden lg:flex flex-col items-center justify-center max-w-[210px] text-center px-3 py-2 bg-slate-900/80 rounded-xl border border-slate-800 text-[11px] text-slate-400 space-y-1">
-            <span className="font-bold text-slate-200">Home Row Rule</span>
-            <p className="leading-snug">
-              उँगलियों को हमेशा <strong>ASDF</strong> और <strong>JKL;</strong> पर रखें। स्पेसबार अंगूठे से दबाएँ।
-            </p>
-            <div className="w-full border-t border-slate-800 pt-1 text-[10px] text-cyan-400 font-semibold">
-              {language === 'hindi' ? 'बायाँ: स्वर • दायाँ: व्यंजन' : 'F & J have tactile home bumps'}
-            </div>
-          </div>
-
-          {/* Right Hand Console */}
-          <div className="flex flex-col items-center">
-            <div className="flex items-center gap-2 mb-1 text-xs font-bold text-slate-300">
-              <span className="text-[10px] bg-slate-800 text-cyan-300 px-2 py-0.5 rounded font-mono">
-                J K L ;
-              </span>
-              <span>दायाँ हाथ (Right Hand)</span>
-            </div>
-
-            <svg width="220" height="150" viewBox="0 0 160 150" className="overflow-visible drop-shadow-2xl">
-              <path
-                d="M 26 92 C 20 128, 42 148, 77 148 C 112 148, 130 128, 126 92 C 116 82, 32 82, 26 92 Z"
-                fill="#1e293b"
-                stroke="#334155"
-                strokeWidth="2.5"
-              />
-
-              {[
-                { id: 'RT', name: 'Thumb', restKey: 'Space', x: 26, y: 84, w: 17, h: 48, rotate: -26 },
-                { id: 'RI', name: 'Index', restKey: 'J', x: 50, y: 34, w: 15, h: 76 },
-                { id: 'RM', name: 'Middle', restKey: 'K', x: 72, y: 22, w: 15, h: 88 },
-                { id: 'RR', name: 'Ring', restKey: 'L', x: 94, y: 36, w: 15, h: 74 },
-                { id: 'RP', name: 'Pinky', restKey: ';', x: 116, y: 56, w: 14, h: 54 },
-              ].map((f) => {
-                const isCurrent = activeFingerId === f.id;
-                const isShift = needRightShift && f.id === 'RP';
-                const isSpace = isSpaceKey && f.id === 'RT';
-                const isActive = isCurrent || isShift || isSpace;
-
-                let dx = 0;
-                let dy = 0;
-                if (isCurrent && targetRowIdx >= 0) {
-                  if (targetRowIdx === 0) dy = -50;
-                  else if (targetRowIdx === 1) dy = -25;
-                  else if (targetRowIdx === 2) dy = -4;
-                  else if (targetRowIdx === 3) dy = 25;
-                  else if (targetRowIdx === 4) dy = 14;
-                } else if (isShift) {
-                  dx = 24;
-                  dy = 24;
-                } else if (isSpace) {
-                  dy = 8;
-                }
-
-                return (
-                  <g
-                    key={f.id}
-                    style={{
-                      transform: `translate(${dx}px, ${dy}px) ${f.rotate ? `rotate(${f.rotate}deg)` : ''}`,
-                      transformOrigin: `${f.x + f.w / 2}px ${f.y + f.h}px`,
-                      transition: 'transform 0.16s cubic-bezier(0.2, 0.9, 0.3, 1.2)',
-                    }}
-                  >
-                    {isActive && (
-                      <circle
-                        cx={f.x + f.w / 2}
-                        cy={f.y + 8}
-                        r="14"
-                        fill="none"
-                        stroke={ACCENT_COLOR}
-                        strokeWidth="2"
-                        className="animate-ping"
-                      />
-                    )}
-                    <rect
-                      x={f.x}
-                      y={f.y}
-                      width={f.w}
-                      height={f.h}
-                      rx={f.w / 2}
-                      fill={isActive ? ACCENT_COLOR : '#1e293b'}
-                      stroke={isActive ? '#ffffff' : '#475569'}
-                      strokeWidth={isActive ? '3' : '1.5'}
-                      className="transition-colors duration-150"
-                    />
-                    <circle
-                      cx={f.x + f.w / 2}
-                      cy={f.y + 11}
-                      r="5.5"
-                      fill={isActive ? '#ffffff' : '#0f172a'}
-                      stroke={isActive ? ACCENT_COLOR : '#64748b'}
-                      strokeWidth="1.2"
-                    />
-                    <text
-                      x={f.x + f.w / 2}
-                      y={f.y + 14}
-                      textAnchor="middle"
-                      fontSize="7"
-                      fontWeight="bold"
-                      fill={isActive ? '#0f172a' : '#94a3b8'}
-                    >
-                      {f.restKey === 'Space' ? '␣' : f.restKey}
-                    </text>
-                  </g>
-                );
-              })}
-            </svg>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

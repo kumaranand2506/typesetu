@@ -3,7 +3,6 @@ import { HINDI_PRACTICE, ENGLISH_PRACTICE } from '../data/practiceData';
 import { useTypingEngine } from '../hooks/useTypingEngine';
 import IntegratedKeyboardHands from './IntegratedKeyboardHands';
 import RollingTextDisplay from './RollingTextDisplay';
-import Speedometer from './Speedometer';
 import AdBanner from './AdBanner';
 import { checkNewBadges } from '../data/badgeSystem';
 import { BookOpen, RotateCcw, Sparkles, Zap, Target, Clock, AlertCircle, Eye, EyeOff, FileText, CheckCircle, Keyboard, Bookmark, Type, Layers } from 'lucide-react';
@@ -246,41 +245,6 @@ export default function PracticeView({
         </div>
       </div>
 
-      {/* Live Minimal Stats Ribbon */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-500 dark:text-slate-400 font-medium">
-        <div className="flex items-center gap-6">
-          <span className="flex items-center gap-1.5">
-            <Zap size={14} className="text-emerald-500 dark:text-emerald-400" />
-            Speed: <strong className="text-slate-800 dark:text-white text-sm">{currentWpm}</strong> WPM
-          </span>
-          <span className="flex items-center gap-1.5">
-            <Target size={14} className="text-blue-500 dark:text-blue-400" />
-            Accuracy: <strong className="text-slate-800 dark:text-white text-sm">{currentAccuracy}%</strong>
-          </span>
-          <span className="flex items-center gap-1.5">
-            <AlertCircle size={14} className="text-rose-500 dark:text-rose-400" />
-            Mistakes: <strong className="text-rose-600 dark:text-rose-400 text-sm">{mistakes}</strong>
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <span>{progressPercent}% Complete</span>
-          <div className="w-20 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
-            <div className="h-full bg-emerald-500 dark:bg-emerald-400 transition-all duration-150" style={{ width: `${progressPercent}%` }} />
-          </div>
-        </div>
-      </div>
-
-      {/* Live Speedometer Gauge */}
-      <Speedometer
-        wpm={currentWpm}
-        grossWpm={currentGrossWpm}
-        cpm={cpm}
-        accuracy={currentAccuracy}
-        mistakes={mistakes}
-        maxWpm={100}
-      />
-
       {/* TYPING CANVAS: 2-LINE ROLLING CAROUSEL OR FULL DOCUMENT */}
       {textLayoutMode === 'rolling' ? (
         <RollingTextDisplay
@@ -295,7 +259,12 @@ export default function PracticeView({
           onFocusTypingArea={focusInput}
           fontSize={fontSize}
           language={language}
-          upcomingSequence={upcomingSequence}
+          wpm={currentWpm}
+          grossWpm={currentGrossWpm}
+          accuracy={currentAccuracy}
+          progressPercent={progressPercent}
+          mistakes={mistakes}
+          onRestart={handleReset}
         />
       ) : (
         /* Classic Full Passage Viewport */
