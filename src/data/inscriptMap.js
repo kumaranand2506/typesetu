@@ -209,13 +209,43 @@ export const KEYBOARD_ROWS = [
   ],
 ];
 
-// Reverse lookups
-const REVERSE_INSCRIPT_MAP = {};
+// Reverse lookups with Unicode NFC normalization
+export const REVERSE_INSCRIPT_MAP = {};
 Object.entries(INSCRIPT_NORMAL).forEach(([k, v]) => {
-  REVERSE_INSCRIPT_MAP[v] = { key: k, shift: false, finger: FINGER_MAP[k] };
+  REVERSE_INSCRIPT_MAP[v.normalize('NFC')] = { key: k, shift: false, finger: FINGER_MAP[k] };
 });
 Object.entries(INSCRIPT_SHIFT).forEach(([k, v]) => {
-  REVERSE_INSCRIPT_MAP[v] = { key: k.toLowerCase(), shift: true, finger: FINGER_MAP[k] };
+  REVERSE_INSCRIPT_MAP[v.normalize('NFC')] = { key: k.toLowerCase(), shift: true, finger: FINGER_MAP[k] };
+});
+
+// Remington (Krutidev) Normal and Shift Key Mappings
+export const REMINGTON_NORMAL = {};
+export const REMINGTON_SHIFT = {};
+export const REVERSE_REMINGTON_MAP = {};
+
+KEYBOARD_ROWS.forEach((row) => {
+  row.forEach((k) => {
+    if (k.key && k.remington) {
+      REMINGTON_NORMAL[k.key] = k.remington;
+      REMINGTON_NORMAL[k.key.toLowerCase()] = k.remington;
+      REVERSE_REMINGTON_MAP[k.remington.normalize('NFC')] = {
+        key: k.key,
+        code: k.code,
+        shift: false,
+        finger: k.finger,
+      };
+    }
+    if (k.key && k.remingtonShift) {
+      REMINGTON_SHIFT[k.key] = k.remingtonShift;
+      REMINGTON_SHIFT[k.shiftKey || k.key.toUpperCase()] = k.remingtonShift;
+      REVERSE_REMINGTON_MAP[k.remingtonShift.normalize('NFC')] = {
+        key: k.key.toLowerCase(),
+        code: k.code,
+        shift: true,
+        finger: k.finger,
+      };
+    }
+  });
 });
 
 // Special multi-char or conjunct shortcuts in InScript
@@ -230,9 +260,25 @@ const SPECIAL_CONJUNCTS = {
   'ऋ': { key: '=', shift: true, finger: 'RP', label: 'Shift + =' },
 };
 
-export function findKeyForChar(char, language = 'english') {
+export function findKeyForChar(rawChar, language = 'english', layout = 'inscript') {
+  if (!rawChar) return { key: '', shift: false, finger: 'RI' };
+
+  let char = String(rawChar).normalize('NFC');
+
+  // Normalize quotes and typographical variations
+  if (char === '“' || char === '”') char = '"';
+  if (char === '‘' || char === '’') char = "'";
+  if (char === '—' || char === '–') char = '-';
+  if (char === '…') char = '.';
+
+  if (char === ' ') return { key: ' ', shift: false, finger: 'SPACE', code: 'Space', label: 'Spacebar' };
+
   if (language === 'hindi') {
-    if (char === ' ') return { key: ' ', shift: false, finger: 'SPACE', code: 'Space', label: 'Spacebar' };
+    if (layout === 'remington') {
+      const foundRem = REVERSE_REMINGTON_MAP[char];
+      if (foundRem) return foundRem;
+    }
+
     if (SPECIAL_CONJUNCTS[char]) {
       return SPECIAL_CONJUNCTS[char];
     }
@@ -243,9 +289,8 @@ export function findKeyForChar(char, language = 'english') {
     return { key: char.toLowerCase(), shift: char !== char.toLowerCase(), finger: FINGER_MAP[char] || 'RI' };
   } else {
     // English
-    if (char === ' ') return { key: ' ', shift: false, finger: 'SPACE', code: 'Space', label: 'Spacebar' };
     const isShift = (char >= 'A' && char <= 'Z') || '~!@#$%^&*()_+{}|:"<>?'.includes(char);
-    const finger = FINGER_MAP[char] || 'RI';
+    const finger = FINGER_MAP[char] || FINGER_MAP[char.toLowerCase()] || 'RI';
     return { key: char.toLowerCase(), shift: isShift, finger };
   }
 }

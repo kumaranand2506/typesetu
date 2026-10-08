@@ -21,6 +21,7 @@ export default function PracticeView({
   const [showCustomModal, setShowCustomModal] = useState(false);
   const [customTitle, setCustomTitle] = useState('');
   const [inputMode, setInputMode] = useState('mapper'); // 'mapper' | 'native'
+  const [hindiLayout, setHindiLayout] = useState('inscript'); // 'inscript' | 'remington'
   const [showKeyboardGuide, setShowKeyboardGuide] = useState(true);
   const [activeCategory, setActiveCategory] = useState('All');
   const [fontSize, setFontSize] = useState('normal'); // 'normal' | 'large'
@@ -88,6 +89,7 @@ export default function PracticeView({
     targetText: currentPassage?.text || '',
     language,
     inputMode,
+    hindiLayout,
     onComplete: handlePracticeComplete,
   });
 
@@ -261,7 +263,7 @@ export default function PracticeView({
       {/* TypeLit Literature Book Container */}
       <div className="relative bg-white dark:bg-slate-950/95 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl min-h-[220px] max-h-[380px] overflow-y-auto leading-relaxed select-none">
         <div className={`${fontSize === 'large' ? 'text-2xl sm:text-3xl lg:text-4xl leading-[2.4]' : 'text-xl sm:text-2xl lg:text-3xl leading-[2.2]'} font-hindi tracking-wide font-normal`}>
-          {currentPassage?.text.split('').map((char, idx) => {
+          {Array.from((currentPassage?.text || '').normalize('NFC')).map((char, idx) => {
             let color = 'text-slate-400 dark:text-slate-500';
             const isCurrent = idx === typedIndex;
 
@@ -316,6 +318,8 @@ export default function PracticeView({
           targetShift={targetKeyInfo?.shift || false}
           language={language}
           pressedKey={lastPressedPhysicalKey}
+          initialHindiLayout={hindiLayout}
+          onLayoutChange={setHindiLayout}
         />
       )}
 

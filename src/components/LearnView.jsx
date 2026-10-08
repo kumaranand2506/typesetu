@@ -18,6 +18,7 @@ export default function LearnView({
 
   const [activeLessonId, setActiveLessonId] = useState(null);
   const [inputMode, setInputMode] = useState('mapper'); // 'mapper' | 'native'
+  const [hindiLayout, setHindiLayout] = useState('inscript'); // 'inscript' | 'remington'
   const [selectedStageId, setSelectedStageId] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -84,6 +85,7 @@ export default function LearnView({
     targetText: activeLesson ? activeLesson.text : '',
     language,
     inputMode,
+    hindiLayout,
     onComplete: handleLessonComplete,
   });
 
@@ -413,7 +415,7 @@ export default function LearnView({
       {/* Target Typing Viewport */}
       <div className="relative bg-slate-950/90 border-2 border-indigo-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl min-h-[140px] flex flex-col items-center justify-center text-center overflow-hidden">
         <div className="text-2xl sm:text-3xl lg:text-4xl leading-relaxed tracking-wider font-hindi font-medium select-none">
-          {activeLesson.text.split('').map((char, idx) => {
+          {Array.from((activeLesson?.text || '').normalize('NFC')).map((char, idx) => {
             let color = 'text-slate-500';
             const isCurrent = idx === typedIndex;
 
@@ -464,6 +466,8 @@ export default function LearnView({
         targetShift={targetKeyInfo?.shift || false}
         language={language}
         pressedKey={lastPressedPhysicalKey}
+        initialHindiLayout={hindiLayout}
+        onLayoutChange={setHindiLayout}
       />
 
       {/* Completion Modal */}

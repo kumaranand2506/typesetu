@@ -29,6 +29,7 @@ export default function BookPracticeView({
   const [fontSize, setFontSize] = useState('normal'); // 'normal' | 'large'
   const [fontFamily, setFontFamily] = useState('serif'); // 'serif' | 'sans'
   const [inputMode, setInputMode] = useState('mapper');
+  const [hindiLayout, setHindiLayout] = useState('inscript'); // 'inscript' | 'remington'
 
   const typingContainerRef = useRef(null);
 
@@ -120,6 +121,7 @@ export default function BookPracticeView({
     targetText: currentParagraphText,
     language: currentBook.language || language,
     inputMode,
+    hindiLayout,
     onComplete: handleParagraphComplete,
   });
 
@@ -401,7 +403,7 @@ export default function BookPracticeView({
       {/* TypeLit Fluid Book Reading Canvas */}
       <div className="relative bg-slate-950/95 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl min-h-[220px] max-h-[380px] overflow-y-auto leading-relaxed select-none">
         <div className={`${fontSize === 'large' ? 'text-2xl sm:text-3xl lg:text-4xl leading-[2.4]' : 'text-xl sm:text-2xl lg:text-3xl leading-[2.2]'} ${fontFamily === 'serif' ? 'font-serif' : 'font-sans'} font-hindi tracking-wide font-normal`}>
-          {currentParagraphText.split('').map((char, idx) => {
+          {Array.from((currentParagraphText || '').normalize('NFC')).map((char, idx) => {
             let color = 'text-slate-500';
             const isCurrent = idx === typedIndex;
 
@@ -456,6 +458,8 @@ export default function BookPracticeView({
           targetShift={targetKeyInfo?.shift || false}
           language={currentBook.language || language}
           pressedKey={lastPressedPhysicalKey}
+          initialHindiLayout={hindiLayout}
+          onLayoutChange={setHindiLayout}
         />
       )}
 
