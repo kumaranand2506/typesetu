@@ -3,10 +3,11 @@ import { BOOKS_CATALOG, getBooks, getBookById } from '../data/booksCatalog';
 import { chunkTextIntoParagraphs, saveBookProgress, getBookProgress, getLastReadBookId, getChapterParagraphs } from '../utils/bookStorage';
 import { useTypingEngine } from '../hooks/useTypingEngine';
 import IntegratedKeyboardHands from './IntegratedKeyboardHands';
+import RollingTextDisplay from './RollingTextDisplay';
 import Speedometer from './Speedometer';
 import AdBanner from './AdBanner';
 import { checkNewBadges } from '../data/badgeSystem';
-import { BookOpen, Search, ArrowLeft, ArrowRight, RotateCcw, Bookmark, CheckCircle, ChevronLeft, ChevronRight, Eye, EyeOff, Sparkles, Filter, Type } from 'lucide-react';
+import { BookOpen, Search, ArrowLeft, ArrowRight, RotateCcw, Bookmark, CheckCircle, ChevronLeft, ChevronRight, Eye, EyeOff, Sparkles, Filter, Type, Layers } from 'lucide-react';
 
 export default function BookPracticeView({
   language,
@@ -30,6 +31,7 @@ export default function BookPracticeView({
   const [fontFamily, setFontFamily] = useState('serif'); // 'serif' | 'sans'
   const [inputMode, setInputMode] = useState('mapper');
   const [hindiLayout, setHindiLayout] = useState('inscript'); // 'inscript' | 'remington'
+  const [textLayoutMode, setTextLayoutMode] = useState('rolling'); // 'rolling' | 'book'
 
   const typingContainerRef = useRef(null);
 
@@ -110,12 +112,19 @@ export default function BookPracticeView({
     mistakes,
     isCompleted,
     currentWpm,
+    currentGrossWpm,
     currentAccuracy,
+    cpm,
     targetChar,
     targetKeyInfo,
     upcomingSequence,
     lastPressedPhysicalKey,
     handleKeyDown,
+    hiddenInputRef,
+    focusInput,
+    errorMode,
+    setErrorMode,
+    strictError,
     progressPercent,
   } = useTypingEngine({
     targetText: currentParagraphText,
@@ -325,6 +334,17 @@ export default function BookPracticeView({
               {fontFamily === 'serif' ? 'Serif' : 'Sans'}
             </button>
 
+            {/* Toggle 2-Line Rolling vs Book Page */}
+            <button
+              type="button"
+              onClick={() => setTextLayoutMode(textLayoutMode === 'rolling' ? 'book' : 'rolling')}
+              className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition hover:border-slate-700"
+              title="Toggle between 2-Line Rolling and Book View"
+            >
+              <Layers size={14} className="text-violet-400" />
+              <span>{textLayoutMode === 'rolling' ? '2-Line Rolling' : 'Book Page'}</span>
+            </button>
+
             {/* Zen Mode Toggle */}
             <button
               onClick={() => setShowKeyboardGuide(!showKeyboardGuide)}
@@ -394,62 +414,81 @@ export default function BookPracticeView({
       {/* Live Speedometer & Metrics */}
       <Speedometer
         wpm={currentWpm}
-        cpm={Math.round(currentWpm * 5)}
+        grossWpm={currentGrossWpm}
+        cpm={cpm}
         accuracy={currentAccuracy}
         mistakes={mistakes}
         maxWpm={100}
       />
 
-      {/* TypeLit Fluid Book Reading Canvas */}
-      <div className="relative bg-slate-950/95 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl min-h-[220px] max-h-[380px] overflow-y-auto leading-relaxed select-none">
-        <div className={`${fontSize === 'large' ? 'text-2xl sm:text-3xl lg:text-4xl leading-[2.4]' : 'text-xl sm:text-2xl lg:text-3xl leading-[2.2]'} ${fontFamily === 'serif' ? 'font-serif' : 'font-sans'} font-hindi tracking-wide font-normal`}>
-          {Array.from((currentParagraphText || '').normalize('NFC')).map((char, idx) => {
-            let color = 'text-slate-500';
-            const isCurrent = idx === typedIndex;
+      {/* TYPING CANVAS: 2-LINE ROLLING CAROUSEL OR BOOK CANVAS */}
+      {textLayoutMode === 'rolling' ? (
+        <RollingTextDisplay
+          targetText={currentParagraphText}
+          typedIndex={typedIndex}
+          history={history}
+          strictError={strictError}
+          errorMode={errorMode}
+          onToggleErrorMode={setErrorMode}
+          hiddenInputRef={hiddenInputRef}
+          onKeyDown={handleKeyDown}
+          onFocusTypingArea={focusInput}
+          fontSize={fontSize}
+          language={currentBook.language || language}
+          upcomingSequence={upcomingSequence}
+        />
+      ) : (
+        /* TypeLit Fluid Book Reading Canvas */
+        <div className="relative bg-slate-950/95 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl min-h-[220px] max-h-[380px] overflow-y-auto leading-relaxed select-none">
+          <div className={`${fontSize === 'large' ? 'text-2xl sm:text-3xl lg:text-4xl leading-[2.4]' : 'text-xl sm:text-2xl lg:text-3xl leading-[2.2]'} ${fontFamily === 'serif' ? 'font-serif' : 'font-sans'} font-hindi tracking-wide font-normal`}>
+            {Array.from((currentParagraphText || '').normalize('NFC')).map((char, idx) => {
+              let color = 'text-slate-500';
+              const isCurrent = idx === typedIndex;
 
-            if (idx < typedIndex) {
-              const hist = history[idx];
-              color = hist?.status === 'correct'
-                ? 'text-emerald-400'
-                : 'text-rose-500 bg-rose-500/20 rounded underline decoration-rose-500';
-            } else if (isCurrent) {
-              color = 'text-white bg-indigo-500/30 px-0.5 rounded ring-2 ring-indigo-400 shadow-md shadow-indigo-500/40 animate-pulse';
-            }
+              if (idx < typedIndex) {
+                const hist = history[idx];
+                color = hist?.status === 'correct'
+                  ? 'text-emerald-400'
+                  : 'text-rose-500 bg-rose-500/20 rounded underline decoration-rose-500';
+              } else if (isCurrent) {
+                color = 'text-white bg-indigo-500/30 px-0.5 rounded ring-2 ring-indigo-400 shadow-md shadow-indigo-500/40 animate-pulse';
+              }
 
-            return (
-              <span key={idx} className={`transition-colors duration-75 ${color}`}>
-                {char}
-              </span>
-            );
-          })}
-        </div>
-
-        {/* Current Key & Hindi Sequence Breakdown */}
-        {targetKeyInfo && !isCompleted && (
-          <div className="sticky bottom-0 mt-6 py-2.5 px-4 rounded-xl bg-slate-900/90 border border-slate-800 backdrop-blur-sm flex flex-wrap items-center justify-between text-xs text-slate-300 gap-2">
-            <div className="flex items-center gap-2">
-              <span>Next Key:</span>
-              <span className="text-amber-300 font-mono-custom font-bold uppercase text-sm">
-                {targetKeyInfo.key === ' ' ? 'Spacebar' : targetKeyInfo.key}
-              </span>
-              {targetKeyInfo.shift && <span className="text-amber-400 font-bold">(+ Shift)</span>}
-            </div>
-
-            {/* Upcoming Sequence */}
-            {currentBook.language === 'hindi' && upcomingSequence.length > 1 && (
-              <div className="hidden sm:flex items-center gap-1.5 font-mono-custom text-[11px]">
-                <span className="text-slate-500">Upcoming:</span>
-                {upcomingSequence.slice(1, 4).map((item, uIdx) => (
-                  <span key={uIdx} className="bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800 text-slate-300">
-                    <span className="font-hindi">{item.char}</span>
-                    <span className="text-slate-500 ml-1 font-bold text-[10px]">({item.key.toUpperCase()})</span>
-                  </span>
-                ))}
-              </div>
-            )}
+              return (
+                <span key={idx} className={`transition-colors duration-75 ${color}`}>
+                  {char}
+                </span>
+              );
+            })}
           </div>
-        )}
-      </div>
+
+          {/* Current Key & Hindi Sequence Breakdown */}
+          {targetKeyInfo && !isCompleted && (
+            <div className="sticky bottom-0 mt-6 py-2.5 px-4 rounded-xl bg-slate-900/90 border border-slate-800 backdrop-blur-sm flex flex-wrap items-center justify-between text-xs text-slate-300 gap-2">
+              <div className="flex items-center gap-2">
+                <span>Next Key:</span>
+                <span className="text-amber-300 font-mono-custom font-bold uppercase text-sm">
+                  {targetKeyInfo.key === ' ' ? 'Spacebar' : targetKeyInfo.key}
+                </span>
+                {targetKeyInfo.shift && <span className="text-amber-400 font-bold">(+ Shift)</span>}
+              </div>
+
+              {/* Upcoming Sequence */}
+              {currentBook.language === 'hindi' && upcomingSequence.length > 1 && (
+                <div className="hidden sm:flex items-center gap-1.5 font-mono-custom text-[11px]">
+                  <span className="text-slate-500">Upcoming:</span>
+                  {upcomingSequence.slice(1, 4).map((item, uIdx) => (
+                    <span key={uIdx} className="bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800 text-slate-300">
+                      <span className="font-hindi">{item.char}</span>
+                      <span className="text-slate-500 ml-1 font-bold text-[10px]">({item.key.toUpperCase()})</span>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Integrated Keyboard with 10 Fingers Directly Placed on It */}
       {showKeyboardGuide && (

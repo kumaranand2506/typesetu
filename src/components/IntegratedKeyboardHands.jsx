@@ -143,6 +143,7 @@ export default function IntegratedKeyboardHands({
     });
   });
 
+  const isSpaceKey = targetKey === ' ' || targetKey === 'Space';
   const activeFinger = activeFingerId ? FINGER_INFO[activeFingerId] : null;
 
   // Touch typing opposite shift discipline
@@ -155,65 +156,29 @@ export default function IntegratedKeyboardHands({
   // Coordinates of target key
   const targetKeyCoord = targetKey ? KEY_COORD_MAP[targetKey] || KEY_COORD_MAP[targetKey.toLowerCase()] : null;
 
-  // 10 Anatomical Fingers Configuration
+  // 10 Minimalist Vector Line-Art Fingers Configuration
   // Resting Home-Row Coordinates (ASDF + JKL; + Space)
   const leftFingersOverlay = [
-    { id: 'LP', name: 'Pinky', restKey: 'A', restX: 128, restY: 138, kx: 155, ky: 215, color: '#f43f5e', zone: '1, Q, A, Z' },
-    { id: 'LR', name: 'Ring', restKey: 'S', restX: 184, restY: 138, kx: 195, ky: 210, color: '#fb923c', zone: '2, W, S, X' },
-    { id: 'LM', name: 'Middle', restKey: 'D', restX: 240, restY: 138, kx: 235, ky: 205, color: '#facc15', zone: '3, E, D, C' },
-    { id: 'LI', name: 'Index', restKey: 'F', restX: 296, restY: 138, kx: 275, ky: 210, color: '#4ade80', zone: '4, 5, R, T, F, G, V, B' },
-    { id: 'LT', name: 'Thumb', restKey: 'Space', restX: 390, restY: 246, kx: 320, ky: 238, color: '#38bdf8', zone: 'Spacebar' },
+    { id: 'LP', name: 'Pinky', restKey: 'A', restX: 128, restY: 138, kx: 155, ky: 215, defaultColor: '#f43f5e', zone: '1, Q, A, Z' },
+    { id: 'LR', name: 'Ring', restKey: 'S', restX: 184, restY: 138, kx: 195, ky: 210, defaultColor: '#fb923c', zone: '2, W, S, X' },
+    { id: 'LM', name: 'Middle', restKey: 'D', restX: 240, restY: 138, kx: 235, ky: 205, defaultColor: '#facc15', zone: '3, E, D, C' },
+    { id: 'LI', name: 'Index', restKey: 'F', restX: 296, restY: 138, kx: 275, ky: 210, defaultColor: '#4ade80', zone: '4, 5, R, T, F, G, V, B' },
+    { id: 'LT', name: 'Thumb', restKey: '␣', restX: 410, restY: 246, kx: 330, ky: 240, defaultColor: '#38bdf8', zone: 'Spacebar' },
   ];
 
   const rightFingersOverlay = [
-    { id: 'RT', name: 'Thumb', restKey: 'Space', restX: 500, restY: 246, kx: 460, ky: 238, color: '#38bdf8', zone: 'Spacebar' },
-    { id: 'RI', name: 'Index', restKey: 'J', restX: 464, restY: 138, kx: 485, ky: 210, color: '#818cf8', zone: '6, 7, Y, U, H, J, N, M' },
-    { id: 'RM', name: 'Middle', restKey: 'K', restX: 520, restY: 138, kx: 525, ky: 205, color: '#a855f7', zone: '8, I, K, ,' },
-    { id: 'RR', name: 'Ring', restKey: 'L', restX: 576, restY: 138, kx: 565, ky: 210, color: '#ec4899', zone: '9, O, L, .' },
-    { id: 'RP', name: 'Pinky', restKey: ';', restX: 632, restY: 138, kx: 605, ky: 215, color: '#14b8a6', zone: '0, P, ;, /, Enter, Shift' },
+    { id: 'RT', name: 'Thumb', restKey: '␣', restX: 510, restY: 246, kx: 450, ky: 240, defaultColor: '#38bdf8', zone: 'Spacebar' },
+    { id: 'RI', name: 'Index', restKey: 'J', restX: 464, restY: 138, kx: 485, ky: 210, defaultColor: '#818cf8', zone: '6, 7, Y, U, H, J, N, M' },
+    { id: 'RM', name: 'Middle', restKey: 'K', restX: 520, restY: 138, kx: 525, ky: 205, defaultColor: '#a855f7', zone: '8, I, K, ,' },
+    { id: 'RR', name: 'Ring', restKey: 'L', restX: 576, restY: 138, kx: 565, ky: 210, defaultColor: '#ec4899', zone: '9, O, L, .' },
+    { id: 'RP', name: 'Pinky', restKey: ';', restX: 632, restY: 138, kx: 605, ky: 215, defaultColor: '#14b8a6', zone: '0, P, ;, /, Enter, Shift' },
   ];
 
   // Opacity conversion
-  const opacityFloat = handOpacity === '0' ? 0 : handOpacity === '20' ? 0.35 : handOpacity === '50' ? 0.65 : 0.95;
+  const opacityFloat = handOpacity === '0' ? 0 : handOpacity === '20' ? 0.30 : handOpacity === '50' ? 0.60 : 0.90;
 
-  // Standalone Console Fingers Vector reach computation
-  const computeFingerReach = (fingerId) => {
-    if (activeFingerId !== fingerId) return { dx: 0, dy: 0, isStriking: false };
-    let dy = 0;
-    let dx = 0;
-    if (targetRowIdx === 0) dy = -52;
-    else if (targetRowIdx === 1) dy = -26;
-    else if (targetRowIdx === 2) dy = -4;
-    else if (targetRowIdx === 3) dy = 26;
-    else if (targetRowIdx === 4) dy = 16;
-
-    if (fingerId === 'LI') {
-      if (['KeyT', 'KeyG', 'KeyB', 'Digit5'].includes(KEYBOARD_ROWS[targetRowIdx]?.[targetColIdx]?.code)) dx = 16;
-    } else if (fingerId === 'RI') {
-      if (['KeyY', 'KeyH', 'KeyN', 'Digit6'].includes(KEYBOARD_ROWS[targetRowIdx]?.[targetColIdx]?.code)) dx = -16;
-    } else if (fingerId === 'LP') {
-      if (['Tab', 'CapsLock', 'ShiftLeft', 'Backquote', 'Digit1'].includes(KEYBOARD_ROWS[targetRowIdx]?.[targetColIdx]?.code)) dx = -14;
-    } else if (fingerId === 'RP') {
-      if (['BracketLeft', 'BracketRight', 'Backslash', 'Enter', 'Backspace', 'ShiftRight', 'Slash'].includes(KEYBOARD_ROWS[targetRowIdx]?.[targetColIdx]?.code)) dx = 16;
-    }
-    return { dx, dy, isStriking: true };
-  };
-
-  const leftFingersConsole = [
-    { id: 'LP', name: 'Pinky', restKey: 'A', x: 28, y: 56, w: 14, h: 54, color: '#f43f5e' },
-    { id: 'LR', name: 'Ring', restKey: 'S', x: 49, y: 36, w: 15, h: 74, color: '#fb923c' },
-    { id: 'LM', name: 'Middle', restKey: 'D', x: 71, y: 22, w: 15, h: 88, color: '#facc15' },
-    { id: 'LI', name: 'Index', restKey: 'F', x: 93, y: 34, w: 15, h: 76, color: '#4ade80' },
-    { id: 'LT', name: 'Thumb', restKey: 'Space', x: 116, y: 84, w: 17, h: 48, rotate: 26, color: '#38bdf8' },
-  ];
-
-  const rightFingersConsole = [
-    { id: 'RT', name: 'Thumb', restKey: 'Space', x: 26, y: 84, w: 17, h: 48, rotate: -26, color: '#38bdf8' },
-    { id: 'RI', name: 'Index', restKey: 'J', x: 50, y: 34, w: 15, h: 76, color: '#818cf8' },
-    { id: 'RM', name: 'Middle', restKey: 'K', x: 72, y: 22, w: 15, h: 88, color: '#a855f7' },
-    { id: 'RR', name: 'Ring', restKey: 'L', x: 94, y: 36, w: 15, h: 74, color: '#ec4899' },
-    { id: 'RP', name: 'Pinky', restKey: ';', x: 116, y: 56, w: 14, h: 54, color: '#14b8a6' },
-  ];
+  // Active accent color: high-visibility electric cyan/blue
+  const ACCENT_COLOR = '#06b6d4'; // Cyan 500
 
   return (
     <div className="flex flex-col items-center w-full max-w-5xl mx-auto space-y-3">
@@ -224,6 +189,7 @@ export default function IntegratedKeyboardHands({
           {language === 'hindi' && (
             <div className="flex items-center gap-1 bg-slate-950 border border-slate-800 rounded-xl p-0.5 text-xs font-semibold">
               <button
+                type="button"
                 onClick={() => handleHindiLayoutToggle('inscript')}
                 className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
                   hindiLayout === 'inscript'
@@ -234,6 +200,7 @@ export default function IntegratedKeyboardHands({
                 इनस्क्रिप्ट (InScript)
               </button>
               <button
+                type="button"
                 onClick={() => handleHindiLayoutToggle('remington')}
                 className={`px-2.5 py-1 rounded-lg transition cursor-pointer ${
                   hindiLayout === 'remington'
@@ -241,7 +208,7 @@ export default function IntegratedKeyboardHands({
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                रेमिंगटन (Krutidev)
+                रेमिंगटन गेल (Remington Gail)
               </button>
             </div>
           )}
@@ -253,17 +220,19 @@ export default function IntegratedKeyboardHands({
               Guide:
             </span>
             <button
+              type="button"
               onClick={() => handleModeChange('overlay')}
               className={`px-2 py-0.5 rounded-lg transition cursor-pointer ${
                 handDisplayMode === 'overlay'
                   ? 'bg-indigo-600 text-white font-bold'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
-              title="Hands overlaid directly on keyboard"
+              title="Minimalist vector line-art hands overlaid directly on keyboard"
             >
               कीबोर्ड पर (On Keys)
             </button>
             <button
+              type="button"
               onClick={() => handleModeChange('console')}
               className={`px-2 py-0.5 rounded-lg transition cursor-pointer ${
                 handDisplayMode === 'console'
@@ -275,6 +244,7 @@ export default function IntegratedKeyboardHands({
               नीचे (Console)
             </button>
             <button
+              type="button"
               onClick={() => handleModeChange('both')}
               className={`px-2 py-0.5 rounded-lg transition cursor-pointer hidden md:inline ${
                 handDisplayMode === 'both'
@@ -297,6 +267,7 @@ export default function IntegratedKeyboardHands({
             {['blue', 'brown', 'red', 'off'].map((p) => (
               <button
                 key={p}
+                type="button"
                 onClick={() => handleSwitchChange(p)}
                 className={`px-1.5 py-0.5 rounded text-[10px] font-bold uppercase transition cursor-pointer ${
                   switchProfile === p
@@ -322,6 +293,7 @@ export default function IntegratedKeyboardHands({
             {['100', '50', '20', '0'].map((op) => (
               <button
                 key={op}
+                type="button"
                 onClick={() => handleOpacityChange(op)}
                 className={`px-1.5 py-0.5 rounded text-[10px] font-bold transition cursor-pointer ${
                   handOpacity === op ? 'bg-indigo-600 text-white' : 'text-slate-400 hover:text-slate-200'
@@ -338,9 +310,9 @@ export default function IntegratedKeyboardHands({
             <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-950 border border-slate-800 shadow-inner">
               <span
                 className="w-2.5 h-2.5 rounded-full animate-bounce shadow-md"
-                style={{ backgroundColor: activeFinger.color }}
+                style={{ backgroundColor: ACCENT_COLOR }}
               />
-              <span className="font-bold text-xs" style={{ color: activeFinger.color }}>
+              <span className="font-bold text-xs text-cyan-400">
                 {language === 'hindi' ? activeFinger.hindiName : activeFinger.name}
               </span>
               {targetShift && (
@@ -355,7 +327,7 @@ export default function IntegratedKeyboardHands({
         </div>
       </div>
 
-      {/* KEYBOARD CHASSIS WITH INTEGRATED ON-KEYBOARD HANDS OVERLAY */}
+      {/* KEYBOARD CHASSIS WITH INTEGRATED VECTOR LINE-ART HANDS OVERLAY */}
       <div className="relative flex flex-col gap-1.5 w-full min-w-[720px] max-w-[940px] px-2 py-3 bg-slate-950/95 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden select-none">
         {KEYBOARD_ROWS.map((row, rowIdx) => (
           <div key={rowIdx} className="flex gap-1.5 justify-center">
@@ -398,14 +370,14 @@ export default function IntegratedKeyboardHands({
                     relative h-12 sm:h-14 ${widthClass} rounded-xl flex flex-col justify-between p-1 sm:p-1.5
                     border transition-all duration-100 select-none cursor-default
                     ${isPhysicallyPressed ? 'scale-90 bg-indigo-600 border-indigo-400 text-white shadow-inner' : ''}
-                    ${isTargetKey ? 'ring-4 ring-indigo-400 bg-indigo-950 border-indigo-300 shadow-xl shadow-indigo-500/40 -translate-y-1 z-10' : ''}
+                    ${isTargetKey ? 'ring-4 ring-cyan-400 bg-cyan-950/80 border-cyan-300 shadow-xl shadow-cyan-500/40 -translate-y-1 z-10' : ''}
                     ${isTargetShift ? 'ring-4 ring-amber-400 bg-amber-950 border-amber-300 shadow-xl shadow-amber-500/40 -translate-y-1 z-10 animate-pulse' : ''}
                     ${!isTargetKey && !isTargetShift && !isPhysicallyPressed ? 'bg-slate-900/90 border-slate-800 text-slate-200' : ''}
                   `}
                   style={{
                     borderBottomWidth: '4px',
                     borderColor: isTargetKey
-                      ? '#818cf8'
+                      ? ACCENT_COLOR
                       : isTargetShift
                       ? '#fbbf24'
                       : isPhysicallyPressed
@@ -413,7 +385,7 @@ export default function IntegratedKeyboardHands({
                       : `${fingerColor}60`,
                   }}
                 >
-                  {/* Finger zone color dot */}
+                  {/* Finger zone indicator */}
                   {finger && !k.special && (
                     <span
                       className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full opacity-60"
@@ -443,7 +415,7 @@ export default function IntegratedKeyboardHands({
                           <>
                             <span
                               className={`text-base sm:text-lg font-bold font-hindi leading-none ${
-                                isTargetKey ? 'text-indigo-200' : 'text-amber-300'
+                                isTargetKey ? 'text-cyan-200' : 'text-amber-300'
                               }`}
                             >
                               {targetShift ? hindiShift || hindiPrimary : hindiPrimary}
@@ -457,7 +429,7 @@ export default function IntegratedKeyboardHands({
                         ) : (
                           <span
                             className={`text-sm sm:text-base font-bold font-mono-custom leading-none ${
-                              isTargetKey ? 'text-indigo-200' : 'text-slate-100'
+                              isTargetKey ? 'text-cyan-200' : 'text-slate-100'
                             }`}
                           >
                             {targetShift ? engShift : engPrimary}
@@ -472,9 +444,9 @@ export default function IntegratedKeyboardHands({
           </div>
         ))}
 
-        {/* ======================================================== */}
-        {/* DIRECT ON-KEYBOARD SVG HANDS OVERLAY (TypingClub Style) */}
-        {/* ======================================================== */}
+        {/* ====================================================================== */}
+        {/* DYNAMIC MINIMALIST VECTOR LINE-ART HANDS OVERLAY                       */}
+        {/* ====================================================================== */}
         {(handDisplayMode === 'overlay' || handDisplayMode === 'both') && handOpacity !== '0' && (
           <svg
             viewBox="0 0 940 280"
@@ -482,27 +454,30 @@ export default function IntegratedKeyboardHands({
             className="absolute inset-0 w-full h-full pointer-events-none z-30 transition-opacity duration-200"
             style={{ opacity: opacityFloat }}
           >
-            {/* LEFT PALM ANATOMICAL BASE */}
+            {/* MINIMALIST LEFT PALM & WRIST FRAME CONTOUR */}
             <path
-              d="M 120 220 C 130 265, 180 275, 230 275 C 280 275, 335 260, 345 220 C 310 205, 150 205, 120 220 Z"
-              fill="rgba(30, 41, 59, 0.45)"
-              stroke="rgba(148, 163, 184, 0.35)"
-              strokeWidth="2"
+              d="M 120 230 C 130 268, 175 276, 230 276 C 285 276, 335 264, 345 230 C 310 215, 150 215, 120 230 Z"
+              fill="rgba(15, 23, 42, 0.35)"
+              stroke="rgba(148, 163, 184, 0.40)"
+              strokeWidth="1.6"
+              strokeDasharray="4 2"
             />
 
-            {/* RIGHT PALM ANATOMICAL BASE */}
+            {/* MINIMALIST RIGHT PALM & WRIST FRAME CONTOUR */}
             <path
-              d="M 450 220 C 460 260, 510 275, 560 275 C 610 275, 665 265, 675 220 C 640 205, 480 205, 450 220 Z"
-              fill="rgba(30, 41, 59, 0.45)"
-              stroke="rgba(148, 163, 184, 0.35)"
-              strokeWidth="2"
+              d="M 450 230 C 460 264, 510 276, 565 276 C 620 276, 665 268, 675 230 C 640 215, 480 215, 450 230 Z"
+              fill="rgba(15, 23, 42, 0.35)"
+              stroke="rgba(148, 163, 184, 0.40)"
+              strokeWidth="1.6"
+              strokeDasharray="4 2"
             />
 
-            {/* LEFT HAND FINGERS DIRECT OVERLAY */}
+            {/* LEFT HAND 5 FINGERS (Pinky, Ring, Middle, Index, Thumb) */}
             {leftFingersOverlay.map((f) => {
               const isDirectTarget = activeFingerId === f.id && targetKeyCoord;
               const isShiftTarget = needLeftShift && f.id === 'LP';
-              const isActive = isDirectTarget || isShiftTarget;
+              const isSpaceTarget = isSpaceKey && f.id === 'LT'; // Thumb Space tap
+              const isActive = isDirectTarget || isShiftTarget || isSpaceTarget;
 
               let curX = f.restX;
               let curY = f.restY;
@@ -511,32 +486,43 @@ export default function IntegratedKeyboardHands({
                 curX = targetKeyCoord.x;
                 curY = targetKeyCoord.y;
               } else if (isShiftTarget) {
-                curX = 65; // ShiftLeft
+                curX = 65; // Left Shift
                 curY = 192;
+              } else if (isSpaceTarget) {
+                curX = f.restX;
+                curY = f.restY + 8; // Animate thumb pressing down toward Spacebar
               }
 
               return (
                 <g key={f.id} className="transition-all duration-150">
-                  {/* Articulated Finger Capsule Path */}
+                  {/* Minimalist Vector Line-Art Finger Stem */}
                   <path
-                    d={`M ${f.kx - 8} ${f.ky} Q ${(f.kx + curX) / 2 - 4} ${(f.ky + curY) / 2} ${curX - 7} ${
-                      curY + 6
-                    } A 8 8 0 0 1 ${curX + 7} ${curY + 6} Q ${(f.kx + curX) / 2 + 4} ${(f.ky + curY) / 2} ${
-                      f.kx + 8
+                    d={`M ${f.kx - 7} ${f.ky} Q ${(f.kx + curX) / 2 - 3} ${(f.ky + curY) / 2} ${curX - 6} ${
+                      curY + 5
+                    } A 7 7 0 0 1 ${curX + 6} ${curY + 5} Q ${(f.kx + curX) / 2 + 3} ${(f.ky + curY) / 2} ${
+                      f.kx + 7
                     } ${f.ky} Z`}
-                    fill={isActive ? `${f.color}65` : 'rgba(30, 41, 59, 0.45)'}
-                    stroke={isActive ? f.color : 'rgba(148, 163, 184, 0.35)'}
-                    strokeWidth={isActive ? '2.5' : '1.2'}
+                    fill={isActive ? 'rgba(6, 182, 212, 0.35)' : 'rgba(15, 23, 42, 0.35)'}
+                    stroke={isActive ? ACCENT_COLOR : 'rgba(148, 163, 184, 0.45)'}
+                    strokeWidth={isActive ? '2.5' : '1.4'}
                   />
 
-                  {/* Pulsing Ripple Wave for Active Finger */}
+                  {/* Knuckle Joint Marker */}
+                  <circle
+                    cx={f.kx}
+                    cy={f.ky}
+                    r="3"
+                    fill={isActive ? ACCENT_COLOR : 'rgba(148, 163, 184, 0.5)'}
+                  />
+
+                  {/* Pulsing Ripple Halo when Active */}
                   {isActive && (
                     <circle
                       cx={curX}
                       cy={curY}
                       r="22"
                       fill="none"
-                      stroke={f.color}
+                      stroke={ACCENT_COLOR}
                       strokeWidth="2.5"
                       className="animate-ping"
                     />
@@ -546,32 +532,33 @@ export default function IntegratedKeyboardHands({
                   <circle
                     cx={curX}
                     cy={curY}
-                    r={isActive ? 13 : 9}
-                    fill={isActive ? f.color : 'rgba(15, 23, 42, 0.85)'}
-                    stroke={isActive ? '#ffffff' : f.color}
-                    strokeWidth={isActive ? 2.5 : 1.5}
+                    r={isActive ? 12 : 8.5}
+                    fill={isActive ? ACCENT_COLOR : 'rgba(15, 23, 42, 0.85)'}
+                    stroke={isActive ? '#ffffff' : 'rgba(148, 163, 184, 0.6)'}
+                    strokeWidth={isActive ? 2.5 : 1.2}
                   />
 
-                  {/* Fingertip Rest / Key Label */}
+                  {/* Fingertip Label */}
                   <text
                     x={curX}
                     y={curY + 3.5}
                     textAnchor="middle"
                     fontSize={isActive ? '9.5' : '8'}
                     fontWeight="bold"
-                    fill={isActive ? '#0f172a' : '#f1f5f9'}
+                    fill={isActive ? '#0f172a' : '#94a3b8'}
                   >
-                    {f.restKey === 'Space' ? '␣' : f.restKey}
+                    {f.restKey}
                   </text>
                 </g>
               );
             })}
 
-            {/* RIGHT HAND FINGERS DIRECT OVERLAY */}
+            {/* RIGHT HAND 5 FINGERS (Thumb, Index, Middle, Ring, Pinky) */}
             {rightFingersOverlay.map((f) => {
               const isDirectTarget = activeFingerId === f.id && targetKeyCoord;
               const isShiftTarget = needRightShift && f.id === 'RP';
-              const isActive = isDirectTarget || isShiftTarget;
+              const isSpaceTarget = isSpaceKey && f.id === 'RT'; // Right Thumb Space tap
+              const isActive = isDirectTarget || isShiftTarget || isSpaceTarget;
 
               let curX = f.restX;
               let curY = f.restY;
@@ -580,32 +567,43 @@ export default function IntegratedKeyboardHands({
                 curX = targetKeyCoord.x;
                 curY = targetKeyCoord.y;
               } else if (isShiftTarget) {
-                curX = 790; // ShiftRight
+                curX = 790; // Right Shift
                 curY = 192;
+              } else if (isSpaceTarget) {
+                curX = f.restX;
+                curY = f.restY + 8; // Animate thumb pressing down toward Spacebar
               }
 
               return (
                 <g key={f.id} className="transition-all duration-150">
-                  {/* Articulated Finger Capsule Path */}
+                  {/* Minimalist Vector Line-Art Finger Stem */}
                   <path
-                    d={`M ${f.kx - 8} ${f.ky} Q ${(f.kx + curX) / 2 - 4} ${(f.ky + curY) / 2} ${curX - 7} ${
-                      curY + 6
-                    } A 8 8 0 0 1 ${curX + 7} ${curY + 6} Q ${(f.kx + curX) / 2 + 4} ${(f.ky + curY) / 2} ${
-                      f.kx + 8
+                    d={`M ${f.kx - 7} ${f.ky} Q ${(f.kx + curX) / 2 - 3} ${(f.ky + curY) / 2} ${curX - 6} ${
+                      curY + 5
+                    } A 7 7 0 0 1 ${curX + 6} ${curY + 5} Q ${(f.kx + curX) / 2 + 3} ${(f.ky + curY) / 2} ${
+                      f.kx + 7
                     } ${f.ky} Z`}
-                    fill={isActive ? `${f.color}65` : 'rgba(30, 41, 59, 0.45)'}
-                    stroke={isActive ? f.color : 'rgba(148, 163, 184, 0.35)'}
-                    strokeWidth={isActive ? '2.5' : '1.2'}
+                    fill={isActive ? 'rgba(6, 182, 212, 0.35)' : 'rgba(15, 23, 42, 0.35)'}
+                    stroke={isActive ? ACCENT_COLOR : 'rgba(148, 163, 184, 0.45)'}
+                    strokeWidth={isActive ? '2.5' : '1.4'}
                   />
 
-                  {/* Pulsing Ripple Wave for Active Finger */}
+                  {/* Knuckle Joint Marker */}
+                  <circle
+                    cx={f.kx}
+                    cy={f.ky}
+                    r="3"
+                    fill={isActive ? ACCENT_COLOR : 'rgba(148, 163, 184, 0.5)'}
+                  />
+
+                  {/* Pulsing Ripple Halo when Active */}
                   {isActive && (
                     <circle
                       cx={curX}
                       cy={curY}
                       r="22"
                       fill="none"
-                      stroke={f.color}
+                      stroke={ACCENT_COLOR}
                       strokeWidth="2.5"
                       className="animate-ping"
                     />
@@ -615,22 +613,22 @@ export default function IntegratedKeyboardHands({
                   <circle
                     cx={curX}
                     cy={curY}
-                    r={isActive ? 13 : 9}
-                    fill={isActive ? f.color : 'rgba(15, 23, 42, 0.85)'}
-                    stroke={isActive ? '#ffffff' : f.color}
-                    strokeWidth={isActive ? 2.5 : 1.5}
+                    r={isActive ? 12 : 8.5}
+                    fill={isActive ? ACCENT_COLOR : 'rgba(15, 23, 42, 0.85)'}
+                    stroke={isActive ? '#ffffff' : 'rgba(148, 163, 184, 0.6)'}
+                    strokeWidth={isActive ? 2.5 : 1.2}
                   />
 
-                  {/* Fingertip Rest / Key Label */}
+                  {/* Fingertip Label */}
                   <text
                     x={curX}
                     y={curY + 3.5}
                     textAnchor="middle"
                     fontSize={isActive ? '9.5' : '8'}
                     fontWeight="bold"
-                    fill={isActive ? '#0f172a' : '#f1f5f9'}
+                    fill={isActive ? '#0f172a' : '#94a3b8'}
                   >
-                    {f.restKey === 'Space' ? '␣' : f.restKey}
+                    {f.restKey}
                   </text>
                 </g>
               );
@@ -639,9 +637,9 @@ export default function IntegratedKeyboardHands({
         )}
       </div>
 
-      {/* ======================================================== */}
-      {/* SEPARATE HAND CONSOLE (UNDER KEYBOARD) */}
-      {/* ======================================================== */}
+      {/* ====================================================================== */}
+      {/* SEPARATE HAND CONSOLE (UNDER KEYBOARD)                                  */}
+      {/* ====================================================================== */}
       {(handDisplayMode === 'console' || handDisplayMode === 'both') && handOpacity !== '0' && (
         <div
           className="w-full max-w-[940px] pt-3 flex flex-col sm:flex-row items-center justify-around gap-6 bg-slate-950/70 rounded-2xl border border-slate-800/80 p-3 transition-opacity duration-200"
@@ -651,7 +649,7 @@ export default function IntegratedKeyboardHands({
           <div className="flex flex-col items-center">
             <div className="flex items-center gap-2 mb-1 text-xs font-bold text-slate-300">
               <span>बायाँ हाथ (Left Hand)</span>
-              <span className="text-[10px] bg-slate-800 text-indigo-300 px-2 py-0.5 rounded font-mono">
+              <span className="text-[10px] bg-slate-800 text-cyan-300 px-2 py-0.5 rounded font-mono">
                 A S D F
               </span>
             </div>
@@ -664,18 +662,38 @@ export default function IntegratedKeyboardHands({
                 strokeWidth="2.5"
               />
 
-              {leftFingersConsole.map((f) => {
-                const reach = computeFingerReach(f.id);
-                const isShiftTriggered = needLeftShift && f.id === 'LP';
-                const finalDx = isShiftTriggered ? -26 : reach.dx;
-                const finalDy = isShiftTriggered ? 26 : reach.dy;
-                const isActive = reach.isStriking || isShiftTriggered;
+              {[
+                { id: 'LP', name: 'Pinky', restKey: 'A', x: 28, y: 56, w: 14, h: 54 },
+                { id: 'LR', name: 'Ring', restKey: 'S', x: 49, y: 36, w: 15, h: 74 },
+                { id: 'LM', name: 'Middle', restKey: 'D', x: 71, y: 22, w: 15, h: 88 },
+                { id: 'LI', name: 'Index', restKey: 'F', x: 93, y: 34, w: 15, h: 76 },
+                { id: 'LT', name: 'Thumb', restKey: 'Space', x: 116, y: 84, w: 17, h: 48, rotate: 26 },
+              ].map((f) => {
+                const isCurrent = activeFingerId === f.id;
+                const isShift = needLeftShift && f.id === 'LP';
+                const isSpace = isSpaceKey && f.id === 'LT';
+                const isActive = isCurrent || isShift || isSpace;
+
+                let dx = 0;
+                let dy = 0;
+                if (isCurrent && targetRowIdx >= 0) {
+                  if (targetRowIdx === 0) dy = -50;
+                  else if (targetRowIdx === 1) dy = -25;
+                  else if (targetRowIdx === 2) dy = -4;
+                  else if (targetRowIdx === 3) dy = 25;
+                  else if (targetRowIdx === 4) dy = 14;
+                } else if (isShift) {
+                  dx = -24;
+                  dy = 24;
+                } else if (isSpace) {
+                  dy = 8;
+                }
 
                 return (
                   <g
                     key={f.id}
                     style={{
-                      transform: `translate(${finalDx}px, ${finalDy}px) ${f.rotate ? `rotate(${f.rotate}deg)` : ''}`,
+                      transform: `translate(${dx}px, ${dy}px) ${f.rotate ? `rotate(${f.rotate}deg)` : ''}`,
                       transformOrigin: `${f.x + f.w / 2}px ${f.y + f.h}px`,
                       transition: 'transform 0.16s cubic-bezier(0.2, 0.9, 0.3, 1.2)',
                     }}
@@ -686,7 +704,7 @@ export default function IntegratedKeyboardHands({
                         cy={f.y + 8}
                         r="14"
                         fill="none"
-                        stroke={f.color}
+                        stroke={ACCENT_COLOR}
                         strokeWidth="2"
                         className="animate-ping"
                       />
@@ -697,8 +715,8 @@ export default function IntegratedKeyboardHands({
                       width={f.w}
                       height={f.h}
                       rx={f.w / 2}
-                      fill={isActive ? f.color : '#1e293b'}
-                      stroke={isActive ? '#ffffff' : f.color}
+                      fill={isActive ? ACCENT_COLOR : '#1e293b'}
+                      stroke={isActive ? '#ffffff' : '#475569'}
                       strokeWidth={isActive ? '3' : '1.5'}
                       className="transition-colors duration-150"
                     />
@@ -707,7 +725,7 @@ export default function IntegratedKeyboardHands({
                       cy={f.y + 11}
                       r="5.5"
                       fill={isActive ? '#ffffff' : '#0f172a'}
-                      stroke={f.color}
+                      stroke={isActive ? ACCENT_COLOR : '#64748b'}
                       strokeWidth="1.2"
                     />
                     <text
@@ -718,7 +736,7 @@ export default function IntegratedKeyboardHands({
                       fontWeight="bold"
                       fill={isActive ? '#0f172a' : '#94a3b8'}
                     >
-                      {f.restKey}
+                      {f.restKey === 'Space' ? '␣' : f.restKey}
                     </text>
                   </g>
                 );
@@ -726,13 +744,13 @@ export default function IntegratedKeyboardHands({
             </svg>
           </div>
 
-          {/* Center Pedagogy Advice */}
+          {/* Center Touch-Typing Pedagogy Advice */}
           <div className="hidden lg:flex flex-col items-center justify-center max-w-[210px] text-center px-3 py-2 bg-slate-900/80 rounded-xl border border-slate-800 text-[11px] text-slate-400 space-y-1">
             <span className="font-bold text-slate-200">Home Row Rule</span>
             <p className="leading-snug">
-              उँगलियों को हमेशा <strong>ASDF</strong> और <strong>JKL;</strong> पर विश्राम दें। अंगूठे स्पेसबार पर रखें।
+              उँगलियों को हमेशा <strong>ASDF</strong> और <strong>JKL;</strong> पर रखें। स्पेसबार अंगूठे से दबाएँ।
             </p>
-            <div className="w-full border-t border-slate-800 pt-1 text-[10px] text-indigo-400 font-semibold">
+            <div className="w-full border-t border-slate-800 pt-1 text-[10px] text-cyan-400 font-semibold">
               {language === 'hindi' ? 'बायाँ: स्वर • दायाँ: व्यंजन' : 'F & J have tactile home bumps'}
             </div>
           </div>
@@ -740,7 +758,7 @@ export default function IntegratedKeyboardHands({
           {/* Right Hand Console */}
           <div className="flex flex-col items-center">
             <div className="flex items-center gap-2 mb-1 text-xs font-bold text-slate-300">
-              <span className="text-[10px] bg-slate-800 text-indigo-300 px-2 py-0.5 rounded font-mono">
+              <span className="text-[10px] bg-slate-800 text-cyan-300 px-2 py-0.5 rounded font-mono">
                 J K L ;
               </span>
               <span>दायाँ हाथ (Right Hand)</span>
@@ -754,18 +772,38 @@ export default function IntegratedKeyboardHands({
                 strokeWidth="2.5"
               />
 
-              {rightFingersConsole.map((f) => {
-                const reach = computeFingerReach(f.id);
-                const isShiftTriggered = needRightShift && f.id === 'RP';
-                const finalDx = isShiftTriggered ? 26 : reach.dx;
-                const finalDy = isShiftTriggered ? 26 : reach.dy;
-                const isActive = reach.isStriking || isShiftTriggered;
+              {[
+                { id: 'RT', name: 'Thumb', restKey: 'Space', x: 26, y: 84, w: 17, h: 48, rotate: -26 },
+                { id: 'RI', name: 'Index', restKey: 'J', x: 50, y: 34, w: 15, h: 76 },
+                { id: 'RM', name: 'Middle', restKey: 'K', x: 72, y: 22, w: 15, h: 88 },
+                { id: 'RR', name: 'Ring', restKey: 'L', x: 94, y: 36, w: 15, h: 74 },
+                { id: 'RP', name: 'Pinky', restKey: ';', x: 116, y: 56, w: 14, h: 54 },
+              ].map((f) => {
+                const isCurrent = activeFingerId === f.id;
+                const isShift = needRightShift && f.id === 'RP';
+                const isSpace = isSpaceKey && f.id === 'RT';
+                const isActive = isCurrent || isShift || isSpace;
+
+                let dx = 0;
+                let dy = 0;
+                if (isCurrent && targetRowIdx >= 0) {
+                  if (targetRowIdx === 0) dy = -50;
+                  else if (targetRowIdx === 1) dy = -25;
+                  else if (targetRowIdx === 2) dy = -4;
+                  else if (targetRowIdx === 3) dy = 25;
+                  else if (targetRowIdx === 4) dy = 14;
+                } else if (isShift) {
+                  dx = 24;
+                  dy = 24;
+                } else if (isSpace) {
+                  dy = 8;
+                }
 
                 return (
                   <g
                     key={f.id}
                     style={{
-                      transform: `translate(${finalDx}px, ${finalDy}px) ${f.rotate ? `rotate(${f.rotate}deg)` : ''}`,
+                      transform: `translate(${dx}px, ${dy}px) ${f.rotate ? `rotate(${f.rotate}deg)` : ''}`,
                       transformOrigin: `${f.x + f.w / 2}px ${f.y + f.h}px`,
                       transition: 'transform 0.16s cubic-bezier(0.2, 0.9, 0.3, 1.2)',
                     }}
@@ -776,7 +814,7 @@ export default function IntegratedKeyboardHands({
                         cy={f.y + 8}
                         r="14"
                         fill="none"
-                        stroke={f.color}
+                        stroke={ACCENT_COLOR}
                         strokeWidth="2"
                         className="animate-ping"
                       />
@@ -787,8 +825,8 @@ export default function IntegratedKeyboardHands({
                       width={f.w}
                       height={f.h}
                       rx={f.w / 2}
-                      fill={isActive ? f.color : '#1e293b'}
-                      stroke={isActive ? '#ffffff' : f.color}
+                      fill={isActive ? ACCENT_COLOR : '#1e293b'}
+                      stroke={isActive ? '#ffffff' : '#475569'}
                       strokeWidth={isActive ? '3' : '1.5'}
                       className="transition-colors duration-150"
                     />
@@ -797,7 +835,7 @@ export default function IntegratedKeyboardHands({
                       cy={f.y + 11}
                       r="5.5"
                       fill={isActive ? '#ffffff' : '#0f172a'}
-                      stroke={f.color}
+                      stroke={isActive ? ACCENT_COLOR : '#64748b'}
                       strokeWidth="1.2"
                     />
                     <text
@@ -808,7 +846,7 @@ export default function IntegratedKeyboardHands({
                       fontWeight="bold"
                       fill={isActive ? '#0f172a' : '#94a3b8'}
                     >
-                      {f.restKey}
+                      {f.restKey === 'Space' ? '␣' : f.restKey}
                     </text>
                   </g>
                 );

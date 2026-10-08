@@ -2,7 +2,8 @@ import React from 'react';
 import { Zap, Target, AlertCircle, Activity } from 'lucide-react';
 
 export default function Speedometer({
-  wpm = 0,
+  wpm = 0, // Net WPM
+  grossWpm = 0,
   cpm = 0,
   accuracy = 100,
   mistakes = 0,
@@ -10,6 +11,7 @@ export default function Speedometer({
   maxWpm = 100,
 }) {
   const displayMistakes = errors !== undefined ? errors : mistakes;
+  const displayGross = grossWpm || wpm;
 
   // Calculate angle for gauge needle (-90 deg to +90 deg)
   const clampedWpm = Math.min(Math.max(wpm, 0), maxWpm);
@@ -35,7 +37,7 @@ export default function Speedometer({
 
   return (
     <div className="w-full bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 sm:p-4 shadow-xl backdrop-blur-sm flex flex-col sm:flex-row items-center justify-between gap-4 select-none">
-      {/* Radial Speedometer Gauge */}
+      {/* Radial Speedometer Gauge (Net WPM) */}
       <div className="relative flex flex-col items-center justify-center shrink-0 w-36 h-24 overflow-hidden">
         <svg viewBox="0 0 160 95" className="w-full h-full overflow-visible">
           {/* Background Track Arc */}
@@ -64,7 +66,16 @@ export default function Speedometer({
             transform={`translate(80, 85) rotate(${rotationDegrees})`}
             className="transition-transform duration-200 ease-out"
           >
-            <line x1="0" y1="0" x2="0" y2="-52" stroke="currentColor" className="text-slate-700 dark:text-white" strokeWidth="3" strokeLinecap="round" />
+            <line
+              x1="0"
+              y1="0"
+              x2="0"
+              y2="-52"
+              stroke="currentColor"
+              className="text-slate-700 dark:text-white"
+              strokeWidth="3"
+              strokeLinecap="round"
+            />
             <circle cx="0" cy="0" r="6" fill="currentColor" className="text-slate-700 dark:text-white" />
             <circle cx="0" cy="0" r="3" fill="currentColor" className="text-slate-100 dark:text-slate-900" />
           </g>
@@ -74,7 +85,7 @@ export default function Speedometer({
         <div className="absolute bottom-0 text-center flex flex-col items-center">
           <div className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white leading-none tracking-tight">
             {wpm}
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold ml-1">WPM</span>
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold ml-1">NET WPM</span>
           </div>
           <span className="text-[9px] font-bold tracking-wider uppercase mt-0.5" style={{ color: tierColor }}>
             {tierLabel}
@@ -82,8 +93,8 @@ export default function Speedometer({
         </div>
       </div>
 
-      {/* Metrics Readout Cards */}
-      <div className="grid grid-cols-3 gap-2.5 w-full max-w-md">
+      {/* Metrics Readout Cards (Accuracy, Gross WPM, CPM, Errors) */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 w-full max-w-lg">
         {/* Accuracy */}
         <div className="bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-center">
           <div className="flex items-center justify-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 font-semibold mb-0.5">
@@ -93,13 +104,24 @@ export default function Speedometer({
           <div className="text-lg font-black text-emerald-600 dark:text-emerald-400">{accuracy}%</div>
         </div>
 
+        {/* Gross WPM */}
+        <div className="bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-center">
+          <div className="flex items-center justify-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 font-semibold mb-0.5">
+            <Zap size={13} className="text-amber-500 dark:text-amber-400" />
+            <span>Gross WPM</span>
+          </div>
+          <div className="text-lg font-black text-amber-600 dark:text-amber-400">{displayGross}</div>
+        </div>
+
         {/* CPM */}
         <div className="bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 text-center">
           <div className="flex items-center justify-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 font-semibold mb-0.5">
             <Activity size={13} className="text-indigo-500 dark:text-indigo-400" />
             <span>CPM</span>
           </div>
-          <div className="text-lg font-black text-indigo-600 dark:text-indigo-300">{cpm || Math.round(wpm * 5)}</div>
+          <div className="text-lg font-black text-indigo-600 dark:text-indigo-300">
+            {cpm || Math.round(wpm * 5)}
+          </div>
         </div>
 
         {/* Errors */}

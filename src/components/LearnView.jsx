@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { getAllLessons, STAGES, getStageForLevel } from '../data/lessonsEngine';
 import { useTypingEngine } from '../hooks/useTypingEngine';
 import IntegratedKeyboardHands from './IntegratedKeyboardHands';
+import RollingTextDisplay from './RollingTextDisplay';
 import Speedometer from './Speedometer';
 import AdBanner from './AdBanner';
 import { checkNewBadges } from '../data/badgeSystem';
@@ -74,12 +75,19 @@ export default function LearnView({
     mistakes,
     isCompleted,
     currentWpm,
+    currentGrossWpm,
     currentAccuracy,
+    cpm,
     targetChar,
     targetKeyInfo,
     upcomingSequence,
     lastPressedPhysicalKey,
     handleKeyDown,
+    hiddenInputRef,
+    focusInput,
+    errorMode,
+    setErrorMode,
+    strictError,
     progressPercent,
   } = useTypingEngine({
     targetText: activeLesson ? activeLesson.text : '',
@@ -406,59 +414,27 @@ export default function LearnView({
       {/* Live Speedometer & Metrics */}
       <Speedometer
         wpm={currentWpm}
-        cpm={Math.round(currentWpm * 5)}
+        grossWpm={currentGrossWpm}
+        cpm={cpm}
         accuracy={currentAccuracy}
         mistakes={mistakes}
         maxWpm={100}
       />
 
-      {/* Target Typing Viewport */}
-      <div className="relative bg-slate-950/90 border-2 border-indigo-500/30 rounded-3xl p-6 sm:p-8 shadow-2xl min-h-[140px] flex flex-col items-center justify-center text-center overflow-hidden">
-        <div className="text-2xl sm:text-3xl lg:text-4xl leading-relaxed tracking-wider font-hindi font-medium select-none">
-          {Array.from((activeLesson?.text || '').normalize('NFC')).map((char, idx) => {
-            let color = 'text-slate-500';
-            const isCurrent = idx === typedIndex;
-
-            if (idx < typedIndex) {
-              const hist = history[idx];
-              color = hist?.status === 'correct' ? 'text-emerald-400' : 'text-rose-500 underline decoration-rose-500 decoration-2';
-            } else if (isCurrent) {
-              color = 'text-white bg-indigo-500/30 px-1 rounded ring-2 ring-indigo-400 animate-pulse';
-            }
-
-            return (
-              <span key={idx} className={`transition-all duration-75 ${color}`}>
-                {char}
-              </span>
-            );
-          })}
-        </div>
-
-        {/* HINDI INFORMATIVE KEYSTROKE SEQUENCE DECOMPOSITION GUIDE */}
-        {language === 'hindi' && upcomingSequence.length > 0 && !isCompleted && (
-          <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-center gap-3 text-xs text-slate-300">
-            <span className="text-slate-500 font-medium">कुंजी अनुक्रम:</span>
-            <div className="flex items-center gap-1.5 font-mono-custom">
-              {upcomingSequence.map((item, sIdx) => (
-                <div
-                  key={sIdx}
-                  className={`flex items-center gap-1 px-2 py-0.5 rounded-lg border text-xs ${
-                    sIdx === 0
-                      ? 'bg-indigo-600/30 border-indigo-500 text-white font-bold ring-1 ring-indigo-400'
-                      : 'bg-slate-900 border-slate-800 text-slate-400'
-                  }`}
-                >
-                  <span className="font-hindi text-sm">{item.char === ' ' ? '␣' : item.char}</span>
-                  <span className="text-[10px] text-slate-400">➔</span>
-                  <span className="font-bold text-amber-300 uppercase">
-                    {item.shift ? `Shift+${item.key}` : (item.key === ' ' ? 'Space' : item.key)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+      {/* TWO-LINE ROLLING CAROUSEL TEXT ENGINE */}
+      <RollingTextDisplay
+        targetText={activeLesson ? activeLesson.text : ''}
+        typedIndex={typedIndex}
+        history={history}
+        strictError={strictError}
+        errorMode={errorMode}
+        onToggleErrorMode={setErrorMode}
+        hiddenInputRef={hiddenInputRef}
+        onKeyDown={handleKeyDown}
+        onFocusTypingArea={focusInput}
+        language={language}
+        upcomingSequence={upcomingSequence}
+      />
 
       {/* INTEGRATED KEYBOARD WITH 10 FINGERS DIRECTLY POSITIONED ON IT */}
       <IntegratedKeyboardHands

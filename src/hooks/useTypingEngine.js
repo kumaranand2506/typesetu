@@ -13,6 +13,7 @@ export function useTypingEngine({
   language = 'hindi',
   inputMode = 'mapper', // 'mapper' | 'native'
   hindiLayout = 'inscript', // 'inscript' | 'remington'
+  initialErrorMode = null, // 'strict' | 'casual'
   onComplete = null,
 }) {
   const [typedIndex, setTypedIndex] = useState(0);
@@ -23,13 +24,32 @@ export function useTypingEngine({
   const [endTime, setEndTime] = useState(null);
   const [isCompleted, setIsCompleted] = useState(false);
   const [lastPressedPhysicalKey, setLastPressedPhysicalKey] = useState(null);
-  const [currentWpm, setCurrentWpm] = useState(0);
+  const [currentWpm, setCurrentWpm] = useState(0); // Net WPM
+  const [currentGrossWpm, setCurrentGrossWpm] = useState(0); // Gross WPM
   const [currentAccuracy, setCurrentAccuracy] = useState(100);
+  const [strictError, setStrictError] = useState(false); // When true in strict mode, cursor is halted
 
+  const [errorMode, setErrorModeState] = useState(() => {
+    if (initialErrorMode) return initialErrorMode;
+    try {
+      return localStorage.getItem('typesetu_error_mode') || 'casual';
+    } catch (e) {
+      return 'casual';
+    }
+  });
+
+  const hiddenInputRef = useRef(null);
   const timerRef = useRef(null);
 
   // Normalize target text with Unicode NFC
   const normalizedTarget = useMemo(() => (targetText || '').normalize('NFC'), [targetText]);
+
+  const setErrorMode = useCallback((mode) => {
+    setErrorModeState(mode);
+    try {
+      localStorage.setItem('typesetu_error_mode', mode);
+    } catch (e) {}
+  }, []);
 
   // Reset state when targetText or language changes
   useEffect(() => {
@@ -41,28 +61,41 @@ export function useTypingEngine({
     setEndTime(null);
     setIsCompleted(false);
     setCurrentWpm(0);
+    setCurrentGrossWpm(0);
     setCurrentAccuracy(100);
+    setStrictError(false);
     if (timerRef.current) clearInterval(timerRef.current);
   }, [normalizedTarget, language]);
 
-  // Periodic WPM calculation
+  // Periodic high-precision metrics calculation (Net WPM, Gross WPM, Accuracy)
   useEffect(() => {
     if (startTime && !endTime && !isCompleted) {
       timerRef.current = setInterval(() => {
         const elapsedMinutes = (Date.now() - startTime) / 60000;
         if (elapsedMinutes > 0) {
-          const words = typedIndex / 5;
-          const wpm = Math.round(words / elapsedMinutes);
-          setCurrentWpm(wpm);
+          const gross = Math.round((totalKeystrokes / 5) / elapsedMinutes);
+          // Net WPM: penalizes uncorrected errors
+          const net = Math.max(
+            0,
+            Math.round(((typedIndex / 5) - (errorMode === 'casual' ? mistakes / 5 : 0)) / elapsedMinutes)
+          );
+          setCurrentGrossWpm(gross);
+          setCurrentWpm(net);
+
+          const acc =
+            totalKeystrokes > 0
+              ? Math.max(0, Math.round(((totalKeystrokes - mistakes) / totalKeystrokes) * 100))
+              : 100;
+          setCurrentAccuracy(acc);
         }
-      }, 500);
+      }, 250);
     } else {
       if (timerRef.current) clearInterval(timerRef.current);
     }
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [startTime, endTime, isCompleted, typedIndex]);
+  }, [startTime, endTime, isCompleted, typedIndex, totalKeystrokes, mistakes, errorMode]);
 
   const targetChar = normalizedTarget[typedIndex] || '';
 
@@ -83,13 +116,39 @@ export function useTypingEngine({
 
   const targetKeyInfo = targetChar ? findKeyForChar(targetChar, language, hindiLayout) : null;
 
+  // Perpetual focus helper
+  const focusInput = useCallback(() => {
+    if (hiddenInputRef.current) {
+      hiddenInputRef.current.focus({ preventScroll: true });
+    }
+  }, []);
+
   const handleKeyDown = useCallback(
     (e) => {
       if (isCompleted || !normalizedTarget) return;
 
+      // 1. Prevent default browser scrolling on Space and Arrow keys immediately
+      if (
+        e.code === 'Space' ||
+        e.key === ' ' ||
+        ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', 'Home', 'End'].includes(e.key)
+      ) {
+        e.preventDefault();
+      }
+
+      // 2. Prevent default browser focus loss on Tab key
+      if (e.key === 'Tab') {
+        e.preventDefault();
+      }
+
       // Ignore lone modifier keys
-      if (['Shift', 'Control', 'Alt', 'Meta', 'CapsLock', 'Tab'].includes(e.key)) {
+      if (['Shift', 'Control', 'Alt', 'Meta', 'CapsLock'].includes(e.key)) {
         return;
+      }
+
+      // Start timer on first active keystroke
+      if (!startTime) {
+        setStartTime(Date.now());
       }
 
       setLastPressedPhysicalKey({ key: e.key, code: e.code });
@@ -98,16 +157,17 @@ export function useTypingEngine({
       // Backspace handling
       if (e.key === 'Backspace') {
         e.preventDefault();
+        if (errorMode === 'strict' && strictError) {
+          // Clear halted strict error on current char
+          setStrictError(false);
+          return;
+        }
         if (typedIndex > 0) {
+          setStrictError(false);
           setTypedIndex((prev) => prev - 1);
           setHistory((prev) => prev.slice(0, -1));
         }
         return;
-      }
-
-      // Start timer on first keystroke
-      if (!startTime) {
-        setStartTime(Date.now());
       }
 
       setTotalKeystrokes((prev) => prev + 1);
@@ -154,47 +214,105 @@ export function useTypingEngine({
 
       if (isCorrect) {
         soundManager.playClick();
+        setStrictError(false);
+
+        const newHistoryItem = {
+          char: expectedChar,
+          typedChar: producedChar,
+          status: 'correct',
+        };
+        const newHistory = [...history, newHistoryItem];
+        setHistory(newHistory);
+
+        const nextIndex = typedIndex + 1;
+        setTypedIndex(nextIndex);
+
+        const totalKeys = totalKeystrokes + 1;
+        const totalErrors = mistakes;
+        const acc = Math.max(0, Math.round(((totalKeys - totalErrors) / totalKeys) * 100));
+        setCurrentAccuracy(acc);
+
+        if (nextIndex >= normalizedTarget.length) {
+          const now = Date.now();
+          setEndTime(now);
+          setIsCompleted(true);
+          soundManager.playSuccess();
+
+          const durationMinutes = Math.max(0.05, (now - (startTime || now)) / 60000);
+          const finalGrossWpm = Math.round((totalKeys / 5) / durationMinutes);
+          const finalNetWpm = Math.max(
+            0,
+            Math.round(((normalizedTarget.length / 5) - (errorMode === 'casual' ? totalErrors / 5 : 0)) / durationMinutes)
+          );
+          const finalCpm = Math.round(finalNetWpm * 5);
+
+          if (onComplete) {
+            onComplete({
+              wpm: finalNetWpm,
+              grossWpm: finalGrossWpm,
+              netWpm: finalNetWpm,
+              cpm: finalCpm,
+              accuracy: acc,
+              mistakes: totalErrors,
+              timeSeconds: Math.round((now - (startTime || now)) / 1000),
+              charactersTyped: normalizedTarget.length,
+            });
+          }
+        }
       } else {
+        // Keystroke Error
         soundManager.playError();
-        setMistakes((prev) => prev + 1);
-      }
+        const updatedMistakes = mistakes + 1;
+        setMistakes(updatedMistakes);
 
-      const newHistoryItem = {
-        char: expectedChar,
-        typedChar: producedChar,
-        status: isCorrect ? 'correct' : 'error',
-      };
+        const totalKeys = totalKeystrokes + 1;
+        const acc = Math.max(0, Math.round(((totalKeys - updatedMistakes) / totalKeys) * 100));
+        setCurrentAccuracy(acc);
 
-      const newHistory = [...history, newHistoryItem];
-      setHistory(newHistory);
+        if (errorMode === 'strict') {
+          // Strict Mode: Halts cursor, letter turns red, user must correct it
+          setStrictError(true);
+        } else {
+          // Casual Mode: Marks letter red and advances cursor
+          setStrictError(false);
+          const newHistoryItem = {
+            char: expectedChar,
+            typedChar: producedChar,
+            status: 'error',
+          };
+          const newHistory = [...history, newHistoryItem];
+          setHistory(newHistory);
 
-      const nextIndex = typedIndex + 1;
-      setTypedIndex(nextIndex);
+          const nextIndex = typedIndex + 1;
+          setTypedIndex(nextIndex);
 
-      const totalKeys = totalKeystrokes + 1;
-      const totalErrors = isCorrect ? mistakes : mistakes + 1;
-      const acc = Math.max(0, Math.round(((totalKeys - totalErrors) / totalKeys) * 100));
-      setCurrentAccuracy(acc);
+          if (nextIndex >= normalizedTarget.length) {
+            const now = Date.now();
+            setEndTime(now);
+            setIsCompleted(true);
+            soundManager.playSuccess();
 
-      if (nextIndex >= normalizedTarget.length) {
-        const now = Date.now();
-        setEndTime(now);
-        setIsCompleted(true);
-        soundManager.playSuccess();
+            const durationMinutes = Math.max(0.05, (now - (startTime || now)) / 60000);
+            const finalGrossWpm = Math.round((totalKeys / 5) / durationMinutes);
+            const finalNetWpm = Math.max(
+              0,
+              Math.round(((normalizedTarget.length / 5) - (updatedMistakes / 5)) / durationMinutes)
+            );
+            const finalCpm = Math.round(finalNetWpm * 5);
 
-        const durationMinutes = Math.max(0.05, (now - (startTime || now)) / 60000);
-        const finalWpm = Math.round((normalizedTarget.length / 5) / durationMinutes);
-        const finalCpm = Math.round(normalizedTarget.length / durationMinutes);
-
-        if (onComplete) {
-          onComplete({
-            wpm: finalWpm,
-            cpm: finalCpm,
-            accuracy: acc,
-            mistakes: totalErrors,
-            timeSeconds: Math.round((now - (startTime || now)) / 1000),
-            charactersTyped: normalizedTarget.length,
-          });
+            if (onComplete) {
+              onComplete({
+                wpm: finalNetWpm,
+                grossWpm: finalGrossWpm,
+                netWpm: finalNetWpm,
+                cpm: finalCpm,
+                accuracy: acc,
+                mistakes: updatedMistakes,
+                timeSeconds: Math.round((now - (startTime || now)) / 1000),
+                charactersTyped: normalizedTarget.length,
+              });
+            }
+          }
         }
       }
     },
@@ -209,6 +327,8 @@ export function useTypingEngine({
       language,
       inputMode,
       hindiLayout,
+      errorMode,
+      strictError,
       onComplete,
     ]
   );
@@ -219,13 +339,21 @@ export function useTypingEngine({
     mistakes,
     totalKeystrokes,
     isCompleted,
-    currentWpm,
+    currentWpm, // Net WPM
+    currentGrossWpm, // Gross WPM
     currentAccuracy,
+    cpm: Math.round(currentWpm * 5),
     targetChar,
     targetKeyInfo,
     upcomingSequence,
     lastPressedPhysicalKey,
     handleKeyDown,
-    progressPercent: normalizedTarget.length > 0 ? Math.min(100, Math.round((typedIndex / normalizedTarget.length) * 100)) : 0,
+    hiddenInputRef,
+    focusInput,
+    errorMode,
+    setErrorMode,
+    strictError,
+    progressPercent:
+      normalizedTarget.length > 0 ? Math.min(100, Math.round((typedIndex / normalizedTarget.length) * 100)) : 0,
   };
 }
