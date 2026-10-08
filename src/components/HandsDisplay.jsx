@@ -1,5 +1,5 @@
 import React from 'react';
-import { FINGER_INFO } from '../data/inscriptMap';
+import { FINGER_INFO } from '../data/krutiDevMap';
 
 export default function HandsDisplay({ activeFinger = null, language = 'english' }) {
   const currentFingerInfo = activeFinger ? FINGER_INFO[activeFinger] : null;

@@ -1,8 +1,7 @@
 import React from 'react';
 import { X, HelpCircle, ShieldCheck } from 'lucide-react';
-import { KEYBOARD_ROWS } from '../data/krutiDevMap';
 
-export default function InScriptChartModal({ isOpen, onClose }) {
+export default function KrutiDevChartModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (

@@ -6,7 +6,7 @@ import PracticeView from './components/PracticeView';
 import BadgesView from './components/BadgesView';
 import AdSettingsModal from './components/AdSettingsModal';
 import PolicyModal from './components/PolicyModal';
-import InScriptChartModal from './components/InScriptChartModal';
+import KrutiDevChartModal from './components/KrutiDevChartModal';
 import BadgeModal from './components/BadgeModal';
 import { getUserStats, saveUserStats } from './data/badgeSystem';
 import { Heart, Sparkles, BookOpen, GraduationCap, Award, Grid, ShieldCheck, DollarSign, Library } from 'lucide-react';
@@ -37,7 +37,7 @@ export default function App() {
   // Modals
   const [isAdSettingsOpen, setIsAdSettingsOpen] = useState(false);
   const [isPolicyOpen, setIsPolicyOpen] = useState(false);
-  const [isInScriptChartOpen, setIsInScriptChartOpen] = useState(false);
+  const [isChartModalOpen, setIsChartModalOpen] = useState(false);
   const [unlockedBadgeId, setUnlockedBadgeId] = useState(null);
 
   // Sync theme with <html> class
@@ -127,7 +127,7 @@ export default function App() {
           onToggleTheme={handleToggleTheme}
           onOpenAdSettings={() => setIsAdSettingsOpen(true)}
           onOpenPolicy={() => setIsPolicyOpen(true)}
-          onOpenChart={() => setIsInScriptChartOpen(true)}
+          onOpenChart={() => setIsChartModalOpen(true)}
         />
       )}
 
@@ -201,7 +201,7 @@ export default function App() {
                 </span>
                 <span className="text-slate-600">•</span>
                 <span className="text-slate-400">
-                  Enterprise Bilingual InScript & English Touch Typing Platform
+                  Enterprise Bilingual Kruti Dev 010 & English Touch Typing Platform
                 </span>
               </div>
             </div>
@@ -233,10 +233,10 @@ export default function App() {
                 CPCT / SSC Exam Mock
               </button>
               <button
-                onClick={() => setIsInScriptChartOpen(true)}
+                onClick={() => setIsChartModalOpen(true)}
                 className="hover:text-indigo-400 transition cursor-pointer"
               >
-                InScript Chart
+                Kruti Dev Chart
               </button>
               <button
                 onClick={() => setIsAdSettingsOpen(true)}
@@ -258,7 +258,7 @@ export default function App() {
               Anonymous touch typing • No account required • Stored securely in your browser
             </div>
             <div>
-              BIS Standard Layout • CPCT, SSC CGL/CHSL & Court Exam Approved
+              Kruti Dev 010 Remington Typewriter • CPCT, SSC CGL/CHSL & Court Exam Approved
             </div>
           </div>
         </footer>
@@ -275,9 +275,9 @@ export default function App() {
         onClose={() => setIsPolicyOpen(false)}
       />
 
-      <InScriptChartModal
-        isOpen={isInScriptChartOpen}
-        onClose={() => setIsInScriptChartOpen(false)}
+      <KrutiDevChartModal
+        isOpen={isChartModalOpen}
+        onClose={() => setIsChartModalOpen(false)}
       />
 
       <BadgeModal

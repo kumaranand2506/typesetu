@@ -24,14 +24,14 @@ import {
 const EXAM_PRESETS = [
   {
     id: 'cpct-hindi',
-    name: 'MP CPCT Exam (हिंदी InScript)',
+    name: 'MP CPCT Exam (हिंदी Kruti Dev 010)',
     language: 'hindi',
     durationMinutes: 15,
     cutoffNetWpm: 20,
     maxErrorPercent: 10,
     backspaceRule: 'currentWord', // CPCT restricts backspacing beyond current word
     title: 'म.प्र. शासन सीपीटी परीक्षा प्रारूप',
-    description: '15 मिनट आधिकारिक इनस्क्रिप्ट मंगल मानक। उत्तीर्ण अंक: न्यूनतम 20 शुद्ध शब्द/मिनट (Net WPM)।',
+    description: '15 मिनट आधिकारिक कुर्ती देव ०१० रेमिंगटन मानक। उत्तीर्ण अंक: न्यूनतम 20 शुद्ध शब्द/मिनट (Net WPM)।',
   },
   {
     id: 'ssc-dest',
@@ -46,14 +46,14 @@ const EXAM_PRESETS = [
   },
   {
     id: 'court-exam-hindi',
-    name: 'High Court / District Court (हिंदी)',
+    name: 'High Court / District Court (हिंदी Kruti Dev 010)',
     language: 'hindi',
     durationMinutes: 5,
     cutoffNetWpm: 30,
     maxErrorPercent: 5,
     backspaceRule: 'disabled', // Strict court exams often lock backspace
     title: 'उच्च न्यायालय कनिष्ठ न्यायिक सहायक प्रारूप',
-    description: '5 मिनट कठोर परीक्षा। बैकस्पेस पूर्णतः प्रतिबंधित। उत्तीर्ण मानक: 30 Net WPM।',
+    description: '5 मिनट कठोर परीक्षा। बैकस्पेस पूर्णतः प्रतिबंधित (कुर्ती देव ०१०)। उत्तीर्ण मानक: 30 Net WPM।',
   },
   {
     id: 'court-exam-eng',
@@ -220,7 +220,6 @@ export default function ExamView({
     targetText: activePassage?.text || '',
     language: examLang,
     inputMode: 'mapper',
-    hindiLayout: 'inscript',
     initialErrorMode: 'casual',
     backspaceRule: currentPreset.id === 'custom-exam' ? backspaceRule : currentPreset.backspaceRule,
     timeLimitSeconds: isExamRunning ? durationSeconds : null,
@@ -265,8 +264,8 @@ export default function ExamView({
             </h1>
             <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl font-hindi">
               {isHindiMode
-                ? 'मध्य प्रदेश CPCT (इनस्क्रिप्ट), SSC CGL/CHSL DEST, एवं उच्च न्यायालय स्टेनो/सहायक परीक्षा के हूबहू वास्तविक मानकों पर आधारित।'
-                : 'Full-fledged exam simulation adhering to official CPCT InScript, SSC DEST, and High Court backspace guidelines.'}
+                ? 'मध्य प्रदेश CPCT (कुर्ती देव ०१०), SSC CGL/CHSL DEST, एवं उच्च न्यायालय स्टेनो/सहायक परीक्षा के हूबहू वास्तविक मानकों पर आधारित।'
+                : 'Full-fledged exam simulation adhering to official CPCT Kruti Dev 010, SSC DEST, and High Court backspace guidelines.'}
             </p>
           </div>
 
@@ -312,7 +311,7 @@ export default function ExamView({
                         ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
                         : 'bg-indigo-500/20 text-indigo-300 border border-indigo-500/30'
                     }`}>
-                      {preset.language === 'hindi' ? 'हिंदी InScript' : 'English QWERTY'}
+                      {preset.language === 'hindi' ? 'हिंदी Kruti Dev 010' : 'English QWERTY'}
                     </span>
                     <span className="text-xs font-bold text-slate-400 font-mono">
                       ⏱️ {preset.durationMinutes} Min

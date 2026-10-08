@@ -1,5 +1,5 @@
 import React from 'react';
-import { KEYBOARD_ROWS, FINGER_INFO } from '../data/inscriptMap';
+import { KEYBOARD_ROWS, FINGER_INFO } from '../data/krutiDevMap';
 
 export default function VirtualKeyboard({
   targetKey = null,
@@ -13,10 +13,10 @@ export default function VirtualKeyboard({
       <div className="flex flex-wrap items-center justify-between gap-2 mb-3 pb-2 border-b border-slate-800/80 text-xs">
         <div className="flex items-center gap-2">
           <span className="font-semibold text-slate-300">
-            {language === 'hindi' ? 'कीबोर्ड लेआउट: इनस्क्रिप्ट (InScript)' : 'Keyboard Layout: English QWERTY'}
+            {language === 'hindi' ? 'कीबोर्ड लेआउट: कुर्ती देव ०१० (Kruti Dev 010)' : 'Keyboard Layout: English QWERTY'}
           </span>
           <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-            {language === 'hindi' ? 'मानक देवनागरी (BIS)' : 'Standard US'}
+            {language === 'hindi' ? 'रेमिंगटन टाइपराइटर (Remington Typewriter)' : 'Standard US'}
           </span>
         </div>
 
@@ -43,12 +43,10 @@ export default function VirtualKeyboard({
                 (k.key === ' ' && targetKey === ' ')
               );
 
-              // Shift key highlight logic:
-              // If target requires Shift, highlight the appropriate Shift key
+              // Shift key highlight logic
               const isTargetShift = targetShift && (
                 (k.code === 'ShiftLeft' && ['RI', 'RM', 'RR', 'RP'].includes(finger?.id || '')) ||
                 (k.code === 'ShiftRight' && ['LP', 'LR', 'LM', 'LI'].includes(finger?.id || '')) ||
-                // fallback if finger unknown
                 (k.code === 'ShiftLeft' || k.code === 'ShiftRight')
               );
 
@@ -62,8 +60,8 @@ export default function VirtualKeyboard({
               // Determine display symbols
               const engPrimary = k.key || '';
               const engShift = k.shiftKey || '';
-              const hindiPrimary = k.inscript || '';
-              const hindiShift = k.inscriptShift || '';
+              const hindiPrimary = k.krutiDev || k.inscript || '';
+              const hindiShift = k.krutiDevShift || k.inscriptShift || '';
 
               return (
                 <div
@@ -116,18 +114,16 @@ export default function VirtualKeyboard({
                         <span className="text-slate-500 font-medium">{engPrimary.toUpperCase()}</span>
                       </div>
 
-                      {/* Bottom/Center of the key: Hindi InScript character */}
+                      {/* Bottom/Center of the key: Kruti Dev 010 character */}
                       <div className="flex items-baseline justify-between mt-auto">
                         {language === 'hindi' ? (
                           <>
                             <span className={`text-base sm:text-lg font-bold font-hindi leading-none ${isTargetKey ? 'text-indigo-300' : 'text-amber-300'}`}>
                               {targetShift ? (hindiShift || hindiPrimary) : hindiPrimary}
                             </span>
-                            {hindiShift && (
-                              <span className="text-[10px] font-hindi text-slate-400 opacity-75">
-                                {hindiShift}
-                              </span>
-                            )}
+                            <span className="text-[9px] font-mono-custom text-slate-500/80 uppercase">
+                              {engPrimary}
+                            </span>
                           </>
                         ) : (
                           <span className={`text-sm sm:text-base font-bold font-mono-custom leading-none ${isTargetKey ? 'text-indigo-300' : 'text-slate-100'}`}>

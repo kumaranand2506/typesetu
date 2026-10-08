@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { KEYBOARD_ROWS, FINGER_INFO } from '../data/inscriptMap';
+import { KEYBOARD_ROWS, FINGER_INFO } from '../data/krutiDevMap';
 import { soundManager } from '../utils/soundEffects';
 import { Volume2, Settings, X, ShieldCheck, Sliders, Eye } from 'lucide-react';
 
@@ -221,7 +221,7 @@ export default function IntegratedKeyboardHands({
             <div className="flex items-center gap-1.5 text-slate-300">
               <ShieldCheck size={14} className="text-emerald-400" />
               <span className="font-bold text-white text-[11px] font-hindi">
-                BIS IS 16350 मानक इनस्क्रिप्ट (Mangal)
+                कुर्ती देव ०१० (Kruti Dev 010 Remington Typewriter)
               </span>
             </div>
           ) : (
@@ -412,8 +412,8 @@ export default function IntegratedKeyboardHands({
               const engPrimary = k.key || '';
               const engShift = k.shiftKey || '';
 
-              const hindiPrimary = k.inscript || '';
-              const hindiShift = k.inscriptShift || '';
+              const hindiPrimary = k.krutiDev || k.inscript || '';
+              const hindiShift = k.krutiDevShift || k.inscriptShift || '';
 
               const fingerColor = finger ? finger.color : '#334155';
 
@@ -472,16 +472,16 @@ export default function IntegratedKeyboardHands({
                     /* DUAL KEYCAP WITH STRICT LANGUAGE SEPARATION */
                     <div className="relative flex flex-col justify-between h-full w-full">
                       {isHindi ? (
-                        /* HINDI INSCRIPT MODE: PROMINENT DEVANAGARI + MUTED QWERTY CORNER */
+                        /* HINDI KRUTI DEV 010 REMINGTON TYPEWRITER MODE */
                         <>
-                          {/* Shifted Devanagari character in top-left */}
-                          <div className="flex items-center justify-start text-[9.5px] sm:text-[10.5px] font-hindi leading-none">
-                            <span className={targetShift && isTargetKey ? 'text-amber-300 font-bold' : 'text-slate-400/70'}>
-                              {hindiShift}
+                          {/* Shifted Kruti Dev glyph in top-left */}
+                          <div className="flex items-center justify-start text-[9px] sm:text-[10px] font-hindi leading-none">
+                            <span className={targetShift && isTargetKey ? 'text-amber-300 font-bold' : 'text-slate-500/80'}>
+                              {targetShift ? hindiPrimary : hindiShift}
                             </span>
                           </div>
 
-                          {/* Primary Devanagari Glyph Centered */}
+                          {/* Primary Kruti Dev Glyph Centered (Transitions to Shifted when Shift active) */}
                           <div className="flex items-center justify-center -mt-1 sm:-mt-1.5">
                             <span
                               className={`text-base sm:text-lg font-bold font-hindi leading-none transition-transform ${
@@ -492,8 +492,8 @@ export default function IntegratedKeyboardHands({
                             </span>
                           </div>
 
-                          {/* Small Muted QWERTY Subscript in Bottom-Right */}
-                          <div className="flex items-center justify-end text-[8.5px] font-mono-custom text-slate-500/70 uppercase leading-none">
+                          {/* Subtle QWERTY Letter Subscript in Bottom-Right */}
+                          <div className="flex items-center justify-end text-[8.5px] font-mono-custom text-slate-500/80 uppercase leading-none">
                             <span>{engPrimary}</span>
                           </div>
                         </>

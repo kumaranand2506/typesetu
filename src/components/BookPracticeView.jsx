@@ -31,7 +31,6 @@ export default function BookPracticeView({
   const [fontSize, setFontSize] = useState('normal'); // 'normal' | 'large'
   const [fontFamily, setFontFamily] = useState('serif'); // 'serif' | 'sans'
   const [inputMode, setInputMode] = useState('mapper');
-  const [hindiLayout, setHindiLayout] = useState('inscript'); // 'inscript' | 'remington'
   const [textLayoutMode, setTextLayoutMode] = useState('rolling'); // 'rolling' | 'book'
 
   const typingContainerRef = useRef(null);
@@ -131,7 +130,6 @@ export default function BookPracticeView({
     targetText: currentParagraphText,
     language: currentBook.language || language,
     inputMode,
-    hindiLayout,
     onComplete: handleParagraphComplete,
   });
 

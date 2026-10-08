@@ -23,7 +23,6 @@ export default function PracticeView({
   const [showCustomModal, setShowCustomModal] = useState(false);
   const [customTitle, setCustomTitle] = useState('');
   const [inputMode, setInputMode] = useState('mapper'); // 'mapper' | 'native'
-  const [hindiLayout, setHindiLayout] = useState('inscript'); // 'inscript' | 'remington'
   const [textLayoutMode, setTextLayoutMode] = useState('rolling'); // 'rolling' | 'full'
   const [showKeyboardGuide, setShowKeyboardGuide] = useState(true);
   const [activeCategory, setActiveCategory] = useState('All');
@@ -99,7 +98,6 @@ export default function PracticeView({
     targetText: currentPassage?.text || '',
     language,
     inputMode,
-    hindiLayout,
     onComplete: handlePracticeComplete,
   });
 

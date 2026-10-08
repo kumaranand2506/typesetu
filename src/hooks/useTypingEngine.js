@@ -1,18 +1,16 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
-  INSCRIPT_NORMAL,
-  INSCRIPT_SHIFT,
-  REMINGTON_NORMAL,
-  REMINGTON_SHIFT,
+  KRUTI_DEV_NORMAL,
+  KRUTI_DEV_SHIFT,
+  tokenizeDevanagariToKrutiDev,
   findKeyForChar,
-} from '../data/inscriptMap';
+} from '../data/krutiDevMap';
 import { soundManager } from '../utils/soundEffects';
 
 export function useTypingEngine({
   targetText = '',
   language = 'hindi',
   inputMode = 'mapper', // 'mapper' | 'native'
-  hindiLayout = 'inscript', // 'inscript' | 'remington'
   initialErrorMode = null, // 'strict' | 'casual'
   backspaceRule = 'allowed', // 'allowed' | 'currentWord' | 'disabled'
   timeLimitSeconds = null, // e.g., 300, 600, 900 for 5, 10, 15 min exams
@@ -44,13 +42,36 @@ export function useTypingEngine({
   const hiddenInputRef = useRef(null);
   const timerRef = useRef(null);
 
-  // Normalize target text with Unicode NFC, strip invisible zero-width controls, and normalize NBSP
+  // Normalize target text with Unicode NFC, strip zero-width chars and NBSP
   const normalizedTarget = useMemo(() => {
     return (targetText || '')
       .normalize('NFC')
       .replace(/[\u200B-\u200D\uFEFF]/g, '')
       .replace(/\u00A0/g, ' ');
   }, [targetText]);
+
+  // Tokenize target into exact sequential keystroke units:
+  // For Hindi: Tokenized into Kruti Dev 010 Remington typing sequence (e.g. 'f' before consonant for 'ि')
+  // For English: Tokenized character-by-character
+  const tokens = useMemo(() => {
+    if (!normalizedTarget) return [];
+    if (language === 'hindi') {
+      return tokenizeDevanagariToKrutiDev(normalizedTarget);
+    } else {
+      return Array.from(normalizedTarget).map((ch) => {
+        const info = findKeyForChar(ch, 'english');
+        return {
+          key: info.key,
+          shift: info.shift,
+          glyph: ch,
+          finger: info.finger,
+          raw: ch,
+        };
+      });
+    }
+  }, [normalizedTarget, language]);
+
+  const totalTokens = tokens.length;
 
   const setErrorMode = useCallback((mode) => {
     setErrorModeState(mode);
@@ -59,7 +80,7 @@ export function useTypingEngine({
     } catch (e) {}
   }, []);
 
-  // Reset state when targetText, language, or timeLimit changes
+  // Reset state when target, language, or timeLimit changes
   useEffect(() => {
     setTypedIndex(0);
     setHistory([]);
@@ -157,24 +178,31 @@ export function useTypingEngine({
     };
   }, [startTime, endTime, isCompleted, typedIndex, totalKeystrokes, mistakes, errorMode, timeLimitSeconds, finalizeTest]);
 
-  const targetChar = normalizedTarget[typedIndex] || '';
+  const targetToken = tokens[typedIndex] || null;
+  const targetChar = targetToken ? targetToken.glyph : (normalizedTarget[typedIndex] || '');
 
-  // Calculate upcoming 4 characters and their keys for sequence guidance
+  // Calculate upcoming 4 tokens for sequence breakdown
   const upcomingSequence = [];
-  if (normalizedTarget && !isCompleted) {
-    for (let i = typedIndex; i < Math.min(normalizedTarget.length, typedIndex + 4); i++) {
-      const ch = normalizedTarget[i];
-      const info = findKeyForChar(ch, language, hindiLayout);
+  if (tokens && !isCompleted) {
+    for (let i = typedIndex; i < Math.min(tokens.length, typedIndex + 4); i++) {
+      const tok = tokens[i];
       upcomingSequence.push({
-        char: ch,
-        key: info.key,
-        shift: info.shift,
-        finger: info.finger,
+        char: tok.glyph,
+        key: tok.key,
+        shift: tok.shift,
+        finger: tok.finger,
       });
     }
   }
 
-  const targetKeyInfo = targetChar ? findKeyForChar(targetChar, language, hindiLayout) : null;
+  const targetKeyInfo = targetToken
+    ? {
+        key: targetToken.key,
+        shift: targetToken.shift,
+        finger: targetToken.finger,
+        glyph: targetToken.glyph,
+      }
+    : null;
 
   // Perpetual focus helper
   const focusInput = useCallback(() => {
@@ -185,9 +213,9 @@ export function useTypingEngine({
 
   const handleKeyDown = useCallback(
     (e) => {
-      if (isCompleted || !normalizedTarget) return;
+      if (isCompleted || totalTokens === 0 || typedIndex >= totalTokens) return;
 
-      // 1. Prevent default browser scrolling on Space and Arrow keys immediately
+      // 1. Prevent default browser scrolling on Space and Arrow keys
       if (
         e.code === 'Space' ||
         e.key === ' ' ||
@@ -226,8 +254,15 @@ export function useTypingEngine({
 
         // 2. Current Word Only (CPCT / SSC rule: cannot backspace past previous word)
         if (backspaceRule === 'currentWord') {
-          const prevSpaceIdx = normalizedTarget.lastIndexOf(' ', Math.max(0, typedIndex - 1));
-          if (typedIndex <= prevSpaceIdx + 1) {
+          // Find index of previous space token
+          let prevSpaceTokenIdx = -1;
+          for (let ti = typedIndex - 1; ti >= 0; ti--) {
+            if (tokens[ti]?.key === ' ' || tokens[ti]?.glyph === ' ') {
+              prevSpaceTokenIdx = ti;
+              break;
+            }
+          }
+          if (typedIndex <= prevSpaceTokenIdx + 1) {
             soundManager.playError();
             return;
           }
@@ -249,52 +284,64 @@ export function useTypingEngine({
 
       setTotalKeystrokes((prev) => prev + 1);
 
+      const currentExpectedToken = tokens[typedIndex];
+      if (!currentExpectedToken) return;
+
       let producedChar = e.key;
 
+      // Hindi Typing powered strictly by Kruti Dev 010 Remington Typewriter
       if (language === 'hindi' && inputMode === 'mapper') {
         e.preventDefault();
-        if (hindiLayout === 'remington') {
-          if (e.shiftKey) {
-            producedChar = REMINGTON_SHIFT[e.key] || REMINGTON_SHIFT[e.code] || e.key;
-          } else {
-            producedChar = REMINGTON_NORMAL[e.key] || REMINGTON_NORMAL[e.code] || e.key;
-          }
+        if (e.shiftKey) {
+          producedChar = KRUTI_DEV_SHIFT[e.key] || KRUTI_DEV_SHIFT[e.code] || e.key;
         } else {
-          if (e.shiftKey) {
-            producedChar = INSCRIPT_SHIFT[e.key] || INSCRIPT_SHIFT[e.code] || e.key;
-          } else {
-            producedChar = INSCRIPT_NORMAL[e.key] || INSCRIPT_NORMAL[e.code] || e.key;
-          }
+          producedChar = KRUTI_DEV_NORMAL[e.key] || KRUTI_DEV_NORMAL[e.code] || e.key;
         }
       }
 
-      const expectedChar = normalizedTarget[typedIndex];
-      const normExpected = (expectedChar || '').normalize('NFC');
+      const expectedGlyph = currentExpectedToken.glyph;
+      const expectedKey = currentExpectedToken.key;
+      const expectedShift = currentExpectedToken.shift;
+
+      const normExpectedGlyph = (expectedGlyph || '').normalize('NFC');
       const normProduced = (producedChar || '').normalize('NFC');
 
-      // Smart InScript & Typographical tolerance (danda, curly quotes, dashes)
+      // Direct Glyph or Physical Key Match
+      const isGlyphMatch = normProduced === normExpectedGlyph;
+      const isKeyMatch =
+        e.key.toLowerCase() === expectedKey.toLowerCase() &&
+        Boolean(e.shiftKey) === Boolean(expectedShift);
+
+      // Space Match
+      const isSpaceMatch =
+        (e.code === 'Space' || e.key === ' ') &&
+        (expectedKey === ' ' || expectedGlyph === ' ');
+
+      // Purna Viram (।) tolerance: in Kruti Dev, Shift+A is ।
       const isDandaMatch =
-        (normExpected === '।' || normExpected === '|') &&
-        (normProduced === '।' || normProduced === '>' || (e.shiftKey && e.key === '.') || normProduced === '|');
+        (normExpectedGlyph === '।' || normExpectedGlyph === '|') &&
+        (normProduced === '।' || (e.shiftKey && (e.key === 'A' || e.key === 'a' || e.key === '.')) || normProduced === '|');
+
+      // Typographical quotes & dashes tolerance
       const isQuoteMatch =
-        (normExpected === '“' || normExpected === '”') &&
+        (normExpectedGlyph === '“' || normExpectedGlyph === '”' || normExpectedGlyph === '"') &&
         (normProduced === '"' || normProduced === '“' || normProduced === '”');
       const isSingleQuoteMatch =
-        (normExpected === '‘' || normExpected === '’') &&
+        (normExpectedGlyph === '‘' || normExpectedGlyph === '’' || normExpectedGlyph === "'") &&
         (normProduced === "'" || normProduced === '‘' || normProduced === '’');
       const isDashMatch =
-        (normExpected === '—' || normExpected === '–') &&
+        (normExpectedGlyph === '—' || normExpectedGlyph === '–' || normExpectedGlyph === '-') &&
         (normProduced === '-' || normProduced === '—' || normProduced === '–');
 
       const isCorrect =
-        normProduced === normExpected || isDandaMatch || isQuoteMatch || isSingleQuoteMatch || isDashMatch;
+        isGlyphMatch || isKeyMatch || isSpaceMatch || isDandaMatch || isQuoteMatch || isSingleQuoteMatch || isDashMatch;
 
       if (isCorrect) {
         soundManager.playClick();
         setStrictError(false);
 
         const newHistoryItem = {
-          char: expectedChar,
+          char: expectedGlyph,
           typedChar: producedChar,
           status: 'correct',
         };
@@ -309,7 +356,7 @@ export function useTypingEngine({
         const acc = Math.max(0, Math.round(((totalKeys - totalErrors) / totalKeys) * 100));
         setCurrentAccuracy(acc);
 
-        if (nextIndex >= normalizedTarget.length) {
+        if (nextIndex >= totalTokens) {
           finalizeTest(false);
         }
       } else {
@@ -323,13 +370,13 @@ export function useTypingEngine({
         setCurrentAccuracy(acc);
 
         if (errorMode === 'strict') {
-          // Strict Mode: Halts cursor, letter turns red, user must correct it
+          // Strict Mode: Halts cursor, letter turns red, user must strike correct key
           setStrictError(true);
         } else {
           // Casual Mode: Marks letter red and advances cursor
           setStrictError(false);
           const newHistoryItem = {
-            char: expectedChar,
+            char: expectedGlyph,
             typedChar: producedChar,
             status: 'error',
           };
@@ -339,7 +386,7 @@ export function useTypingEngine({
           const nextIndex = typedIndex + 1;
           setTypedIndex(nextIndex);
 
-          if (nextIndex >= normalizedTarget.length) {
+          if (nextIndex >= totalTokens) {
             finalizeTest(false);
           }
         }
@@ -347,7 +394,8 @@ export function useTypingEngine({
     },
     [
       isCompleted,
-      normalizedTarget,
+      totalTokens,
+      tokens,
       typedIndex,
       history,
       mistakes,
@@ -355,7 +403,6 @@ export function useTypingEngine({
       startTime,
       language,
       inputMode,
-      hindiLayout,
       errorMode,
       strictError,
       backspaceRule,
@@ -364,6 +411,7 @@ export function useTypingEngine({
   );
 
   return {
+    tokens,
     typedIndex,
     history,
     mistakes,
@@ -386,6 +434,6 @@ export function useTypingEngine({
     remainingSeconds,
     submitExam: () => finalizeTest(false),
     progressPercent:
-      normalizedTarget.length > 0 ? Math.min(100, Math.round((typedIndex / normalizedTarget.length) * 100)) : 0,
+      totalTokens > 0 ? Math.min(100, Math.round((typedIndex / totalTokens) * 100)) : 0,
   };
 }

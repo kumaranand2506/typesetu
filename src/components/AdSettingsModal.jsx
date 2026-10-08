@@ -180,7 +180,7 @@ export default function AdSettingsModal({ isOpen, onClose }) {
                   <li>Included comprehensive Privacy Policy, Terms of Service, and About pages.</li>
                   <li>Over 25 high-value lessons and classic literature passages in Hindi and English.</li>
                   <li>Responsive, fast static layout (100/100 Google Core Web Vitals).</li>
-                  <li>InScript educational keyboard guide providing clear user utility.</li>
+                  <li>Kruti Dev 010 educational keyboard guide providing clear user utility.</li>
                 </ul>
               </div>
             </div>

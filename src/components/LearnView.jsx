@@ -20,7 +20,6 @@ export default function LearnView({
 
   const [activeLessonId, setActiveLessonId] = useState(null);
   const [inputMode, setInputMode] = useState('mapper'); // 'mapper' | 'native'
-  const [hindiLayout, setHindiLayout] = useState('inscript'); // 'inscript' | 'remington'
   const [selectedStageId, setSelectedStageId] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -94,7 +93,6 @@ export default function LearnView({
     targetText: activeLesson ? activeLesson.text : '',
     language,
     inputMode,
-    hindiLayout,
     onComplete: handleLessonComplete,
   });
 

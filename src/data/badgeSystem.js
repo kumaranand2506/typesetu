@@ -43,10 +43,10 @@ export const BADGES_DEFINITION = [
   },
   {
     id: 'inscript_pro',
-    name: 'InScript Scholar',
-    hindiName: 'इनस्क्रिप्ट विद्वान',
-    description: 'Complete 5 Hindi InScript lessons.',
-    icon: '🇮🇳',
+    name: 'Kruti Dev Scholar',
+    hindiName: 'कुर्ती देव विद्वान',
+    description: 'Complete 5 Hindi Kruti Dev 010 lessons.',
+    icon: '⌨️',
     color: 'from-orange-500 to-amber-600',
   },
   {

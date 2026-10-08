@@ -16,7 +16,7 @@ export const STAGES = [
     name: 'Stage 2: Capitalization & Shift Mechanics',
     hindiName: 'चरण 2: शिफ्ट कुँजी एवं महाप्राण व्यंजन',
     range: [61, 120],
-    description: 'Opposite-hand Shift mechanics, proper nouns, and InScript shifted characters.',
+    description: 'Opposite-hand Shift mechanics, proper nouns, and Kruti Dev 010 shifted characters.',
     hindiDescription: 'शिफ्ट कुँजी से स्वतंत्र स्वर (अ, आ, इ...), महाप्राण व्यंजन (ख, घ, छ...), एवं संयुक्ताक्षर।',
     icon: '⬆️',
   },
@@ -239,7 +239,7 @@ export function generateEnglishLessons() {
 }
 
 // -------------------------------------------------------------
-// HINDI INSCIPT 300 LESSON GENERATOR & CURATED CORPUS
+// HINDI KRUTI DEV 010 (REMINGTON TYPEWRITER) 300 LESSON GENERATOR & CURATED CORPUS
 // -------------------------------------------------------------
 
 export function generateHindiLessons() {
@@ -257,24 +257,24 @@ export function generateHindiLessons() {
     if (i <= 60) {
       // STAGE 1: Lowercase Fundamentals (1-60)
       if (i <= 10) {
-        title = `पाठ ${i}: गृह पंक्ति मूल अक्षर (र, क, त, च, प)`;
-        subtitle = 'दाहिने हाथ की तर्जनी व मध्यमा';
-        description = 'दाहिने हाथ की उँगलियों से J (र), K (क), L (त), ; (च), H (प) का अभ्यास करें।';
-        text = 'र क त च प रक तर चत कच तक रत चर कर तप कप रप चप परक कपट तरक';
+        title = `पाठ ${i}: गृह पंक्ति मूल अक्षर (क, र, स, य, ह, श)`;
+        subtitle = 'D (क), J (र), L (स), ; (य), G (ह), \' (श)';
+        description = 'बाएँ हाथ से D (क), G (ह) और दाएँ हाथ से J (र), L (स), ; (य), \' (श) का अभ्यास करें।';
+        text = 'क र स य ह श कर सर हर यश शहर कह करस रसक सही शीश हरक यशक';
       } else if (i <= 20) {
-        title = `पाठ ${i}: गृह पंक्ति मात्राएँ (ि, ु, े, ो, ्)`;
-        subtitle = 'बायाँ हाथ: F (ि), G (ु), S (े), A (ो), D (्)';
-        description = 'बाएँ हाथ की उँगलियों से गृह पंक्ति की मूलभूत मात्राओं का अभ्यास।';
-        text = 'ो े ् ि ु कि कु के को ति तु ते तो रि रु रे रो पि पु पे पो चिक चुरा';
+        title = `पाठ ${i}: गृह पंक्ति मात्राएँ (ा, े, ि, ी, ं)`;
+        subtitle = 'K (ा), S (े), F (ि), H (ी), A (ं)';
+        description = 'F (ि) हमेशा व्यंजन से पहले दबाई जाती है! K (ा), S (े), H (ी), A (ं) का अभ्यास।';
+        text = 'का के कि की कंग सिर सीख किया दिया सेवा सारा शहर सही किया सीरा हंस';
       } else if (i <= 35) {
-        title = `पाठ ${i}: ऊपरी पंक्ति मात्राएँ व व्यंजन (ब, ह, ग, द, ज, ा, ी, ू)`;
-        subtitle = 'Y (ब), U (ह), I (ग), O (द), P (ज), E (ा), R (ी), T (ू)';
-        description = 'ऊपरी पंक्ति के व्यंजन और दीर्घ मात्राओं का संगम।';
-        text = 'भारत देश पानी गीत फूल सुबह खेल धूप बाग हवा नदी तीर वीर जीत मीत बात हाथ';
+        title = `पाठ ${i}: ऊपरी पंक्ति अक्षर व मात्राएँ (म, त, ज, ल, न, प, व, च, ख, ु, ू)`;
+        subtitle = 'E (म), R (त), T (ज), Y (ल), U (न), I (प), O (व), P (च), [ (ख), Q (ु), W (ू)';
+        description = 'ऊपरी पंक्ति के व्यंजन और उ/ऊ मात्राओं का संगम।';
+        text = 'भारत देश पानी गीत फूल सुबह खेल धूप बाग हवा नदी तीर वीर जीत मीत बात हाथ पूरा पुल';
       } else if (i <= 50) {
-        title = `पाठ ${i}: निचली पंक्ति के अक्षर (म, न, व, ल, स, य, ं)`;
-        subtitle = 'C (म), V (न), B (व), N (ल), M (स), / (य), X (ं)';
-        description = 'निचली पंक्ति के स्पर्श और अनुस्वार बिंदी का अभ्यास।';
+        title = `पाठ ${i}: निचली पंक्ति के अक्षर (ग, ब, अ, इ, द, उ, ए, ध, ्र, ्)`;
+        subtitle = 'X (ग), C (ब), V (अ), B (इ), N (द), M (उ), , (ए), / (ध), Z (्र), . (्)';
+        description = 'निचली पंक्ति के स्पर्श और स्वर कुंजियों का अभ्यास।';
         text = 'समय समाज विचार पुस्तक मित्र सत्य जीवन विद्या मंदिर संसार सुंदर पवन गगन नगर स्वयं';
       } else {
         title = `पाठ ${i}: तीनों पंक्तियों का द्रुत प्रवाह ड्रिल ${i - 50}`;
@@ -286,20 +286,20 @@ export function generateHindiLessons() {
       // STAGE 2: Capitalization & Shift Mechanics (61-120)
       const sub = i - 60;
       if (sub <= 20) {
-        title = `पाठ ${i}: शिफ्ट कुँजी से स्वतंत्र स्वर (अ, आ, इ, ई, उ, ऊ, ए, ऐ, ओ, औ)`;
-        subtitle = 'Shift + D, E, F, R, G, T, S, W, A, Q';
-        description = 'शिफ्ट दबाकर स्वतंत्र स्वरों का अभ्यास करें।';
-        text = 'अ आ इ ई उ ऊ ए ऐ ओ औ अब आज इधर ईश्वर उधर ऊपर एक ऐसा और औरत अमर आशा';
+        title = `पाठ ${i}: शिफ्ट कुँजी से आधे अक्षर (क्, म्, त्, ज्, ल्, न्, प्, थ, भ, स्, ध्)`;
+        subtitle = 'Shift + D (क्), E (म्), R (त्), T (ज्), Y (ल्), U (न्), I (प्), F (थ), G (भ), L (स्), / (ध्)';
+        description = 'Shift दबाकर सीधे आधे अक्षर टाइप करें।';
+        text = 'क्या त्याग ज्वाला कल्याण न्याय प्यार प्यारा पुष्प स्थान धर्म कर्म मुख्य द्वितीय';
       } else if (sub <= 40) {
-        title = `पाठ ${i}: शिफ्ट कुँजी से महाप्राण व्यंजन (ख, घ, छ, झ, ठ, ढ, थ, ध, फ, भ, श, ष)`;
-        subtitle = 'Shift + K, I, :, P, ", {, L, O, H, Y, M, <';
-        description = 'महाप्राण व्यंजन और ऊष्म वर्णों का अभ्यास।';
-        text = 'ख घ छ झ ठ ढ थ ध फ भ श ष फल घर धन थल छाया झंडा भाषा शांति शुभ ठीक धर्म';
+        title = `पाठ ${i}: शिफ्ट कुँजी से महाप्राण एवं पूर्ण विराम (फ, थ, भ, भ्, रू, ष्, ।)`;
+        subtitle = 'Shift + Q (फ), F (थ), G (भ), H (भ्), ; (रू), \' (ष्), A (।)';
+        description = 'महाप्राण व्यंजन और पूर्ण विराम (।) का अभ्यास।';
+        text = 'फल भारत भाई भाषा शांति शुभ विशेष रूप रूचि । सत्य की सदा जय होती है ।';
       } else {
-        title = `पाठ ${i}: संयुक्ताक्षर एवं विशेष वर्ण (क्ष, त्र, ज्ञ, श्र, ँ, ।)`;
-        subtitle = 'Shift + 7, 6, 5, 8, X, .';
-        description = 'क्ष (Shift+7), त्र (Shift+6), ज्ञ (Shift+5), श्र (Shift+8), पूर्ण विराम (।)';
-        text = 'ज्ञान क्षमा त्रिशूल श्रम चाँद गाँव । सूर्य प्रकाश । विद्या धनं सर्वधनं प्रधानम् ।';
+        title = `पाठ ${i}: संयुक्ताक्षर एवं रेफ़ (क्ष, त्र, ज्ञ, श्र, द्व, र्, ।)`;
+        subtitle = 'Shift + { (क्ष), + (त्र), K (ज्ञ), J (श्र), } (द्व), Z (र्), A (।)';
+        description = 'कुर्ती देव ०१० विशेष संयुक्ताक्षर और रेफ़ का अभ्यास।';
+        text = 'ज्ञान क्षमा त्रिशूल श्रम धर्म कर्म सूर्य । भारत हमारा देश है । विद्या सर्वधनं प्रधानम् ।';
       }
     } else if (i <= 180) {
       // STAGE 3: Numbers & Basic Punctuation (121-180)
@@ -328,7 +328,7 @@ export function generateHindiLessons() {
       const devSnippetsHi = [
         '// डेटाबेस कनेक्शन एवं प्रमाणीकरण: const dbClient = await connectPool({ host: "localhost", port: 5432 });',
         '/* उपयोगकर्ता प्रपत्र सत्यापन */ function validateForm(payload) { return payload.isValid && payload.score >= 95; }',
-        '// हिंदी इनस्क्रिप्ट मैपर लॉजिक: const inscriptNormalMap = { k: "क", j: "र", l: "त", h: "प", f: "ि" };',
+        '// हिंदी कुर्ती देव ०१० मैपर लॉजिक: const krutiDevMap = { d: "क", j: "र", k: "ा", s: "े", f: "ि" };',
         'SELECT कर्मचारी_आईडी, नाम, पद, वेतन FROM कर्मचारी_विवरण WHERE विभाग = "आई_टी" ORDER BY वेतन DESC;',
         'const response = await fetch("/api/v1/hindi-lessons", { method: "POST", headers: { "Content-Type": "application/json" } });',
         '<div className="w-full max-w-5xl bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl">',
@@ -336,12 +336,13 @@ export function generateHindiLessons() {
       ];
       const snippet = devSnippetsHi[(sub - 1) % devSnippetsHi.length];
       title = `पाठ ${i}: द्विभाषी कोडिंग एवं डेवलपर सिंटैक्स (${sub})`;
-      subtitle = 'प्रोग्रामर इनस्क्रिप्ट एवं कोड अभ्यास';
+      subtitle = 'प्रोग्रामर कुर्ती देव ०१० एवं कोड अभ्यास';
       description = 'प्रोग्रामिंग चिह्नों ({ }, [], =>, ===) के साथ द्विभाषी टिप्पणियाँ और कोड स्निपेट्स।';
       text = snippet;
       targetWpm = 25 + Math.floor(sub / 10) * 2;
       minAccuracy = 95;
     }
+
 
     lessons.push({
       id: `hi-${i}`,

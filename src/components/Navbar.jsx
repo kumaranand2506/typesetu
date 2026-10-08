@@ -48,7 +48,7 @@ export default function Navbar({
                 </span>
               </div>
               <p className="text-[10px] text-slate-400 font-medium hidden sm:block">
-                {currentLanguage === 'hindi' ? 'शासकीय एवं व्यावसायिक टाइपिंग सेतु' : 'Bilingual InScript & English Platform'}
+                {currentLanguage === 'hindi' ? 'शासकीय एवं व्यावसायिक टाइपिंग सेतु (Kruti Dev 010)' : 'Bilingual Kruti Dev 010 & English Platform'}
               </p>
             </div>
           </button>
@@ -126,14 +126,14 @@ export default function Navbar({
             )}
           </button>
 
-          {/* InScript Reference Chart */}
+          {/* Kruti Dev Reference Chart */}
           <button
             onClick={onOpenChart}
             className="hidden xl:flex px-2.5 py-1.5 rounded-xl text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition cursor-pointer items-center gap-1"
-            title="InScript Keyboard Layout Chart"
+            title="Kruti Dev 010 Keyboard Layout Chart"
           >
             <Grid size={14} />
-            <span>InScript Chart</span>
+            <span>Kruti Dev Chart</span>
           </button>
         </nav>
 
