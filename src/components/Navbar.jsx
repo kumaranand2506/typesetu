@@ -14,11 +14,14 @@ export default function Navbar({
   onOpenPolicy,
   onOpenChart,
 }) {
-  const [isMuted, setIsMuted] = useState(soundManager.getMuted());
+  const [switchProfile, setSwitchProfile] = useState(() => soundManager.getSwitchProfile());
 
-  const handleToggleSound = () => {
-    const next = soundManager.toggleMute();
-    setIsMuted(next);
+  const handleCycleSound = () => {
+    const cycle = { blue: 'brown', brown: 'red', red: 'off', off: 'blue' };
+    const next = cycle[switchProfile] || 'blue';
+    soundManager.setSwitchProfile(next);
+    soundManager.playClick();
+    setSwitchProfile(next);
   };
 
   const unlockedBadgeCount = userStats?.unlockedBadges?.length || 0;
@@ -156,13 +159,20 @@ export default function Navbar({
             {theme === 'dark' ? <Sun size={17} className="text-amber-400" /> : <Moon size={17} className="text-indigo-400" />}
           </button>
 
-          {/* Sound Toggle */}
+          {/* Mechanical Switch Sound Toggle */}
           <button
-            onClick={handleToggleSound}
-            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer"
-            title={isMuted ? 'Unmute Mechanical Sound' : 'Mute Sound'}
+            onClick={handleCycleSound}
+            className="px-2.5 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 hover:text-white transition cursor-pointer flex items-center gap-1.5 text-xs font-semibold"
+            title={`Switch Sound: Cherry MX ${switchProfile}. Click to cycle.`}
           >
-            {isMuted ? <VolumeX size={17} className="text-rose-400" /> : <Volume2 size={17} className="text-emerald-400" />}
+            {switchProfile === 'off' ? (
+              <VolumeX size={15} className="text-rose-400" />
+            ) : (
+              <Volume2 size={15} className="text-emerald-400" />
+            )}
+            <span className="hidden sm:inline font-mono text-[10px] uppercase">
+              {switchProfile === 'blue' ? 'MX Blue 🔵' : switchProfile === 'brown' ? 'MX Brown 🟤' : switchProfile === 'red' ? 'MX Red 🔴' : 'Mute 🔇'}
+            </span>
           </button>
 
           {/* Monetize & Ads Guide */}

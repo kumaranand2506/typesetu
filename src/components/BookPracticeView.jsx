@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { BOOKS_CATALOG, getBooks, getBookById } from '../data/booksCatalog';
-import { chunkTextIntoParagraphs, saveBookProgress, getBookProgress, getLastReadBookId } from '../utils/bookStorage';
+import { chunkTextIntoParagraphs, saveBookProgress, getBookProgress, getLastReadBookId, getChapterParagraphs } from '../utils/bookStorage';
 import { useTypingEngine } from '../hooks/useTypingEngine';
 import IntegratedKeyboardHands from './IntegratedKeyboardHands';
 import Speedometer from './Speedometer';
@@ -27,6 +27,7 @@ export default function BookPracticeView({
   const [paragraphIdx, setParagraphIdx] = useState(0);
   const [showKeyboardGuide, setShowKeyboardGuide] = useState(true);
   const [fontSize, setFontSize] = useState('normal'); // 'normal' | 'large'
+  const [fontFamily, setFontFamily] = useState('serif'); // 'serif' | 'sans'
   const [inputMode, setInputMode] = useState('mapper');
 
   const typingContainerRef = useRef(null);
@@ -34,8 +35,19 @@ export default function BookPracticeView({
   const currentBook = getBookById(selectedBookId);
   const savedProgress = getBookProgress(selectedBookId);
 
-  // Derive active text chunks
-  const paragraphs = chunkTextIntoParagraphs(currentBook.initialSampleText || '', 55);
+  // Lazy-load chapter paragraphs dynamically from IndexedDB
+  const [paragraphs, setParagraphs] = useState(() => chunkTextIntoParagraphs(currentBook.initialSampleText || '', 55));
+
+  useEffect(() => {
+    let isMounted = true;
+    getChapterParagraphs(currentBook, chapterIdx).then((chunks) => {
+      if (isMounted && chunks && chunks.length > 0) {
+        setParagraphs(chunks);
+      }
+    });
+    return () => { isMounted = false; };
+  }, [selectedBookId, chapterIdx]);
+
   const currentParagraphText = paragraphs[paragraphIdx] || paragraphs[0] || '';
 
   // Resume bookmark on book change
@@ -296,10 +308,19 @@ export default function BookPracticeView({
             {/* Font Size Toggle */}
             <button
               onClick={() => setFontSize(fontSize === 'normal' ? 'large' : 'normal')}
-              className="p-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 hover:text-white cursor-pointer transition"
+              className="p-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 hover:text-white cursor-pointer transition text-xs font-bold"
               title="Toggle Font Size"
             >
               <Type size={16} />
+            </button>
+
+            {/* Serif / Sans Typography Toggle */}
+            <button
+              onClick={() => setFontFamily(fontFamily === 'serif' ? 'sans' : 'serif')}
+              className="px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 hover:text-white cursor-pointer transition text-xs font-semibold"
+              title="Toggle Serif/Sans Typography"
+            >
+              {fontFamily === 'serif' ? 'Serif' : 'Sans'}
             </button>
 
             {/* Zen Mode Toggle */}
@@ -379,7 +400,7 @@ export default function BookPracticeView({
 
       {/* TypeLit Fluid Book Reading Canvas */}
       <div className="relative bg-slate-950/95 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl min-h-[220px] max-h-[380px] overflow-y-auto leading-relaxed select-none">
-        <div className={`${fontSize === 'large' ? 'text-2xl sm:text-3xl lg:text-4xl leading-[2.4]' : 'text-xl sm:text-2xl lg:text-3xl leading-[2.2]'} font-hindi tracking-wide font-normal`}>
+        <div className={`${fontSize === 'large' ? 'text-2xl sm:text-3xl lg:text-4xl leading-[2.4]' : 'text-xl sm:text-2xl lg:text-3xl leading-[2.2]'} ${fontFamily === 'serif' ? 'font-serif' : 'font-sans'} font-hindi tracking-wide font-normal`}>
           {currentParagraphText.split('').map((char, idx) => {
             let color = 'text-slate-500';
             const isCurrent = idx === typedIndex;

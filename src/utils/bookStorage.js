@@ -130,3 +130,29 @@ export function getLastReadBookId() {
     return null;
   }
 }
+
+// Dynamically load or synthesize chapter paragraphs with IndexedDB caching
+export async function getChapterParagraphs(book, chapterIndex = 0) {
+  if (!book) return [];
+  const cached = await getCachedChapterChunks(book.id, chapterIndex);
+  if (cached && cached.length > 0) {
+    return cached;
+  }
+
+  let rawText = '';
+  if (chapterIndex === 0 && book.initialSampleText) {
+    rawText = book.initialSampleText;
+  } else {
+    const chTitle = book.chapters?.[chapterIndex] || `Chapter ${chapterIndex + 1}`;
+    if (book.language === 'hindi') {
+      rawText = `${chTitle} — ${book.title} की यह कथा आगे बढ़ते हुए मानवीय संवेदनाओं, आत्मसम्मान और परिस्थितियों के द्वंद्व को सजीव करती है। पात्र अपने आदर्शों और कर्तव्यों के बीच संतुलन साधने का प्रयास करते हैं। समाज की विडंबनाओं और जीवन के संघर्षों का यह सजीव चित्रण अंतर्मन को झकझोर देता है। धर्म, कर्म और सत्य की राह पर चलते हुए प्रत्येक व्यक्ति को अपने भीतर के संशयों पर विजय पानी होती है।`;
+    } else {
+      rawText = `${chTitle} — As the narrative of ${book.title} progresses, the characters find themselves confronted by sudden turns of fortune and profound moral choices. With quiet dignity and persistent courage, they navigate their circumstances. Every dialogue and quiet reflection deepens our understanding of human character, revealing that steadfast integrity remains the true measure of noble ambition.`;
+    }
+  }
+
+  const chunks = chunkTextIntoParagraphs(rawText, 55);
+  await cacheChapterChunks(book.id, chapterIndex, chunks);
+  return chunks;
+}
+
