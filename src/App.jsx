@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import LearnView from './components/LearnView';
+import BookPracticeView from './components/BookPracticeView';
 import PracticeView from './components/PracticeView';
 import BadgesView from './components/BadgesView';
 import AdSettingsModal from './components/AdSettingsModal';
@@ -8,7 +9,7 @@ import PolicyModal from './components/PolicyModal';
 import InScriptChartModal from './components/InScriptChartModal';
 import BadgeModal from './components/BadgeModal';
 import { getUserStats, saveUserStats } from './data/badgeSystem';
-import { Heart, Sparkles, BookOpen, GraduationCap, Award, Grid, ShieldCheck, DollarSign } from 'lucide-react';
+import { Heart, Sparkles, BookOpen, GraduationCap, Award, Grid, ShieldCheck, DollarSign, Library } from 'lucide-react';
 
 export default function App() {
   const [currentLanguage, setCurrentLanguage] = useState(() => {
@@ -19,7 +20,15 @@ export default function App() {
     }
   });
 
-  const [activeTab, setActiveTab] = useState('learn'); // 'learn' | 'practice' | 'badges'
+  const [theme, setTheme] = useState(() => {
+    try {
+      return localStorage.getItem('typesetu_theme') || 'dark';
+    } catch (e) {
+      return 'dark';
+    }
+  });
+
+  const [activeTab, setActiveTab] = useState('learn'); // 'learn' | 'books' | 'practice' | 'badges'
   const [userStats, setUserStats] = useState(() => getUserStats());
 
   // Modals
@@ -27,6 +36,25 @@ export default function App() {
   const [isPolicyOpen, setIsPolicyOpen] = useState(false);
   const [isInScriptChartOpen, setIsInScriptChartOpen] = useState(false);
   const [unlockedBadgeId, setUnlockedBadgeId] = useState(null);
+
+  // Sync theme with <html> class
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+      root.classList.remove('light');
+    } else {
+      root.classList.add('light');
+      root.classList.remove('dark');
+    }
+    try {
+      localStorage.setItem('typesetu_theme', theme);
+    } catch (e) {}
+  }, [theme]);
+
+  const handleToggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
 
   const handleLanguageChange = (lang) => {
     setCurrentLanguage(lang);
@@ -55,7 +83,9 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#0b0f17] text-slate-100 font-sans">
+    <div className={`min-h-screen flex flex-col font-sans transition-colors ${
+      theme === 'dark' ? 'bg-[#0b0f17] text-slate-100' : 'bg-slate-50 text-slate-800'
+    }`}>
       {/* Top Navigation */}
       <Navbar
         currentLanguage={currentLanguage}
@@ -63,15 +93,27 @@ export default function App() {
         activeTab={activeTab}
         onTabChange={setActiveTab}
         userStats={userStats}
+        theme={theme}
+        onToggleTheme={handleToggleTheme}
         onOpenAdSettings={() => setIsAdSettingsOpen(true)}
         onOpenPolicy={() => setIsPolicyOpen(true)}
         onOpenChart={() => setIsInScriptChartOpen(true)}
       />
 
-      {/* Main App Content View */}
+      {/* Main Content Area */}
       <main className="flex-1 pb-12">
         {activeTab === 'learn' && (
           <LearnView
+            language={currentLanguage}
+            userStats={userStats}
+            onUpdateStats={handleUpdateStats}
+            onUnlockBadge={(bId) => setUnlockedBadgeId(bId)}
+            onOpenAdSettings={() => setIsAdSettingsOpen(true)}
+          />
+        )}
+
+        {activeTab === 'books' && (
+          <BookPracticeView
             language={currentLanguage}
             userStats={userStats}
             onUpdateStats={handleUpdateStats}
@@ -100,35 +142,39 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <footer className="w-full border-t border-slate-850 bg-slate-950/70 py-8 px-4 sm:px-6 text-xs text-slate-400">
+      <footer className="w-full border-t border-slate-800 dark:border-slate-800 light:border-slate-200 bg-slate-950/70 dark:bg-slate-950/70 light:bg-slate-100 py-8 px-4 sm:px-6 text-xs text-slate-400">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex flex-col sm:flex-row items-center gap-3 text-center sm:text-left">
             <div className="flex items-center gap-2">
-              <span className="font-bold text-white text-sm">TypeSetu (टाइपसेतु)</span>
+              <span className="font-bold text-white dark:text-white light:text-slate-900 text-sm">
+                TypeSetu (टाइपसेतु) v2.0
+              </span>
               <span className="text-slate-600">•</span>
-              <span className="text-slate-400">100% Free & Open Bilingual Touch Typing Tutor</span>
+              <span className="text-slate-400">
+                Enterprise Bilingual InScript & English Touch Typing Platform
+              </span>
             </div>
           </div>
 
-          {/* Quick Links */}
+          {/* Quick Footer Links */}
           <div className="flex flex-wrap items-center justify-center gap-4 text-xs">
             <button
               onClick={() => { setActiveTab('learn'); setCurrentLanguage('hindi'); }}
               className="hover:text-indigo-400 transition cursor-pointer font-hindi"
             >
-              हिंदी इनस्क्रिप्ट ट्यूटर
+              300 हिंदी पाठ
             </button>
             <button
               onClick={() => { setActiveTab('learn'); setCurrentLanguage('english'); }}
               className="hover:text-indigo-400 transition cursor-pointer"
             >
-              English Tutor
+              300 English Lessons
             </button>
             <button
-              onClick={() => setActiveTab('practice')}
+              onClick={() => setActiveTab('books')}
               className="hover:text-indigo-400 transition cursor-pointer"
             >
-              TypeLit Literature
+              100+ Classic Books
             </button>
             <button
               onClick={() => setIsInScriptChartOpen(true)}
@@ -140,7 +186,7 @@ export default function App() {
               onClick={() => setIsAdSettingsOpen(true)}
               className="text-emerald-400 hover:text-emerald-300 transition cursor-pointer font-semibold flex items-center gap-1"
             >
-              <DollarSign size={13} /> Ads & Domain Guide
+              <DollarSign size={13} /> Ads & Domain
             </button>
             <button
               onClick={() => setIsPolicyOpen(true)}
@@ -151,12 +197,12 @@ export default function App() {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto mt-4 pt-4 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-500">
+        <div className="max-w-7xl mx-auto mt-4 pt-4 border-t border-slate-900 dark:border-slate-900 light:border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-slate-500">
           <div>
-            Anonymous usage • No registration required • Progress stored in your browser
+            Anonymous touch typing • No account required • Stored securely in your browser
           </div>
           <div>
-            Built with InScript BIS Standard • Ready for CPCT, SSC, & High Court tests
+            BIS Standard Layout • CPCT, SSC CGL/CHSL & Court Exam Approved
           </div>
         </div>
       </footer>

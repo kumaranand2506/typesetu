@@ -1,0 +1,11 @@
+# TypeSetu Robots.txt
+# Optimized for Googlebot, Bingbot, and Technical SEO
+
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+
+# Sitemaps
+Sitemap: https://typesetu.app/sitemap.xml
+Sitemap: https://kumaranand2506.github.io/typesetu/sitemap.xml

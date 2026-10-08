@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { HINDI_PRACTICE, ENGLISH_PRACTICE } from '../data/practiceData';
 import { useTypingEngine } from '../hooks/useTypingEngine';
 import IntegratedKeyboardHands from './IntegratedKeyboardHands';
+import Speedometer from './Speedometer';
 import AdBanner from './AdBanner';
 import { checkNewBadges } from '../data/badgeSystem';
 import { BookOpen, RotateCcw, Sparkles, Zap, Target, Clock, AlertCircle, Eye, EyeOff, FileText, CheckCircle, Keyboard, Bookmark, Type } from 'lucide-react';
@@ -124,16 +125,16 @@ export default function PracticeView({
       <AdBanner position="header" onOpenSettings={onOpenAdSettings} />
 
       {/* Book Shelf & Control Ribbon */}
-      <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-4 sm:p-6 backdrop-blur-sm space-y-4">
+      <div className="bg-slate-900/80 dark:bg-slate-900/80 light:bg-white border border-slate-800 dark:border-slate-800 light:border-slate-200 rounded-3xl p-4 sm:p-6 backdrop-blur-sm space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-500/10 text-violet-400 text-xs font-semibold mb-1 border border-violet-500/20">
               <Bookmark size={14} /> TypeLit Classical Library
             </div>
-            <h1 className="text-xl sm:text-2xl font-black text-white font-hindi">
+            <h1 className="text-xl sm:text-2xl font-black text-white dark:text-white light:text-slate-900 font-hindi">
               {currentPassage?.title}
             </h1>
-            <p className="text-xs text-slate-400 font-hindi mt-0.5">
+            <p className="text-xs text-slate-400 dark:text-slate-400 light:text-slate-600 font-hindi mt-0.5">
               लेखक: <span className="text-slate-200 font-semibold">{currentPassage?.author || 'अज्ञात'}</span> • श्रेणी: {currentPassage?.category}
             </p>
           </div>
@@ -224,44 +225,53 @@ export default function PracticeView({
       </div>
 
       {/* Live Minimal Stats Ribbon */}
-      <div className="flex items-center justify-between px-4 py-2.5 bg-slate-900/60 border border-slate-800 rounded-xl text-xs text-slate-400 font-medium">
+      <div className="flex items-center justify-between px-4 py-2.5 bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-500 dark:text-slate-400 font-medium">
         <div className="flex items-center gap-6">
           <span className="flex items-center gap-1.5">
-            <Zap size={14} className="text-emerald-400" />
-            Speed: <strong className="text-white text-sm">{currentWpm}</strong> WPM
+            <Zap size={14} className="text-emerald-500 dark:text-emerald-400" />
+            Speed: <strong className="text-slate-800 dark:text-white text-sm">{currentWpm}</strong> WPM
           </span>
           <span className="flex items-center gap-1.5">
-            <Target size={14} className="text-blue-400" />
-            Accuracy: <strong className="text-white text-sm">{currentAccuracy}%</strong>
+            <Target size={14} className="text-blue-500 dark:text-blue-400" />
+            Accuracy: <strong className="text-slate-800 dark:text-white text-sm">{currentAccuracy}%</strong>
           </span>
           <span className="flex items-center gap-1.5">
-            <AlertCircle size={14} className="text-rose-400" />
-            Mistakes: <strong className="text-rose-400 text-sm">{mistakes}</strong>
+            <AlertCircle size={14} className="text-rose-500 dark:text-rose-400" />
+            Mistakes: <strong className="text-rose-600 dark:text-rose-400 text-sm">{mistakes}</strong>
           </span>
         </div>
 
         <div className="flex items-center gap-2">
           <span>{progressPercent}% Complete</span>
-          <div className="w-20 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-            <div className="h-full bg-emerald-400 transition-all duration-150" style={{ width: `${progressPercent}%` }} />
+          <div className="w-20 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden">
+            <div className="h-full bg-emerald-500 dark:bg-emerald-400 transition-all duration-150" style={{ width: `${progressPercent}%` }} />
           </div>
         </div>
       </div>
 
+      {/* Live Speedometer Gauge */}
+      <Speedometer
+        wpm={currentWpm}
+        cpm={Math.round(currentWpm * 5)}
+        accuracy={currentAccuracy}
+        mistakes={mistakes}
+        maxWpm={100}
+      />
+
       {/* TypeLit Literature Book Container */}
-      <div className="relative bg-slate-950/95 border border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl min-h-[220px] max-h-[380px] overflow-y-auto leading-relaxed select-none">
+      <div className="relative bg-white dark:bg-slate-950/95 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-10 shadow-2xl min-h-[220px] max-h-[380px] overflow-y-auto leading-relaxed select-none">
         <div className={`${fontSize === 'large' ? 'text-2xl sm:text-3xl lg:text-4xl leading-[2.4]' : 'text-xl sm:text-2xl lg:text-3xl leading-[2.2]'} font-hindi tracking-wide font-normal`}>
           {currentPassage?.text.split('').map((char, idx) => {
-            let color = 'text-slate-500';
+            let color = 'text-slate-400 dark:text-slate-500';
             const isCurrent = idx === typedIndex;
 
             if (idx < typedIndex) {
               const hist = history[idx];
               color = hist?.status === 'correct'
-                ? 'text-emerald-400'
+                ? 'text-emerald-600 dark:text-emerald-400'
                 : 'text-rose-500 bg-rose-500/20 rounded underline decoration-rose-500';
             } else if (isCurrent) {
-              color = 'text-white bg-indigo-500/30 px-0.5 rounded ring-2 ring-indigo-400 shadow-md shadow-indigo-500/40 animate-pulse';
+              color = 'text-slate-900 dark:text-white bg-indigo-500/30 px-0.5 rounded ring-2 ring-indigo-400 shadow-md shadow-indigo-500/40 animate-pulse';
             }
 
             return (
@@ -274,13 +284,13 @@ export default function PracticeView({
 
         {/* Current Key & Hindi Sequence Breakdown */}
         {targetKeyInfo && !isCompleted && (
-          <div className="sticky bottom-0 mt-6 py-2.5 px-4 rounded-xl bg-slate-900/90 border border-slate-800 backdrop-blur-sm flex flex-wrap items-center justify-between text-xs text-slate-300 gap-2">
+          <div className="sticky bottom-0 mt-6 py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 backdrop-blur-sm flex flex-wrap items-center justify-between text-xs text-slate-700 dark:text-slate-300 gap-2">
             <div className="flex items-center gap-2">
               <span>Next Key:</span>
-              <span className="text-amber-300 font-mono-custom font-bold uppercase text-sm">
+              <span className="text-amber-600 dark:text-amber-300 font-mono-custom font-bold uppercase text-sm">
                 {targetKeyInfo.key === ' ' ? 'Spacebar' : targetKeyInfo.key}
               </span>
-              {targetKeyInfo.shift && <span className="text-amber-400 font-bold">(+ Shift)</span>}
+              {targetKeyInfo.shift && <span className="text-amber-600 dark:text-amber-400 font-bold">(+ Shift)</span>}
             </div>
 
             {/* Upcoming Sequence */}
@@ -288,9 +298,9 @@ export default function PracticeView({
               <div className="hidden sm:flex items-center gap-1.5 font-mono-custom text-[11px]">
                 <span className="text-slate-500">Upcoming:</span>
                 {upcomingSequence.slice(1, 4).map((item, uIdx) => (
-                  <span key={uIdx} className="bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800 text-slate-300">
+                  <span key={uIdx} className="bg-white dark:bg-slate-950 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">
                     <span className="font-hindi">{item.char}</span>
-                    <span className="text-slate-500 ml-1 font-bold text-[10px]">({item.key.toUpperCase()})</span>
+                    <span className="text-slate-400 dark:text-slate-500 ml-1 font-bold text-[10px]">({item.key.toUpperCase()})</span>
                   </span>
                 ))}
               </div>

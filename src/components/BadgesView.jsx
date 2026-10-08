@@ -31,16 +31,16 @@ export default function BadgesView({
       <AdBanner position="header" onOpenSettings={onOpenAdSettings} />
 
       {/* Header & Stats Highlight */}
-      <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-6 sm:p-8 backdrop-blur-sm space-y-6">
+      <div className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 backdrop-blur-sm space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 text-amber-400 text-xs font-semibold mb-2 border border-amber-500/20">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 text-amber-500 dark:text-amber-400 text-xs font-semibold mb-2 border border-amber-500/20">
               <Award size={14} /> उपलब्धियां एवं व्यक्तिगत सांख्यिकी
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-white">
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
               Trophies & Performance Profile
             </h1>
-            <p className="text-xs text-slate-400 mt-1 max-w-2xl font-hindi">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-2xl font-hindi">
               सभी उपलब्धियां और आंकड़े आपके ब्राउज़र (Local Storage) में स्वतः सुरक्षित रहते हैं। किसी खाते (Login) की आवश्यकता नहीं है।
             </p>
           </div>
@@ -48,7 +48,7 @@ export default function BadgesView({
           <div className="flex items-center gap-2">
             <button
               onClick={handleExportData}
-              className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition border border-slate-700"
+              className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition border border-slate-200 dark:border-slate-700"
               title="Download your progress JSON file"
             >
               <Download size={14} /> Backup Stats
@@ -59,7 +59,7 @@ export default function BadgesView({
                   onResetStats();
                 }
               }}
-              className="px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition border border-rose-500/20"
+              className="px-3 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-300 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition border border-rose-500/20"
               title="Reset progress"
             >
               <RotateCcw size={14} /> Reset
@@ -69,43 +69,43 @@ export default function BadgesView({
 
         {/* Aggregate Stats Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-xl">
+          <div className="bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-amber-500/20 text-amber-500 dark:text-amber-400 flex items-center justify-center text-xl">
               ⚡
             </div>
             <div>
-              <span className="text-[11px] text-slate-400 font-semibold block uppercase">Peak Speed</span>
-              <span className="text-2xl font-black text-white">{highestWpm} <span className="text-xs text-slate-400">WPM</span></span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold block uppercase">Peak Speed</span>
+              <span className="text-2xl font-black text-slate-900 dark:text-white">{highestWpm} <span className="text-xs text-slate-400">WPM</span></span>
             </div>
           </div>
 
-          <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xl">
+          <div className="bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-indigo-500/20 text-indigo-500 dark:text-indigo-400 flex items-center justify-center text-xl">
               ✍️
             </div>
             <div>
-              <span className="text-[11px] text-slate-400 font-semibold block uppercase">Words Typed</span>
-              <span className="text-2xl font-black text-white">{totalWords}</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold block uppercase">Words Typed</span>
+              <span className="text-2xl font-black text-slate-900 dark:text-white">{totalWords}</span>
             </div>
           </div>
 
-          <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl">
+          <div className="bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-emerald-500/20 text-emerald-500 dark:text-emerald-400 flex items-center justify-center text-xl">
               🎓
             </div>
             <div>
-              <span className="text-[11px] text-slate-400 font-semibold block uppercase">Lessons Mastered</span>
-              <span className="text-2xl font-black text-white">{totalCompletedLessons}</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold block uppercase">Lessons Mastered</span>
+              <span className="text-2xl font-black text-slate-900 dark:text-white">{totalCompletedLessons}</span>
             </div>
           </div>
 
-          <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-violet-500/20 text-violet-400 flex items-center justify-center text-xl">
+          <div className="bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-violet-500/20 text-violet-500 dark:text-violet-400 flex items-center justify-center text-xl">
               🏆
             </div>
             <div>
-              <span className="text-[11px] text-slate-400 font-semibold block uppercase">Badges Earned</span>
-              <span className="text-2xl font-black text-amber-400">{unlockedIds.size} / {BADGES_DEFINITION.length}</span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold block uppercase">Badges Earned</span>
+              <span className="text-2xl font-black text-amber-500 dark:text-amber-400">{unlockedIds.size} / {BADGES_DEFINITION.length}</span>
             </div>
           </div>
         </div>
@@ -113,9 +113,9 @@ export default function BadgesView({
 
       {/* Badges Grid */}
       <div>
-        <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+        <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
           <span>उपलब्धि पदक (Achievement Badges)</span>
-          <span className="text-xs font-normal text-slate-400">
+          <span className="text-xs font-normal text-slate-500 dark:text-slate-400">
             ({unlockedIds.size} Unlocked)
           </span>
         </h2>
@@ -129,8 +129,8 @@ export default function BadgesView({
                 key={badge.id}
                 className={`relative rounded-2xl p-5 border transition-all duration-200 flex flex-col justify-between ${
                   isUnlocked
-                    ? 'bg-slate-900/90 border-slate-700/80 shadow-lg shadow-indigo-500/5'
-                    : 'bg-slate-950/40 border-slate-800/60 opacity-60 grayscale'
+                    ? 'bg-white dark:bg-slate-900/90 border-slate-200 dark:border-slate-700/80 shadow-lg shadow-indigo-500/5'
+                    : 'bg-slate-100 dark:bg-slate-950/40 border-slate-200 dark:border-slate-800/60 opacity-60 grayscale'
                 }`}
               >
                 <div>
@@ -140,28 +140,28 @@ export default function BadgesView({
                     </div>
 
                     {isUnlocked ? (
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold border border-emerald-500/30 flex items-center gap-1">
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 text-[10px] font-bold border border-emerald-500/30 flex items-center gap-1">
                         <CheckCircle size={11} /> Unlocked
                       </span>
                     ) : (
-                      <span className="px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 text-[10px] font-semibold">
+                      <span className="px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-semibold">
                         Locked
                       </span>
                     )}
                   </div>
 
-                  <h3 className="font-bold text-white text-base">
+                  <h3 className="font-bold text-slate-900 dark:text-white text-base">
                     {badge.name}
                   </h3>
-                  <h4 className="text-xs font-semibold text-amber-400/90 mt-0.5 font-hindi">
+                  <h4 className="text-xs font-semibold text-amber-600 dark:text-amber-400/90 mt-0.5 font-hindi">
                     {badge.hindiName}
                   </h4>
-                  <p className="text-xs text-slate-400 mt-2 font-hindi leading-relaxed">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-hindi leading-relaxed">
                     {badge.description}
                   </p>
                 </div>
 
-                <div className="mt-4 pt-3 border-t border-slate-800/80 text-[11px] text-slate-500">
+                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 text-[11px] text-slate-400 dark:text-slate-500">
                   {isUnlocked ? 'प्राप्त हुआ • Achieved' : 'अभ्यास करके अनलॉक करें'}
                 </div>
               </div>
