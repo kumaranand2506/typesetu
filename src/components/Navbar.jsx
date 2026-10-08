@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Volume2, VolumeX, Sparkles, Award, BookOpen, GraduationCap, Grid, Info, DollarSign, Sun, Moon, Library } from 'lucide-react';
+import { Volume2, VolumeX, Sparkles, Award, BookOpen, GraduationCap, Grid, Info, DollarSign, Sun, Moon, Library, Shield, Maximize2 } from 'lucide-react';
 import { soundManager } from '../utils/soundEffects';
 
 export default function Navbar({
@@ -36,7 +36,7 @@ export default function Navbar({
             className="flex items-center gap-2.5 text-left group cursor-pointer"
           >
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-pink-500 flex items-center justify-center font-black text-white text-base shadow-lg shadow-indigo-600/30 group-hover:scale-105 transition">
-              <span>कA</span>
+              <span>{currentLanguage === 'hindi' ? 'क' : 'TS'}</span>
             </div>
             <div>
               <div className="flex items-center gap-1.5">
@@ -48,7 +48,7 @@ export default function Navbar({
                 </span>
               </div>
               <p className="text-[10px] text-slate-400 font-medium hidden sm:block">
-                Bilingual InScript & English Platform
+                {currentLanguage === 'hindi' ? 'शासकीय एवं व्यावसायिक टाइपिंग सेतु' : 'Bilingual InScript & English Platform'}
               </p>
             </div>
           </button>
@@ -66,7 +66,7 @@ export default function Navbar({
             }`}
           >
             <GraduationCap size={15} />
-            <span>{currentLanguage === 'hindi' ? '300 पाठ (Learn)' : 'Learn (300)'}</span>
+            <span>{currentLanguage === 'hindi' ? '300 पाठ' : '300 Lessons'}</span>
           </button>
 
           {/* 100+ Books Library Tab */}
@@ -79,7 +79,7 @@ export default function Navbar({
             }`}
           >
             <Library size={15} />
-            <span>{currentLanguage === 'hindi' ? 'पुस्तकालय (100+)' : 'Books (100+)'}</span>
+            <span>{currentLanguage === 'hindi' ? '100+ पुस्तकें' : '100+ Books'}</span>
           </button>
 
           {/* Practice Room */}
@@ -92,7 +92,20 @@ export default function Navbar({
             }`}
           >
             <BookOpen size={15} />
-            <span>{currentLanguage === 'hindi' ? 'अभ्यास' : 'Drills'}</span>
+            <span>{currentLanguage === 'hindi' ? 'अभ्यास' : 'Practice'}</span>
+          </button>
+
+          {/* Dedicated Govt Exam Simulation Tab */}
+          <button
+            onClick={() => onTabChange('exam')}
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
+              activeTab === 'exam'
+                ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30 font-bold'
+                : 'text-slate-300 dark:text-slate-300 light:text-slate-600 hover:text-white hover:bg-slate-800/60'
+            }`}
+          >
+            <Shield size={15} className={activeTab === 'exam' ? 'text-white' : 'text-emerald-400'} />
+            <span>{currentLanguage === 'hindi' ? 'शासकीय परीक्षा (CPCT)' : 'Govt Exam (CPCT)'}</span>
           </button>
 
           {/* Badges Tab */}

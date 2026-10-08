@@ -13,6 +13,8 @@ export default function PracticeView({
   onUpdateStats,
   onUnlockBadge,
   onOpenAdSettings,
+  onToggleFocusMode = null,
+  isFocusMode = false,
 }) {
   const passages = language === 'hindi' ? HINDI_PRACTICE : ENGLISH_PRACTICE;
 
@@ -130,12 +132,10 @@ export default function PracticeView({
       ref={typingBoxRef}
       tabIndex={0}
       onKeyDown={handleKeyDown}
-      className="w-full max-w-7xl mx-auto px-4 py-6 space-y-6 focus:outline-none select-none"
+      className="w-full max-w-7xl mx-auto px-4 py-4 sm:py-5 space-y-4 focus:outline-none select-none"
     >
-      <AdBanner position="header" onOpenSettings={onOpenAdSettings} />
-
       {/* Book Shelf & Control Ribbon */}
-      <div className="bg-slate-900/80 dark:bg-slate-900/80 light:bg-white border border-slate-800 dark:border-slate-800 light:border-slate-200 rounded-3xl p-4 sm:p-6 backdrop-blur-sm space-y-4">
+      <div className="bg-slate-900/80 dark:bg-slate-900/80 light:bg-white border border-slate-800 dark:border-slate-800 light:border-slate-200 rounded-3xl p-4 sm:p-5 backdrop-blur-sm space-y-3">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-violet-500/10 text-violet-400 text-xs font-semibold mb-1 border border-violet-500/20">
@@ -145,7 +145,9 @@ export default function PracticeView({
               {currentPassage?.title}
             </h1>
             <p className="text-xs text-slate-400 dark:text-slate-400 light:text-slate-600 font-hindi mt-0.5">
-              लेखक: <span className="text-slate-200 font-semibold">{currentPassage?.author || 'अज्ञात'}</span> • श्रेणी: {currentPassage?.category}
+              {language === 'hindi'
+                ? `लेखक: ${currentPassage?.author || 'अज्ञात'} • श्रेणी: ${currentPassage?.category}`
+                : `Author: ${currentPassage?.author || 'Unknown'} • Category: ${currentPassage?.category}`}
             </p>
           </div>
 
@@ -181,13 +183,25 @@ export default function PracticeView({
               <span>{textLayoutMode === 'rolling' ? '2-Line Rolling' : 'Full Passage'}</span>
             </button>
 
-            {/* Zen Mode */}
+            {/* Focus / Zen Mode */}
+            {onToggleFocusMode && (
+              <button
+                type="button"
+                onClick={onToggleFocusMode}
+                className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition"
+                title="Toggle Distraction-Free Focus Mode"
+              >
+                <span>{isFocusMode ? 'Exit Zen' : 'Zen Focus'}</span>
+              </button>
+            )}
+
+            {/* Keyboard Guide Toggle */}
             <button
               onClick={() => setShowKeyboardGuide(!showKeyboardGuide)}
               className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 hover:border-slate-700 text-slate-300 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition"
             >
               {showKeyboardGuide ? <EyeOff size={14} className="text-amber-400" /> : <Eye size={14} className="text-emerald-400" />}
-              <span>{showKeyboardGuide ? 'Zen Mode' : 'Show Keyboard'}</span>
+              <span>{showKeyboardGuide ? 'Hide Keys' : 'Show Keys'}</span>
             </button>
 
             {/* Custom Passage */}
@@ -202,7 +216,7 @@ export default function PracticeView({
             <button
               onClick={handleReset}
               className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer"
-              title="पुनः प्रारंभ करें (Restart)"
+              title={language === 'hindi' ? 'पुनः प्रारंभ करें' : 'Restart'}
             >
               <RotateCcw size={15} />
             </button>
@@ -326,9 +340,14 @@ export default function PracticeView({
           targetShift={targetKeyInfo?.shift || false}
           language={language}
           pressedKey={lastPressedPhysicalKey}
-          initialHindiLayout={hindiLayout}
-          onLayoutChange={setHindiLayout}
         />
+      )}
+
+      {/* Relocated Ad Banner at Bottom Footer */}
+      {!isFocusMode && (
+        <div className="pt-2">
+          <AdBanner position="practice-bottom" onOpenSettings={onOpenAdSettings} />
+        </div>
       )}
 
       {/* Custom Text Modal */}

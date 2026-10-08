@@ -14,6 +14,8 @@ export default function BookPracticeView({
   onUpdateStats,
   onUnlockBadge,
   onOpenAdSettings,
+  onToggleFocusMode = null,
+  isFocusMode = false,
 }) {
   const [selectedBookId, setSelectedBookId] = useState(() => {
     return getLastReadBookId() || 'en-pride-and-prejudice';
@@ -272,10 +274,8 @@ export default function BookPracticeView({
       ref={typingContainerRef}
       tabIndex={0}
       onKeyDown={handleKeyDown}
-      className="w-full max-w-7xl mx-auto px-4 py-6 space-y-4 focus:outline-none select-none"
+      className="w-full max-w-7xl mx-auto px-4 py-4 sm:py-5 space-y-3 focus:outline-none select-none"
     >
-      <AdBanner position="header" onOpenSettings={onOpenAdSettings} />
-
       {/* Book Reader Navigation Ribbon */}
       <div className="bg-slate-900/80 border border-slate-800 rounded-3xl p-4 sm:p-5 backdrop-blur-sm space-y-3">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -344,13 +344,25 @@ export default function BookPracticeView({
               <span>{textLayoutMode === 'rolling' ? '2-Line Rolling' : 'Book Page'}</span>
             </button>
 
-            {/* Zen Mode Toggle */}
+            {/* Focus Mode Toggle */}
+            {onToggleFocusMode && (
+              <button
+                type="button"
+                onClick={onToggleFocusMode}
+                className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition hover:border-slate-700"
+                title="Toggle Focus Mode"
+              >
+                <span>{isFocusMode ? 'Exit Zen' : 'Zen Focus'}</span>
+              </button>
+            )}
+
+            {/* Keyboard Guide Toggle */}
             <button
               onClick={() => setShowKeyboardGuide(!showKeyboardGuide)}
               className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-300 text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition"
             >
               {showKeyboardGuide ? <EyeOff size={14} className="text-amber-400" /> : <Eye size={14} className="text-emerald-400" />}
-              <span>{showKeyboardGuide ? 'Zen Mode' : 'Show Keyboard'}</span>
+              <span>{showKeyboardGuide ? 'Hide Keys' : 'Show Keys'}</span>
             </button>
 
             {/* Prev/Next Paragraph */}
@@ -493,12 +505,13 @@ export default function BookPracticeView({
           targetShift={targetKeyInfo?.shift || false}
           language={currentBook.language || language}
           pressedKey={lastPressedPhysicalKey}
-          initialHindiLayout={hindiLayout}
-          onLayoutChange={setHindiLayout}
         />
       )}
 
-      <AdBanner position="lesson-bottom" onOpenSettings={onOpenAdSettings} />
+      {!isFocusMode && (
+        <AdBanner position="lesson-bottom" onOpenSettings={onOpenAdSettings} />
+      )}
     </div>
   );
 }
+

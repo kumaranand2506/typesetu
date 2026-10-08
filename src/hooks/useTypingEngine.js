@@ -14,6 +14,8 @@ export function useTypingEngine({
   inputMode = 'mapper', // 'mapper' | 'native'
   hindiLayout = 'inscript', // 'inscript' | 'remington'
   initialErrorMode = null, // 'strict' | 'casual'
+  backspaceRule = 'allowed', // 'allowed' | 'currentWord' | 'disabled'
+  timeLimitSeconds = null, // e.g., 300, 600, 900 for 5, 10, 15 min exams
   onComplete = null,
 }) {
   const [typedIndex, setTypedIndex] = useState(0);
@@ -28,6 +30,7 @@ export function useTypingEngine({
   const [currentGrossWpm, setCurrentGrossWpm] = useState(0); // Gross WPM
   const [currentAccuracy, setCurrentAccuracy] = useState(100);
   const [strictError, setStrictError] = useState(false); // When true in strict mode, cursor is halted
+  const [remainingSeconds, setRemainingSeconds] = useState(timeLimitSeconds || null);
 
   const [errorMode, setErrorModeState] = useState(() => {
     if (initialErrorMode) return initialErrorMode;
@@ -56,7 +59,7 @@ export function useTypingEngine({
     } catch (e) {}
   }, []);
 
-  // Reset state when targetText or language changes
+  // Reset state when targetText, language, or timeLimit changes
   useEffect(() => {
     setTypedIndex(0);
     setHistory([]);
@@ -69,17 +72,69 @@ export function useTypingEngine({
     setCurrentGrossWpm(0);
     setCurrentAccuracy(100);
     setStrictError(false);
+    setRemainingSeconds(timeLimitSeconds || null);
     if (timerRef.current) clearInterval(timerRef.current);
-  }, [normalizedTarget, language]);
+  }, [normalizedTarget, language, timeLimitSeconds]);
 
-  // Periodic high-precision metrics calculation (Net WPM, Gross WPM, Accuracy)
+  // Finish typing test / exam helper
+  const finalizeTest = useCallback((isTimeUp = false) => {
+    const now = Date.now();
+    setEndTime(now);
+    setIsCompleted(true);
+    if (timerRef.current) clearInterval(timerRef.current);
+
+    soundManager.playSuccess();
+
+    const actualDurationMinutes = Math.max(0.05, (now - (startTime || now)) / 60000);
+    const durationMinutes = timeLimitSeconds ? (timeLimitSeconds / 60) : actualDurationMinutes;
+
+    const finalGrossWpm = Math.round((totalKeystrokes / 5) / durationMinutes);
+    // Standard Govt Exam Net WPM: (Gross Words - Errors) / Minutes
+    const finalNetWpm = Math.max(
+      0,
+      Math.round(((totalKeystrokes / 5) - mistakes) / durationMinutes)
+    );
+    const acc = totalKeystrokes > 0
+      ? Math.max(0, Math.round(((totalKeystrokes - mistakes) / totalKeystrokes) * 100))
+      : 100;
+
+    const finalCpm = Math.round(finalNetWpm * 5);
+
+    if (onComplete) {
+      onComplete({
+        wpm: finalNetWpm,
+        grossWpm: finalGrossWpm,
+        netWpm: finalNetWpm,
+        cpm: finalCpm,
+        accuracy: acc,
+        mistakes,
+        totalKeystrokes,
+        timeSeconds: Math.round((now - (startTime || now)) / 1000),
+        charactersTyped: typedIndex,
+        isTimeUp,
+      });
+    }
+  }, [startTime, totalKeystrokes, mistakes, timeLimitSeconds, typedIndex, onComplete]);
+
+  // Periodic high-precision metrics calculation (Net WPM, Gross WPM, Accuracy, Countdown)
   useEffect(() => {
     if (startTime && !endTime && !isCompleted) {
       timerRef.current = setInterval(() => {
-        const elapsedMinutes = (Date.now() - startTime) / 60000;
+        const elapsedSeconds = (Date.now() - startTime) / 1000;
+        const elapsedMinutes = elapsedSeconds / 60;
+
+        // Countdown timer for Exam Mode
+        if (timeLimitSeconds) {
+          const rem = Math.max(0, Math.round(timeLimitSeconds - elapsedSeconds));
+          setRemainingSeconds(rem);
+          if (rem <= 0) {
+            finalizeTest(true);
+            return;
+          }
+        }
+
         if (elapsedMinutes > 0) {
           const gross = Math.round((totalKeystrokes / 5) / elapsedMinutes);
-          // Net WPM: penalizes uncorrected errors
           const net = Math.max(
             0,
             Math.round(((typedIndex / 5) - (errorMode === 'casual' ? mistakes / 5 : 0)) / elapsedMinutes)
@@ -100,7 +155,7 @@ export function useTypingEngine({
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [startTime, endTime, isCompleted, typedIndex, totalKeystrokes, mistakes, errorMode]);
+  }, [startTime, endTime, isCompleted, typedIndex, totalKeystrokes, mistakes, errorMode, timeLimitSeconds, finalizeTest]);
 
   const targetChar = normalizedTarget[typedIndex] || '';
 
@@ -159,14 +214,31 @@ export function useTypingEngine({
       setLastPressedPhysicalKey({ key: e.key, code: e.code });
       setTimeout(() => setLastPressedPhysicalKey(null), 140);
 
-      // Backspace handling
+      // Backspace handling with Exam Rules (Allowed, Current Word Only, Disabled)
       if (e.key === 'Backspace') {
         e.preventDefault();
+
+        // 1. Strict Backspace Disabled (Court Exam rule)
+        if (backspaceRule === 'disabled') {
+          soundManager.playError();
+          return;
+        }
+
+        // 2. Current Word Only (CPCT / SSC rule: cannot backspace past previous word)
+        if (backspaceRule === 'currentWord') {
+          const prevSpaceIdx = normalizedTarget.lastIndexOf(' ', Math.max(0, typedIndex - 1));
+          if (typedIndex <= prevSpaceIdx + 1) {
+            soundManager.playError();
+            return;
+          }
+        }
+
+        // 3. Clear halted strict error on current char if present
         if (errorMode === 'strict' && strictError) {
-          // Clear halted strict error on current char
           setStrictError(false);
           return;
         }
+
         if (typedIndex > 0) {
           setStrictError(false);
           setTypedIndex((prev) => prev - 1);
@@ -238,31 +310,7 @@ export function useTypingEngine({
         setCurrentAccuracy(acc);
 
         if (nextIndex >= normalizedTarget.length) {
-          const now = Date.now();
-          setEndTime(now);
-          setIsCompleted(true);
-          soundManager.playSuccess();
-
-          const durationMinutes = Math.max(0.05, (now - (startTime || now)) / 60000);
-          const finalGrossWpm = Math.round((totalKeys / 5) / durationMinutes);
-          const finalNetWpm = Math.max(
-            0,
-            Math.round(((normalizedTarget.length / 5) - (errorMode === 'casual' ? totalErrors / 5 : 0)) / durationMinutes)
-          );
-          const finalCpm = Math.round(finalNetWpm * 5);
-
-          if (onComplete) {
-            onComplete({
-              wpm: finalNetWpm,
-              grossWpm: finalGrossWpm,
-              netWpm: finalNetWpm,
-              cpm: finalCpm,
-              accuracy: acc,
-              mistakes: totalErrors,
-              timeSeconds: Math.round((now - (startTime || now)) / 1000),
-              charactersTyped: normalizedTarget.length,
-            });
-          }
+          finalizeTest(false);
         }
       } else {
         // Keystroke Error
@@ -292,31 +340,7 @@ export function useTypingEngine({
           setTypedIndex(nextIndex);
 
           if (nextIndex >= normalizedTarget.length) {
-            const now = Date.now();
-            setEndTime(now);
-            setIsCompleted(true);
-            soundManager.playSuccess();
-
-            const durationMinutes = Math.max(0.05, (now - (startTime || now)) / 60000);
-            const finalGrossWpm = Math.round((totalKeys / 5) / durationMinutes);
-            const finalNetWpm = Math.max(
-              0,
-              Math.round(((normalizedTarget.length / 5) - (updatedMistakes / 5)) / durationMinutes)
-            );
-            const finalCpm = Math.round(finalNetWpm * 5);
-
-            if (onComplete) {
-              onComplete({
-                wpm: finalNetWpm,
-                grossWpm: finalGrossWpm,
-                netWpm: finalNetWpm,
-                cpm: finalCpm,
-                accuracy: acc,
-                mistakes: updatedMistakes,
-                timeSeconds: Math.round((now - (startTime || now)) / 1000),
-                charactersTyped: normalizedTarget.length,
-              });
-            }
+            finalizeTest(false);
           }
         }
       }
@@ -334,7 +358,8 @@ export function useTypingEngine({
       hindiLayout,
       errorMode,
       strictError,
-      onComplete,
+      backspaceRule,
+      finalizeTest,
     ]
   );
 
@@ -358,6 +383,8 @@ export function useTypingEngine({
     errorMode,
     setErrorMode,
     strictError,
+    remainingSeconds,
+    submitExam: () => finalizeTest(false),
     progressPercent:
       normalizedTarget.length > 0 ? Math.min(100, Math.round((typedIndex / normalizedTarget.length) * 100)) : 0,
   };

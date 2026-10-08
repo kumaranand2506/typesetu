@@ -178,7 +178,9 @@ export default function RollingTextDisplay({
             <span className="text-indigo-400 font-bold text-[11px]">
               {progressPercent !== null ? progressPercent : 0}%
             </span>
-            <span className="text-slate-500 text-[11px]">done</span>
+            <span className="text-slate-500 text-[11px]">
+              {isHindi ? 'पूर्ण' : 'done'}
+            </span>
           </div>
 
           {/* Mistakes count (if any) */}
@@ -194,7 +196,7 @@ export default function RollingTextDisplay({
         <div className="flex items-center gap-2">
           {/* Line index badge */}
           <span className="text-slate-500 font-mono text-[11px] hidden md:inline">
-            Line {activeLineIdx + 1}/{lines.length}
+            {isHindi ? `पंक्ति ${activeLineIdx + 1}/${lines.length}` : `Line ${activeLineIdx + 1}/${lines.length}`}
           </span>
 
           {/* Strict / Casual Mode toggle pill */}
@@ -210,17 +212,17 @@ export default function RollingTextDisplay({
                   ? 'bg-rose-950/80 border-rose-700/60 text-rose-300 hover:bg-rose-900/60 shadow-sm'
                   : 'bg-emerald-950/80 border-emerald-700/60 text-emerald-300 hover:bg-emerald-900/60 shadow-sm'
               }`}
-              title="Click to toggle between Casual and Strict error mode"
+              title={isHindi ? 'कठोर और सहज त्रुटि मोड बदलें' : 'Toggle between Casual and Strict error mode'}
             >
               {errorMode === 'strict' ? (
                 <>
                   <ShieldAlert size={12} className="text-rose-400" />
-                  <span>Strict</span>
+                  <span>{isHindi ? 'कठोर (Strict)' : 'Strict'}</span>
                 </>
               ) : (
                 <>
                   <Check size={12} className="text-emerald-400" />
-                  <span>Casual</span>
+                  <span>{isHindi ? 'सहज (Casual)' : 'Casual'}</span>
                 </>
               )}
             </button>
@@ -235,7 +237,7 @@ export default function RollingTextDisplay({
                 onRestart();
               }}
               className="p-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 transition cursor-pointer"
-              title="पुनः प्रारंभ करें (Restart / Reset)"
+              title={isHindi ? 'पुनः प्रारंभ करें' : 'Restart'}
             >
               <RotateCcw size={14} />
             </button>
@@ -312,7 +314,7 @@ export default function RollingTextDisplay({
             </div>
           ) : (
             <div className="text-xs text-indigo-400/80 font-semibold pt-1">
-              🎉 अंतिम चरण (Final line of practice)
+              {isHindi ? '🎉 अंतिम चरण!' : '🎉 Final line of practice!'}
             </div>
           )}
         </div>

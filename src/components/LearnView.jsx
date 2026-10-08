@@ -13,6 +13,8 @@ export default function LearnView({
   onUpdateStats,
   onUnlockBadge,
   onOpenAdSettings,
+  onToggleFocusMode = null,
+  isFocusMode = false,
 }) {
   const allLessons = getAllLessons(language);
 
@@ -341,12 +343,10 @@ export default function LearnView({
       ref={inputContainerRef}
       tabIndex={0}
       onKeyDown={handleKeyDown}
-      className="w-full max-w-7xl mx-auto px-4 py-4 sm:py-6 space-y-4 focus:outline-none select-none"
+      className="w-full max-w-7xl mx-auto px-4 py-3 sm:py-4 space-y-2.5 focus:outline-none select-none"
     >
-      <AdBanner position="header" onOpenSettings={onOpenAdSettings} />
-
-      {/* Sleek Minimal Header: Back to lessons & Lesson Badge */}
-      <div className="flex items-center justify-between gap-3 bg-slate-900/60 border border-slate-800/80 rounded-2xl px-3.5 py-2 backdrop-blur-sm">
+      {/* Sleek Minimal Header: Back to lessons, Lesson Badge & Focus Mode */}
+      <div className="flex items-center justify-between gap-3 bg-slate-900/60 border border-slate-800/80 rounded-2xl px-3.5 py-1.5 backdrop-blur-sm">
         <button
           onClick={() => {
             setActiveLessonId(null);
@@ -355,7 +355,7 @@ export default function LearnView({
           className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer flex items-center gap-1.5 text-xs font-semibold"
         >
           <ArrowLeft size={15} />
-          <span>All Lessons (300)</span>
+          <span>{language === 'hindi' ? 'सभी पाठ (300)' : 'All Lessons (300)'}</span>
         </button>
 
         <div className="flex items-center gap-2">
@@ -367,28 +367,39 @@ export default function LearnView({
           </h2>
         </div>
 
-        {language === 'hindi' ? (
-          <div className="flex items-center gap-1 bg-slate-950 p-0.5 rounded-xl border border-slate-800 text-[11px]">
+        <div className="flex items-center gap-2">
+          {language === 'hindi' ? (
+            <div className="flex items-center gap-1 bg-slate-950 p-0.5 rounded-xl border border-slate-800 text-[11px]">
+              <button
+                onClick={() => setInputMode('mapper')}
+                className={`px-2.5 py-1 rounded-lg font-medium transition cursor-pointer ${
+                  inputMode === 'mapper' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                इनस्क्रिप्ट मैपर
+              </button>
+              <button
+                onClick={() => setInputMode('native')}
+                className={`px-2.5 py-1 rounded-lg font-medium transition cursor-pointer ${
+                  inputMode === 'native' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                सिस्टम
+              </button>
+            </div>
+          ) : null}
+
+          {onToggleFocusMode && (
             <button
-              onClick={() => setInputMode('mapper')}
-              className={`px-2.5 py-1 rounded-lg font-medium transition cursor-pointer ${
-                inputMode === 'mapper' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400 hover:text-slate-200'
-              }`}
+              type="button"
+              onClick={onToggleFocusMode}
+              className="px-2.5 py-1 rounded-xl bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white text-xs font-medium flex items-center gap-1 cursor-pointer transition"
+              title="Toggle Distraction-Free Focus Mode"
             >
-              इनस्क्रिप्ट मैपर
+              <span>{isFocusMode ? 'Exit Zen' : 'Zen Focus'}</span>
             </button>
-            <button
-              onClick={() => setInputMode('native')}
-              className={`px-2.5 py-1 rounded-lg font-medium transition cursor-pointer ${
-                inputMode === 'native' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400 hover:text-slate-200'
-              }`}
-            >
-              सिस्टम
-            </button>
-          </div>
-        ) : (
-          <div className="w-16" />
-        )}
+          )}
+        </div>
       </div>
 
       {/* TWO-LINE ROLLING CAROUSEL TEXT ENGINE WITH MINIMAL TELEMETRY PILL */}
@@ -411,15 +422,20 @@ export default function LearnView({
         onRestart={handleRestart}
       />
 
-      {/* INTEGRATED KEYBOARD WITH HIGH-CONTRAST SUPERIMPOSED HANDS & BIS DUAL KEYCAPS */}
+      {/* INTEGRATED KEYBOARD WITH REALISTIC ORGANIC HAND OVERLAYS & COMPACT SPACING */}
       <IntegratedKeyboardHands
         targetKey={targetKeyInfo?.key || null}
         targetShift={targetKeyInfo?.shift || false}
         language={language}
         pressedKey={lastPressedPhysicalKey}
-        initialHindiLayout={hindiLayout}
-        onLayoutChange={setHindiLayout}
       />
+
+      {/* Optimized Ad Banner Location: Bottom Footer (Away from typing sightline) */}
+      {!isFocusMode && (
+        <div className="pt-2">
+          <AdBanner position="lesson-bottom" onOpenSettings={onOpenAdSettings} />
+        </div>
+      )}
 
       {/* Completion Modal */}
       {completionResult && (
