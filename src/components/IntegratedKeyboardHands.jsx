@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { KEYBOARD_ROWS, FINGER_INFO } from '../data/krutiDevMap';
+import { INSCRIPT_KEYBOARD_ROWS } from '../data/inscriptMap';
 import { soundManager } from '../utils/soundEffects';
 import { Volume2, Settings, X, ShieldCheck, Sliders, Eye } from 'lucide-react';
 
@@ -116,6 +117,7 @@ export default function IntegratedKeyboardHands({
   targetKey = null,
   targetShift = false,
   language = 'hindi',
+  hindiLayout = 'inscript', // 'inscript' | 'krutiDev'
   pressedKey = null,
 }) {
   // High-Contrast Hand Overlay Mode: 'visible' | 'outline' | 'hidden'
@@ -159,10 +161,14 @@ export default function IntegratedKeyboardHands({
     setSwitchProfile(profile);
   };
 
+  const isHindi = language === 'hindi';
+  const isHindiInscript = isHindi && hindiLayout === 'inscript';
+  const activeRows = isHindiInscript ? INSCRIPT_KEYBOARD_ROWS : KEYBOARD_ROWS;
+
   // Find target key coordinates and responsible finger
   let activeFingerId = null;
 
-  KEYBOARD_ROWS.forEach((row) => {
+  activeRows.forEach((row) => {
     row.forEach((k) => {
       const match =
         targetKey &&
@@ -228,7 +234,6 @@ export default function IntegratedKeyboardHands({
 
   const isShiftActive = Boolean(targetShift || physicalShiftActive);
   const currentOpacity = handMode === 'hidden' ? 0 : handOpacity / 100;
-  const isHindi = language === 'hindi';
 
   return (
     <div className="flex flex-col items-center w-full max-w-5xl mx-auto mt-1 sm:mt-1.5 space-y-1.5 select-none">
@@ -240,7 +245,9 @@ export default function IntegratedKeyboardHands({
             <div className="flex items-center gap-1.5 text-slate-300">
               <ShieldCheck size={14} className="text-emerald-400" />
               <span className="font-bold text-white text-[11px] font-hindi">
-                कुर्ती देव ०१० (Kruti Dev 010 Remington Typewriter)
+                {hindiLayout === 'inscript'
+                  ? 'भारतीय मानक इनस्क्रिप्ट (BIS IS 16350 Hindi InScript)'
+                  : 'कुर्ती देव ०१० (Kruti Dev 010 Remington Typewriter)'}
               </span>
             </div>
           ) : (
@@ -406,7 +413,7 @@ export default function IntegratedKeyboardHands({
 
       {/* COMPACT VIRTUAL KEYBOARD WITH STRICT LANGUAGE SEPARATION */}
       <div className="relative flex flex-col gap-1 w-full min-w-[700px] max-w-[920px] px-2 py-2 bg-slate-950/95 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden select-none">
-        {KEYBOARD_ROWS.map((row, rowIdx) => (
+        {activeRows.map((row, rowIdx) => (
           <div key={rowIdx} className="flex gap-1 justify-center">
             {row.map((k) => {
               const finger = k.finger ? FINGER_INFO[k.finger] : null;
@@ -431,8 +438,8 @@ export default function IntegratedKeyboardHands({
               const engPrimary = k.key || '';
               const engShift = k.shiftKey || '';
 
-              const hindiPrimary = k.krutiDev || k.inscript || '';
-              const hindiShift = k.krutiDevShift || k.inscriptShift || '';
+              const hindiPrimary = isHindiInscript ? (k.inscript || '') : (k.krutiDev || k.inscript || '');
+              const hindiShift = isHindiInscript ? (k.inscriptShift || '') : (k.krutiDevShift || k.inscriptShift || '');
 
               const fingerColor = finger ? finger.color : '#334155';
 

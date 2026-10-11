@@ -5,11 +5,18 @@ import {
   tokenizeDevanagariToKrutiDev,
   findKeyForChar,
 } from '../data/krutiDevMap';
+import {
+  INSCRIPT_NORMAL,
+  INSCRIPT_SHIFT,
+  tokenizeDevanagariToInscript,
+  findInscriptKeyForChar,
+} from '../data/inscriptMap';
 import { soundManager } from '../utils/soundEffects';
 
 export function useTypingEngine({
   targetText = '',
   language = 'hindi',
+  hindiLayout = 'inscript', // 'inscript' | 'krutiDev'
   inputMode = 'mapper', // 'mapper' | 'native'
   initialErrorMode = null, // 'strict' | 'casual'
   backspaceRule = 'allowed', // 'allowed' | 'currentWord' | 'disabled'
@@ -30,6 +37,7 @@ export function useTypingEngine({
   const [strictError, setStrictError] = useState(false); // When true in strict mode, cursor is halted
   const [streak, setStreak] = useState(0); // Live consecutive correct keystrokes
   const [hesitationPrompt, setHesitationPrompt] = useState(false); // Alert when user hesitates or repeats mistakes
+  const [isTypoShaking, setIsTypoShaking] = useState(false); // Red typo shake feedback
   const [remainingSeconds, setRemainingSeconds] = useState(timeLimitSeconds || null);
 
   const lastKeystrokeTimeRef = useRef(Date.now());
@@ -56,12 +64,17 @@ export function useTypingEngine({
   }, [targetText]);
 
   // Tokenize target into exact sequential keystroke units:
-  // For Hindi: Tokenized into Kruti Dev 010 Remington typing sequence (e.g. 'f' before consonant for 'ि')
+  // For Hindi InScript: Tokenized into Unicode sequential Devanagari units
+  // For Hindi Kruti Dev: Tokenized into Kruti Dev 010 Remington typing sequence
   // For English: Tokenized character-by-character
   const tokens = useMemo(() => {
     if (!normalizedTarget) return [];
     if (language === 'hindi') {
-      return tokenizeDevanagariToKrutiDev(normalizedTarget);
+      if (hindiLayout === 'inscript') {
+        return tokenizeDevanagariToInscript(normalizedTarget);
+      } else {
+        return tokenizeDevanagariToKrutiDev(normalizedTarget);
+      }
     } else {
       return Array.from(normalizedTarget).map((ch) => {
         const info = findKeyForChar(ch, 'english');
@@ -74,7 +87,7 @@ export function useTypingEngine({
         };
       });
     }
-  }, [normalizedTarget, language]);
+  }, [normalizedTarget, language, hindiLayout]);
 
   const totalTokens = tokens.length;
 
@@ -104,7 +117,7 @@ export function useTypingEngine({
     consecutiveKeyMistakesRef.current = 0;
     setRemainingSeconds(timeLimitSeconds || null);
     if (timerRef.current) clearInterval(timerRef.current);
-  }, [normalizedTarget, language, timeLimitSeconds]);
+  }, [normalizedTarget, language, hindiLayout, timeLimitSeconds]);
 
   // Finish typing test / exam helper
   const finalizeTest = useCallback((isTimeUp = false) => {
@@ -142,9 +155,10 @@ export function useTypingEngine({
         timeSeconds: Math.round((now - (startTime || now)) / 1000),
         charactersTyped: typedIndex,
         isTimeUp,
+        history, // Detailed keystroke history for visual error heatmap
       });
     }
-  }, [startTime, totalKeystrokes, mistakes, timeLimitSeconds, typedIndex, onComplete]);
+  }, [startTime, totalKeystrokes, mistakes, timeLimitSeconds, typedIndex, onComplete, history]);
 
   // Periodic high-precision metrics calculation (Net WPM, Gross WPM, Accuracy, Countdown)
   useEffect(() => {
@@ -312,13 +326,21 @@ export function useTypingEngine({
 
       let producedChar = e.key;
 
-      // Hindi Typing powered strictly by Kruti Dev 010 Remington Typewriter
+      // Hindi Typing (InScript or Kruti Dev)
       if (language === 'hindi' && inputMode === 'mapper') {
         e.preventDefault();
-        if (e.shiftKey) {
-          producedChar = KRUTI_DEV_SHIFT[e.key] || KRUTI_DEV_SHIFT[e.code] || e.key;
+        if (hindiLayout === 'inscript') {
+          if (e.shiftKey) {
+            producedChar = INSCRIPT_SHIFT[e.key] || INSCRIPT_SHIFT[e.code] || e.key;
+          } else {
+            producedChar = INSCRIPT_NORMAL[e.key] || INSCRIPT_NORMAL[e.code] || e.key;
+          }
         } else {
-          producedChar = KRUTI_DEV_NORMAL[e.key] || KRUTI_DEV_NORMAL[e.code] || e.key;
+          if (e.shiftKey) {
+            producedChar = KRUTI_DEV_SHIFT[e.key] || KRUTI_DEV_SHIFT[e.code] || e.key;
+          } else {
+            producedChar = KRUTI_DEV_NORMAL[e.key] || KRUTI_DEV_NORMAL[e.code] || e.key;
+          }
         }
       }
 
@@ -340,10 +362,10 @@ export function useTypingEngine({
         (e.code === 'Space' || e.key === ' ') &&
         (expectedKey === ' ' || expectedGlyph === ' ');
 
-      // Purna Viram (।) tolerance: in Kruti Dev, Shift+A is ।
+      // Purna Viram (।) tolerance: in Kruti Dev, Shift+A is । ; in InScript Shift+. is ।
       const isDandaMatch =
         (normExpectedGlyph === '।' || normExpectedGlyph === '|') &&
-        (normProduced === '।' || (e.shiftKey && (e.key === 'A' || e.key === 'a' || e.key === '.')) || normProduced === '|');
+        (normProduced === '।' || (e.shiftKey && (e.key === 'A' || e.key === 'a' || e.key === '.' || e.key === '>')) || normProduced === '|');
 
       // Typographical quotes & dashes tolerance
       const isQuoteMatch =
@@ -387,8 +409,10 @@ export function useTypingEngine({
           finalizeTest(false);
         }
       } else {
-        // Keystroke Error
+        // Keystroke Error: Trigger subtle audio cue and visual shake
         soundManager.playError();
+        setIsTypoShaking(true);
+        setTimeout(() => setIsTypoShaking(false), 280);
         setStreak(0);
         consecutiveKeyMistakesRef.current += 1;
         if (consecutiveKeyMistakesRef.current >= 2) {
@@ -436,6 +460,7 @@ export function useTypingEngine({
       totalKeystrokes,
       startTime,
       language,
+      hindiLayout,
       inputMode,
       errorMode,
       strictError,
@@ -467,6 +492,7 @@ export function useTypingEngine({
     strictError,
     streak,
     hesitationPrompt,
+    isTypoShaking,
     remainingSeconds,
     submitExam: () => finalizeTest(false),
     progressPercent:

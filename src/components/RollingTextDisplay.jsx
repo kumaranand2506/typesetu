@@ -86,6 +86,7 @@ export default function RollingTextDisplay({
   mistakes = null,
   streak = null,
   hesitationPrompt = false,
+  isTypoShaking = false,
   onRestart = null,
 }) {
   const containerRef = useRef(null);
@@ -286,6 +287,7 @@ export default function RollingTextDisplay({
             font-mono-custom tracking-wider leading-relaxed transition-all duration-200 transform
             ${fontSize === 'large' ? 'text-2xl sm:text-3xl' : 'text-xl sm:text-2xl'}
             ${isHindi ? 'font-hindi font-medium' : 'font-mono-custom font-semibold'}
+            ${isTypoShaking ? 'animate-shake' : ''}
           `}
         >
           {Array.from((activeLine.text || '').normalize('NFC')).map((char, charOffset) => {

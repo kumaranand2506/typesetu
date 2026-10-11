@@ -1,8 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { getAllLessons, getPhases, getPhaseForLevel } from '../data/lessonsEngine';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import {
+  getTypingClubChapters,
+  getTypingClubLessons,
+} from '../data/typingClubCurriculum';
+import { getAllLessons, getPhases } from '../data/lessonsEngine';
 import { useTypingEngine } from '../hooks/useTypingEngine';
 import IntegratedKeyboardHands from './IntegratedKeyboardHands';
 import RollingTextDisplay from './RollingTextDisplay';
+import LessonIntroModal from './LessonIntroModal';
+import LessonCompletionScoreboard from './LessonCompletionScoreboard';
 import AdBanner from './AdBanner';
 import { checkNewBadges } from '../data/badgeSystem';
 import {
@@ -17,17 +23,19 @@ import {
   Sparkles,
   Keyboard,
   Search,
-  ChevronLeft,
-  ChevronRight,
   Layers,
   Lock,
   Unlock,
   CheckCircle2,
   Info,
+  BookOpen,
+  GraduationCap,
+  Sliders,
+  ShieldCheck,
 } from 'lucide-react';
 
 export default function LearnView({
-  language,
+  language = 'hindi',
   userStats,
   onUpdateStats,
   onUnlockBadge,
@@ -35,31 +43,74 @@ export default function LearnView({
   onToggleFocusMode = null,
   isFocusMode = false,
 }) {
-  const allLessons = getAllLessons(language);
-  const phases = getPhases(language);
+  // Course curriculum mode: 'typingClub' (6 Chapters) or 'mastery300' (300 Drills)
+  const [courseMode, setCourseMode] = useState(() => {
+    try {
+      return localStorage.getItem('typesetu_course_mode') || 'typingClub';
+    } catch (e) {
+      return 'typingClub';
+    }
+  });
+
+  // Hindi Keyboard Layout: 'inscript' (BIS IS 16350) or 'krutiDev' (Remington)
+  const [hindiLayout, setHindiLayout] = useState(() => {
+    try {
+      return localStorage.getItem('typesetu_hindi_layout') || 'inscript';
+    } catch (e) {
+      return 'inscript';
+    }
+  });
 
   const [activeLessonId, setActiveLessonId] = useState(null);
+  const [pendingIntroLesson, setPendingIntroLesson] = useState(null);
   const [inputMode, setInputMode] = useState('mapper'); // 'mapper' | 'native'
-  const [selectedPhaseId, setSelectedPhaseId] = useState('all');
+  const [selectedChapterId, setSelectedChapterId] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 24;
-
   const [completionResult, setCompletionResult] = useState(null);
 
-  const activeLesson = allLessons.find((l) => l.id === activeLessonId) || null;
   const inputContainerRef = useRef(null);
 
-  // Lesson completion & passing criteria:
-  // - Minimum 90% accuracy required to pass & unlock next lesson
-  // - 1 Star: 85-89%, 2 Stars: 90-97%, 3 Stars: 98-100%
+  const handleCourseModeChange = (mode) => {
+    setCourseMode(mode);
+    setActiveLessonId(null);
+    setCompletionResult(null);
+    setPendingIntroLesson(null);
+    try {
+      localStorage.setItem('typesetu_course_mode', mode);
+    } catch (e) {}
+  };
+
+  const handleHindiLayoutChange = (layout) => {
+    setHindiLayout(layout);
+    try {
+      localStorage.setItem('typesetu_hindi_layout', layout);
+    } catch (e) {}
+  };
+
+  // Lessons and Chapters based on active course mode
+  const typingClubLessons = useMemo(() => getTypingClubLessons(language), [language]);
+  const typingClubChapters = useMemo(() => getTypingClubChapters(language), [language]);
+  const mastery300Lessons = useMemo(() => getAllLessons(language), [language]);
+  const mastery300Phases = useMemo(() => getPhases(language), [language]);
+
+  const activeLessonList = courseMode === 'typingClub' ? typingClubLessons : mastery300Lessons;
+  const activeLesson = activeLessonList.find((l) => l.id === activeLessonId) || null;
+
+  // Passing criteria: >=90% accuracy
+  // Star rating: 1 to 5 Stars (TypingClub pedagogy)
   const handleLessonComplete = (stats) => {
     let stars = 0;
-    if (stats.accuracy >= 98) {
-      stars = 3;
+    const targetWpm = activeLesson?.targetWpm || 20;
+
+    if (stats.accuracy >= 98 && stats.wpm >= targetWpm) {
+      stars = 5;
+    } else if (stats.accuracy >= 95) {
+      stars = 4;
     } else if (stats.accuracy >= 90) {
-      stars = 2;
+      stars = 3;
     } else if (stats.accuracy >= 85) {
+      stars = 2;
+    } else if (stats.accuracy >= 80) {
       stars = 1;
     }
 
@@ -70,7 +121,7 @@ export default function LearnView({
       stars,
       passed,
       lessonId: activeLesson.id,
-      isExam: activeLesson.level >= 270,
+      isExam: false,
     };
     setCompletionResult(result);
 
@@ -119,27 +170,43 @@ export default function LearnView({
     strictError,
     streak,
     hesitationPrompt,
+    isTypoShaking,
     progressPercent,
   } = useTypingEngine({
     targetText: activeLesson ? activeLesson.text : '',
     language,
+    hindiLayout,
     inputMode,
-    initialErrorMode: 'strict', // Pedagogical default: enforce Backspace error correction
+    initialErrorMode: 'strict', // Pedagogical default: enforce correction
     onComplete: handleLessonComplete,
   });
 
-  // Auto-focus container
+  // Auto-focus container when active lesson starts
   useEffect(() => {
     if (activeLesson && inputContainerRef.current) {
       inputContainerRef.current.focus();
     }
   }, [activeLesson, activeLessonId]);
 
-  const handleNextLesson = () => {
-    const currentIndex = allLessons.findIndex((l) => l.id === activeLessonId);
-    if (currentIndex >= 0 && currentIndex < allLessons.length - 1) {
-      setActiveLessonId(allLessons[currentIndex + 1].id);
+  const handleStartLessonFromIntro = () => {
+    if (pendingIntroLesson) {
+      setActiveLessonId(pendingIntroLesson.id);
+      setPendingIntroLesson(null);
       setCompletionResult(null);
+    }
+  };
+
+  const handleNextLesson = () => {
+    const currentIndex = activeLessonList.findIndex((l) => l.id === activeLessonId);
+    if (currentIndex >= 0 && currentIndex < activeLessonList.length - 1) {
+      const nextLesson = activeLessonList[currentIndex + 1];
+      setCompletionResult(null);
+      if (nextLesson.illustration && courseMode === 'typingClub') {
+        setActiveLessonId(null);
+        setPendingIntroLesson(nextLesson);
+      } else {
+        setActiveLessonId(nextLesson.id);
+      }
     } else {
       setActiveLessonId(null);
       setCompletionResult(null);
@@ -153,217 +220,366 @@ export default function LearnView({
     }
   };
 
-  // Filter lessons by Phase & Search query
-  const filteredLessons = allLessons.filter((lesson) => {
-    if (selectedPhaseId !== 'all' && lesson.phaseId !== Number(selectedPhaseId)) {
-      return false;
+  const handleSelectLesson = (lesson, isUnlocked) => {
+    if (!isUnlocked) return;
+    if (lesson.illustration && courseMode === 'typingClub') {
+      setPendingIntroLesson(lesson);
+    } else {
+      setActiveLessonId(lesson.id);
+      setCompletionResult(null);
     }
+  };
+
+  // Filter lessons
+  const filteredLessons = activeLessonList.filter((lesson) => {
+    if (courseMode === 'typingClub') {
+      if (selectedChapterId !== 'all' && lesson.chapterId !== Number(selectedChapterId)) {
+        return false;
+      }
+    } else {
+      if (selectedChapterId !== 'all' && lesson.phaseId !== Number(selectedChapterId)) {
+        return false;
+      }
+    }
+
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       return (
         lesson.title.toLowerCase().includes(q) ||
-        lesson.subtitle.toLowerCase().includes(q) ||
-        lesson.text.toLowerCase().includes(q) ||
-        String(lesson.level).includes(q)
+        (lesson.subtitle && lesson.subtitle.toLowerCase().includes(q)) ||
+        (lesson.text && lesson.text.toLowerCase().includes(q)) ||
+        String(lesson.lessonNumber || lesson.level).includes(q)
       );
     }
     return true;
   });
 
-  const totalPages = Math.ceil(filteredLessons.length / pageSize) || 1;
-  const paginatedLessons = filteredLessons.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  // Total stars earned
+  const totalStarsEarned = useMemo(() => {
+    let sum = 0;
+    activeLessonList.forEach((l) => {
+      sum += userStats.completedLessons?.[l.id]?.stars || 0;
+    });
+    return sum;
+  }, [activeLessonList, userStats.completedLessons]);
 
-  // LEVEL SELECTION DASHBOARD (300 PROGRESSIVE LESSONS)
+  const totalLessonsPassed = useMemo(() => {
+    let count = 0;
+    activeLessonList.forEach((l) => {
+      if (userStats.completedLessons?.[l.id]?.passed) {
+        count++;
+      }
+    });
+    return count;
+  }, [activeLessonList, userStats.completedLessons]);
+
+  // =========================================================================
+  // VIEW 1: CURRICULUM DASHBOARD (TYPINGCLUB STYLE)
+  // =========================================================================
   if (!activeLesson) {
     return (
       <div className="w-full max-w-7xl mx-auto px-4 py-6 sm:py-8 space-y-6 select-none">
         <AdBanner position="header" onOpenSettings={onOpenAdSettings} />
 
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+        {/* TOP HERO SECTION: COURSE TITLE, LANGUAGE TOGGLES & METRICS */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 pb-5 border-b border-slate-800">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 text-indigo-400 text-xs font-semibold mb-2 border border-indigo-500/20">
-              <Sparkles size={14} /> Muscle-Memory Touch Typing Curriculum
+              <Sparkles size={14} /> TypingClub Interactive Touch Typing Curriculum
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-white">
-              {language === 'hindi' ? 'हिंदी कुर्ती देव ०१० (रेमिंगटन) 300 पाठ्य-शृंखला' : 'English Touch Typing: 300 Lesson Mastery'}
+              {language === 'hindi'
+                ? 'हिंदी टंकण सेतु (Typing Jungle Hindi Curriculum)'
+                : 'English Typing Jungle: Touch Typing Curriculum'}
             </h1>
             <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl font-hindi leading-relaxed">
               {language === 'hindi'
-                ? 'गृह पंक्ति से लेकर ऊपरी/निचली पंक्ति, छोटी \'ि\' के रेमिंगटन नियम, आधे अक्षर एवं शासकीय परीक्षा मानक (CPCT/SSC) तक।'
-                : 'Progressive phased curriculum: Home Row anchor, spacebar rhythm, top & bottom reaches, shift discipline, and programmer syntax.'}
+                ? 'प्रगतिशील 6-अध्याय पाठ्यक्रम: गृह पंक्ति आधार, ऊपरी एवं निचली पंक्ति, शिफ्ट एवं महाप्राण, हलंत संयुक्ताक्षर और 20→40→60 WPM गति मानक।'
+                : 'Progressive 6-chapter touch typing curriculum: Home Row anchor, Top & Bottom reaches, Opposite-hand Shift, word patterns, and 20→40→60 WPM speed benchmarks.'}
             </p>
           </div>
 
-          <div className="flex items-center gap-3 bg-slate-900/80 border border-slate-800 p-3 rounded-2xl">
-            <div className="text-center px-3 border-r border-slate-800">
-              <span className="text-[11px] text-slate-400 uppercase font-bold block">Curriculum</span>
-              <span className="text-lg font-black text-indigo-400">300 Levels</span>
-            </div>
-            <div className="text-center px-3 border-r border-slate-800">
-              <span className="text-[11px] text-slate-400 uppercase font-bold block">Peak Speed</span>
-              <span className="text-lg font-black text-emerald-400">{userStats.highestWpm || 0}</span>
-            </div>
-            <div className="text-center px-3">
-              <span className="text-[11px] text-slate-400 uppercase font-bold block">Mastered</span>
-              <span className="text-lg font-black text-amber-400">
-                {Object.keys(userStats.completedLessons || {}).filter(k => k.startsWith(language === 'hindi' ? 'hi-' : 'en-')).length}
-              </span>
-            </div>
-          </div>
-        </div>
+          {/* Quick Metrics & Settings Cards */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            {/* Hindi Layout Switcher Pill */}
+            {language === 'hindi' && (
+              <div className="flex items-center bg-slate-900 border border-slate-800 rounded-2xl p-1 text-xs">
+                <button
+                  type="button"
+                  onClick={() => handleHindiLayoutChange('inscript')}
+                  className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                    hindiLayout === 'inscript'
+                      ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                  title="Official Indian Standard BIS IS 16350 InScript Layout"
+                >
+                  <ShieldCheck size={14} />
+                  <span>इनस्क्रिप्ट (BIS IS 16350)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleHindiLayoutChange('krutiDev')}
+                  className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                    hindiLayout === 'krutiDev'
+                      ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-md'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                  title="Kruti Dev 010 Remington Typewriter Layout"
+                >
+                  <span>कुर्ती देव ०१०</span>
+                </button>
+              </div>
+            )}
 
-        {/* Phased Curriculum Navigation Tabs */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
-          <button
-            onClick={() => { setSelectedPhaseId('all'); setCurrentPage(1); }}
-            className={`p-3 rounded-2xl border text-left transition cursor-pointer ${
-              selectedPhaseId === 'all'
-                ? 'bg-indigo-600 text-white border-indigo-500 shadow-lg shadow-indigo-600/30'
-                : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:border-slate-700'
-            }`}
-          >
-            <div className="text-base mb-1">🌟</div>
-            <div className="font-bold text-xs truncate">All Phases</div>
-            <div className="text-[10px] opacity-75">300 Lessons</div>
-          </button>
-
-          {phases.map((ph) => {
-            const isSelected = selectedPhaseId === String(ph.id);
-            return (
+            {/* Course Switcher (Typing Jungle vs 300 Drills) */}
+            <div className="flex items-center bg-slate-900 border border-slate-800 rounded-2xl p-1 text-xs">
               <button
-                key={ph.id}
-                onClick={() => { setSelectedPhaseId(String(ph.id)); setCurrentPage(1); }}
-                className={`p-3 rounded-2xl border text-left transition cursor-pointer ${
-                  isSelected
-                    ? 'bg-indigo-600 text-white border-indigo-500 shadow-lg shadow-indigo-600/30'
-                    : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:border-slate-700'
+                type="button"
+                onClick={() => handleCourseModeChange('typingClub')}
+                className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                  courseMode === 'typingClub'
+                    ? 'bg-indigo-600 text-white shadow-md'
+                    : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                <div className="text-base mb-1">{ph.icon}</div>
-                <div className="font-bold text-xs truncate">
-                  {ph.name.split(':')[0]}
-                </div>
-                <div className="text-[10px] opacity-75">
-                  Lvl {ph.range[0]}–{ph.range[1]}
-                </div>
+                <GraduationCap size={14} />
+                <span>Typing Jungle (6 Chapters)</span>
               </button>
-            );
-          })}
-        </div>
-
-        {/* Search & Pagination Bar */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-900/60 p-3 rounded-2xl border border-slate-800">
-          <div className="relative w-full sm:w-72">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Search level #, keys, or words..."
-              value={searchQuery}
-              onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
-              className="w-full pl-9 pr-3 py-1.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
-            />
-          </div>
-
-          <div className="flex items-center gap-2 text-xs text-slate-400">
-            <span>Showing {filteredLessons.length} lessons</span>
-            <div className="flex items-center bg-slate-950 border border-slate-800 rounded-xl p-0.5 ml-2">
               <button
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-                className="p-1.5 text-slate-400 hover:text-white disabled:opacity-30 cursor-pointer"
+                type="button"
+                onClick={() => handleCourseModeChange('mastery300')}
+                className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                  courseMode === 'mastery300'
+                    ? 'bg-indigo-600 text-white shadow-md'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
               >
-                <ChevronLeft size={16} />
+                <Layers size={14} />
+                <span>300 Drills</span>
               </button>
-              <span className="px-2 font-mono text-slate-200">
-                {currentPage} / {totalPages}
-              </span>
-              <button
-                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                disabled={currentPage >= totalPages}
-                className="p-1.5 text-slate-400 hover:text-white disabled:opacity-30 cursor-pointer"
-              >
-                <ChevronRight size={16} />
-              </button>
+            </div>
+
+            {/* Gamification Progress Counters */}
+            <div className="flex items-center gap-2 bg-slate-900/80 border border-slate-800 p-2.5 rounded-2xl">
+              <div className="text-center px-2.5 border-r border-slate-800">
+                <span className="text-[10px] text-slate-400 uppercase font-bold block">Passed</span>
+                <span className="text-base font-black text-indigo-400">
+                  {totalLessonsPassed}/{activeLessonList.length}
+                </span>
+              </div>
+              <div className="text-center px-2.5 border-r border-slate-800">
+                <span className="text-[10px] text-slate-400 uppercase font-bold block">Stars</span>
+                <span className="text-base font-black text-amber-400 flex items-center gap-0.5 justify-center">
+                  <Star size={12} className="fill-amber-400 text-amber-400 inline" /> {totalStarsEarned}
+                </span>
+              </div>
+              <div className="text-center px-2">
+                <span className="text-[10px] text-slate-400 uppercase font-bold block">Peak WPM</span>
+                <span className="text-base font-black text-emerald-400">
+                  {userStats.highestWpm || 0}
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* 24 Progressive Lesson Cards Grid per page */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {paginatedLessons.map((lesson) => {
-            const progress = userStats.completedLessons?.[lesson.id];
-            const stars = progress?.stars || 0;
-            const isDone = Boolean(progress && progress.accuracy >= 90);
+        {/* CHAPTER / PHASE NAVIGATION TABS */}
+        {courseMode === 'typingClub' ? (
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+            <button
+              onClick={() => setSelectedChapterId('all')}
+              className={`p-3 rounded-2xl border text-left transition cursor-pointer ${
+                selectedChapterId === 'all'
+                  ? 'bg-indigo-600 text-white border-indigo-500 shadow-lg shadow-indigo-600/30'
+                  : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:border-slate-700'
+              }`}
+            >
+              <div className="text-base mb-1">🌟</div>
+              <div className="font-bold text-xs truncate">All Chapters</div>
+              <div className="text-[10px] opacity-75">{activeLessonList.length} Lessons</div>
+            </button>
 
-            // Progressive unlocking rule:
-            // Level 1 is always unlocked.
-            // Level N is unlocked if level N-1 has been passed with >= 90% accuracy.
-            const prefix = language === 'hindi' ? 'hi-' : 'en-';
-            const prevId = `${prefix}${lesson.level - 1}`;
-            const prevCompleted = userStats.completedLessons?.[prevId];
-            const isUnlocked = lesson.level === 1 || Boolean(prevCompleted?.accuracy >= 90) || Boolean(progress);
+            {typingClubChapters.map((ch) => {
+              const isSelected = selectedChapterId === String(ch.id);
+              const chapterLessons = activeLessonList.filter((l) => l.chapterId === ch.id);
+              const passedInChapter = chapterLessons.filter(
+                (l) => userStats.completedLessons?.[l.id]?.passed
+              ).length;
+
+              return (
+                <button
+                  key={ch.id}
+                  onClick={() => setSelectedChapterId(String(ch.id))}
+                  className={`p-3 rounded-2xl border text-left transition cursor-pointer ${
+                    isSelected
+                      ? 'bg-indigo-600 text-white border-indigo-500 shadow-lg shadow-indigo-600/30'
+                      : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:border-slate-700'
+                  }`}
+                >
+                  <div className="text-base mb-1">{ch.icon}</div>
+                  <div className="font-bold text-xs truncate font-hindi">{ch.title.split(':')[0]}</div>
+                  <div className="text-[10px] opacity-75">
+                    {passedInChapter}/{chapterLessons.length} Done
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+            <button
+              onClick={() => setSelectedChapterId('all')}
+              className={`p-3 rounded-2xl border text-left transition cursor-pointer ${
+                selectedChapterId === 'all'
+                  ? 'bg-indigo-600 text-white border-indigo-500 shadow-lg shadow-indigo-600/30'
+                  : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:border-slate-700'
+              }`}
+            >
+              <div className="text-base mb-1">🌟</div>
+              <div className="font-bold text-xs truncate">All Phases</div>
+              <div className="text-[10px] opacity-75">300 Lessons</div>
+            </button>
+            {mastery300Phases.map((ph) => {
+              const isSelected = selectedChapterId === String(ph.id);
+              return (
+                <button
+                  key={ph.id}
+                  onClick={() => setSelectedChapterId(String(ph.id))}
+                  className={`p-3 rounded-2xl border text-left transition cursor-pointer ${
+                    isSelected
+                      ? 'bg-indigo-600 text-white border-indigo-500 shadow-lg shadow-indigo-600/30'
+                      : 'bg-slate-900/80 text-slate-300 border-slate-800 hover:border-slate-700'
+                  }`}
+                >
+                  <div className="text-base mb-1">{ph.icon}</div>
+                  <div className="font-bold text-xs truncate font-hindi">{ph.name.split(':')[0]}</div>
+                  <div className="text-[10px] opacity-75">Lvl {ph.range[0]}–{ph.range[1]}</div>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* SEARCH BAR */}
+        <div className="flex items-center gap-3 bg-slate-900/90 border border-slate-800 rounded-2xl px-4 py-2.5">
+          <Search size={16} className="text-slate-400" />
+          <input
+            type="text"
+            placeholder={
+              language === 'hindi'
+                ? 'पाठ खोजें (उदा. F & J, क & र, मात्रा, गति)...'
+                : 'Search lessons (e.g. F & J, Home Row, Shift, 40 WPM)...'
+            }
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-transparent text-sm text-white placeholder-slate-500 focus:outline-none"
+          />
+        </div>
+
+        {/* LESSON CARDS GRID (WITH 5-STAR RATINGS, LOCKS, TARGET KEYCAPS) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5">
+          {filteredLessons.map((lesson, idx) => {
+            const rawIndex = activeLessonList.findIndex((l) => l.id === lesson.id);
+            // Lesson 1 is always unlocked. Next lessons unlock when preceding lesson is passed (>=90%)
+            const isUnlocked =
+              rawIndex === 0 ||
+              Boolean(userStats.completedLessons?.[activeLessonList[rawIndex - 1]?.id]?.passed);
+
+            const progress = userStats.completedLessons?.[lesson.id] || null;
+            const stars = progress?.stars || 0;
+            const isDone = Boolean(progress?.passed);
 
             return (
               <div
                 key={lesson.id}
-                onClick={() => {
-                  setActiveLessonId(lesson.id);
-                  setCompletionResult(null);
-                }}
-                className={`group relative rounded-2xl p-4 sm:p-5 border transition-all duration-200 cursor-pointer flex flex-col justify-between ${
-                  !isUnlocked
-                    ? 'bg-slate-950/40 border-slate-900/90 text-slate-600 hover:border-slate-800 opacity-70'
-                    : isDone
-                    ? 'bg-slate-900/90 border-slate-700/80 hover:border-indigo-500 hover:shadow-xl hover:shadow-indigo-500/10'
-                    : 'bg-slate-950/70 border-slate-800/80 hover:border-indigo-500/60 hover:bg-slate-900/50'
-                }`}
+                onClick={() => handleSelectLesson(lesson, isUnlocked)}
+                className={`
+                  p-4 rounded-2xl border transition-all duration-200 flex flex-col justify-between text-left relative group
+                  ${
+                    !isUnlocked
+                      ? 'bg-slate-950/60 border-slate-900 text-slate-500 opacity-70 cursor-not-allowed'
+                      : isDone
+                      ? 'bg-slate-900/90 border-emerald-500/30 hover:border-emerald-500 hover:shadow-lg hover:shadow-emerald-500/10 cursor-pointer'
+                      : 'bg-slate-900/80 border-slate-800 hover:border-indigo-500/80 hover:shadow-lg hover:shadow-indigo-500/20 cursor-pointer'
+                  }
+                `}
               >
                 <div>
-                  <div className="flex items-center justify-between mb-2">
+                  {/* Top card bar: Lesson Badge + Star Ratings */}
+                  <div className="flex items-center justify-between mb-2.5">
                     <div className="flex items-center gap-1.5">
-                      <span className={`w-7 h-7 rounded-lg font-extrabold flex items-center justify-center text-xs border ${
-                        !isUnlocked
-                          ? 'bg-slate-900 text-slate-500 border-slate-800'
-                          : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30'
-                      }`}>
-                        {lesson.level}
+                      <span
+                        className={`w-7 h-7 rounded-lg font-black flex items-center justify-center text-xs border ${
+                          !isUnlocked
+                            ? 'bg-slate-900 text-slate-500 border-slate-800'
+                            : isDone
+                            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                            : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30'
+                        }`}
+                      >
+                        {lesson.lessonNumber || lesson.level}
                       </span>
                       <span className="text-[10px] font-semibold text-slate-400">
-                        {lesson.tier === 1 ? 'Tier 1: Drills' : lesson.tier === 2 ? 'Tier 2: Words' : 'Tier 3: Flow'}
+                        {lesson.chapterId
+                          ? `Ch ${lesson.chapterId}`
+                          : lesson.tier === 1
+                          ? 'Tier 1'
+                          : lesson.tier === 2
+                          ? 'Tier 2'
+                          : 'Tier 3'}
                       </span>
                     </div>
 
+                    {/* 5 Star indicators */}
                     <div className="flex items-center gap-0.5">
                       {!isUnlocked ? (
                         <span className="flex items-center gap-1 text-[10px] text-slate-500 font-medium">
                           <Lock size={12} /> Locked
                         </span>
                       ) : (
-                        [1, 2, 3].map((s) => (
+                        [1, 2, 3, 4, 5].map((s) => (
                           <Star
                             key={s}
-                            size={13}
-                            className={s <= stars ? 'text-amber-400 fill-amber-400' : 'text-slate-800'}
+                            size={12}
+                            className={
+                              s <= stars
+                                ? 'text-amber-400 fill-amber-400 drop-shadow-[0_0_6px_rgba(251,191,36,0.6)]'
+                                : 'text-slate-800'
+                            }
                           />
                         ))
                       )}
                     </div>
                   </div>
 
+                  {/* Target Keycaps Preview if present */}
+                  {lesson.targetKeys && lesson.targetKeys.length > 0 && (
+                    <div className="flex items-center gap-1 mb-2">
+                      {lesson.targetKeys.slice(0, 4).map((k, kIdx) => (
+                        <span
+                          key={kIdx}
+                          className="px-1.5 py-0.5 rounded bg-slate-800/90 border border-slate-700/80 text-[10px] font-mono-custom font-bold text-amber-300 uppercase"
+                        >
+                          {k}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Title & Subtitle */}
                   <h3 className="font-bold text-white text-sm group-hover:text-indigo-300 transition font-hindi line-clamp-1">
                     {lesson.title}
                   </h3>
                   <h4 className="text-[11px] font-semibold text-indigo-400/90 mt-0.5 font-hindi line-clamp-1">
-                    {lesson.subtitle}
+                    {lesson.subtitle || lesson.description}
                   </h4>
-                  <p className="text-[11px] text-slate-400 mt-1.5 font-hindi line-clamp-2 leading-relaxed">
-                    {lesson.description}
-                  </p>
                 </div>
 
+                {/* Bottom card bar: Target WPM and completion badge */}
                 <div className="mt-3 pt-2.5 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
                   <span className="text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-300 font-medium">
-                    🎯 {lesson.targetWpm} WPM (90% Acc)
+                    🎯 {lesson.targetWpm || 20} WPM (≥90% Acc)
                   </span>
 
                   {isDone ? (
@@ -376,7 +592,7 @@ export default function LearnView({
                     </span>
                   ) : (
                     <span className="text-slate-600 text-[10px]">
-                      Pass Lvl {lesson.level - 1}
+                      Pass Lesson {rawIndex}
                     </span>
                   )}
                 </div>
@@ -385,12 +601,25 @@ export default function LearnView({
           })}
         </div>
 
+        {/* ILLUSTRATED LESSON INTRO POPUP (TypingClub style) */}
+        {pendingIntroLesson && (
+          <LessonIntroModal
+            isOpen={Boolean(pendingIntroLesson)}
+            lesson={pendingIntroLesson}
+            language={language}
+            onStart={handleStartLessonFromIntro}
+            onClose={() => setPendingIntroLesson(null)}
+          />
+        )}
+
         <AdBanner position="lesson-bottom" onOpenSettings={onOpenAdSettings} />
       </div>
     );
   }
 
-  // ACTIVE LESSON VIEW WITH LIVE SPEEDOMETER, REAL-TIME HAND OVERLAY & SAFEGUARDS
+  // =========================================================================
+  // VIEW 2: ACTIVE TYPING PRACTICE CANVAS
+  // =========================================================================
   return (
     <div
       ref={inputContainerRef}
@@ -398,7 +627,7 @@ export default function LearnView({
       onKeyDown={handleKeyDown}
       className="w-full max-w-7xl mx-auto px-4 py-3 sm:py-4 space-y-2.5 focus:outline-none select-none"
     >
-      {/* Sleek Header: Back to lessons, Lesson Title, Tier Badge & Zen Mode */}
+      {/* Sleek Top Navigation Bar */}
       <div className="flex items-center justify-between gap-3 bg-slate-900/60 border border-slate-800/80 rounded-2xl px-3.5 py-1.5 backdrop-blur-sm">
         <button
           onClick={() => {
@@ -408,15 +637,16 @@ export default function LearnView({
           className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition cursor-pointer flex items-center gap-1.5 text-xs font-semibold"
         >
           <ArrowLeft size={15} />
-          <span>{language === 'hindi' ? 'सभी पाठ (300)' : 'All Lessons (300)'}</span>
+          <span>
+            {language === 'hindi'
+              ? `सभी पाठ (${activeLessonList.length})`
+              : `All Lessons (${activeLessonList.length})`}
+          </span>
         </button>
 
         <div className="flex items-center gap-2">
           <span className="px-2.5 py-0.5 rounded-lg bg-indigo-500/20 text-indigo-300 font-bold text-xs border border-indigo-500/30">
-            Lvl {activeLesson.level}
-          </span>
-          <span className="px-2 py-0.5 rounded-lg bg-slate-800 text-slate-400 font-semibold text-[11px] hidden sm:inline">
-            {activeLesson.tier === 1 ? 'Tier 1: Drills' : activeLesson.tier === 2 ? 'Tier 2: Words' : 'Tier 3: Flow'}
+            #{activeLesson.lessonNumber || activeLesson.level}
           </span>
           <h2 className="text-sm sm:text-base font-bold text-white font-hindi truncate max-w-xs sm:max-w-md">
             {activeLesson.title}
@@ -429,15 +659,19 @@ export default function LearnView({
               <button
                 onClick={() => setInputMode('mapper')}
                 className={`px-2.5 py-1 rounded-lg font-medium transition cursor-pointer ${
-                  inputMode === 'mapper' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400 hover:text-slate-200'
+                  inputMode === 'mapper'
+                    ? 'bg-indigo-600 text-white font-bold'
+                    : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                रेमिंगटन मैपर
+                {hindiLayout === 'inscript' ? 'इनस्क्रिप्ट मैपर' : 'रेमिंगटन मैपर'}
               </button>
               <button
                 onClick={() => setInputMode('native')}
                 className={`px-2.5 py-1 rounded-lg font-medium transition cursor-pointer ${
-                  inputMode === 'native' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400 hover:text-slate-200'
+                  inputMode === 'native'
+                    ? 'bg-indigo-600 text-white font-bold'
+                    : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 सिस्टम
@@ -458,17 +692,17 @@ export default function LearnView({
         </div>
       </div>
 
-      {/* SPECIAL HINDI PHASE 4 'f' MATRA INSTRUCTIONAL BANNER */}
-      {language === 'hindi' && activeLesson.phaseId === 4 && (
+      {/* SPECIAL HINDI INSTRUCTIONAL BANNER */}
+      {language === 'hindi' && hindiLayout === 'krutiDev' && activeLesson.phaseId === 4 && (
         <div className="flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs font-hindi">
           <Info size={16} className="text-amber-400 shrink-0" />
           <span>
-            <strong>रेमिंगटन टाइपराइटर नियम:</strong> छोटी <strong>'ि' (F कुँजी)</strong> हमेशा व्यंजन से <em>पहले</em> टाइप की जाती है! उदा. कि = <code>f + d</code>, दिन = <code>f + n</code>, सिर = <code>f + l + j</code>
+            <strong>रेमिंगटन टाइपराइटर नियम:</strong> छोटी <strong>'ि' (F कुँजी)</strong> हमेशा व्यंजन से <em>पहले</em> टाइप की जाती है! उदा. कि = <code>f + d</code>
           </span>
         </div>
       )}
 
-      {/* TWO-LINE ROLLING CAROUSEL TEXT ENGINE WITH MINIMAL TELEMETRY PILL & STREAK */}
+      {/* TWO-LINE ROLLING CAROUSEL DISPLAY WITH TYPO SHAKE & MINIMAL TELEMETRY */}
       <RollingTextDisplay
         targetText={activeLesson ? activeLesson.text : ''}
         typedIndex={typedIndex}
@@ -487,113 +721,35 @@ export default function LearnView({
         mistakes={mistakes}
         streak={streak}
         hesitationPrompt={hesitationPrompt}
+        isTypoShaking={isTypoShaking}
         onRestart={handleRestart}
       />
 
-      {/* INTEGRATED KEYBOARD WITH REALISTIC ORGANIC HAND OVERLAYS & REAL-TIME SHIFT UPDATES */}
+      {/* DYNAMIC VIRTUAL KEYBOARD WITH ORGANIC HAND SILHOUETTES & OPPOSITE SHIFT ANIMATION */}
       <IntegratedKeyboardHands
         targetKey={targetKeyInfo?.key || null}
         targetShift={targetKeyInfo?.shift || false}
         language={language}
+        hindiLayout={hindiLayout}
         pressedKey={lastPressedPhysicalKey}
       />
 
-      {/* Optimized Ad Banner Location: Bottom Footer */}
+      {/* Optimized Ad Banner */}
       {!isFocusMode && (
         <div className="pt-2">
           <AdBanner position="lesson-bottom" onOpenSettings={onOpenAdSettings} />
         </div>
       )}
 
-      {/* LESSON COMPLETION MODAL WITH 90% PASS CRITERIA & STAR RATINGS */}
+      {/* LESSON COMPLETION SCOREBOARD WITH 1-5 STARS & ERROR HEATMAP BREAKDOWN */}
       {completionResult && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
-          <div className="bg-slate-900 border-2 border-indigo-500/50 rounded-3xl p-6 sm:p-8 max-w-lg w-full text-center shadow-2xl relative space-y-6">
-            <div>
-              <div className="flex justify-center gap-2 mb-3">
-                {[1, 2, 3].map((s) => (
-                  <Star
-                    key={s}
-                    size={36}
-                    className={s <= completionResult.stars ? 'text-amber-400 fill-amber-400 animate-bounce' : 'text-slate-800'}
-                  />
-                ))}
-              </div>
-
-              {completionResult.passed ? (
-                <>
-                  <h3 className="text-2xl font-black text-white font-hindi">
-                    {completionResult.stars === 3
-                      ? '🎉 उत्कृष्ट प्रदर्शन! (3 Stars Mastery!)'
-                      : '👍 पाठ सफल! (Lesson Passed!)'}
-                  </h3>
-                  <p className="text-xs text-emerald-400 font-semibold mt-1">
-                    ✓ न्यूनतम 90% शुद्धता मानक पूर्ण — अगला पाठ अनलॉक हुआ!
-                  </p>
-                </>
-              ) : (
-                <>
-                  <h3 className="text-2xl font-black text-rose-400 font-hindi">
-                    ⚠️ पुनः प्रयास करें (90% शुद्धता आवश्यक)
-                  </h3>
-                  <p className="text-xs text-slate-400 font-hindi mt-1">
-                    अगला पाठ अनलॉक करने के लिए कम से कम 90% शुद्धता आवश्यक है।
-                  </p>
-                </>
-              )}
-              <p className="text-sm text-slate-300 font-hindi mt-1.5 font-bold">
-                {activeLesson.title}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3 p-4 rounded-2xl bg-slate-950 border border-slate-800">
-              <div className="text-center">
-                <span className="text-[11px] text-slate-400 uppercase font-semibold block">Speed</span>
-                <span className="text-2xl font-black text-indigo-400">{completionResult.wpm}</span>
-                <span className="text-[10px] text-slate-500 block">WPM</span>
-              </div>
-              <div className="text-center border-x border-slate-800">
-                <span className="text-[11px] text-slate-400 uppercase font-semibold block">Accuracy</span>
-                <span className={`text-2xl font-black ${completionResult.passed ? 'text-emerald-400' : 'text-rose-400'}`}>
-                  {completionResult.accuracy}%
-                </span>
-                <span className="text-[10px] text-slate-500 block">लक्ष्य: ≥90%</span>
-              </div>
-              <div className="text-center">
-                <span className="text-[11px] text-slate-400 uppercase font-semibold block">Mistakes</span>
-                <span className="text-2xl font-black text-rose-400">{completionResult.mistakes}</span>
-                <span className="text-[10px] text-slate-500 block">त्रुटियाँ</span>
-              </div>
-            </div>
-
-            <AdBanner position="practice-complete" onOpenSettings={onOpenAdSettings} />
-
-            <div className="flex items-center gap-3 pt-2">
-              <button
-                onClick={handleRestart}
-                className="flex-1 py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs flex items-center justify-center gap-2 cursor-pointer transition"
-              >
-                <RotateCcw size={15} /> पुनः अभ्यास (Retry)
-              </button>
-              {completionResult.passed ? (
-                <button
-                  onClick={handleNextLesson}
-                  className="flex-1 py-3 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 cursor-pointer transition"
-                >
-                  अगला पाठ (Next) <ArrowRight size={15} />
-                </button>
-              ) : (
-                <button
-                  disabled
-                  className="flex-1 py-3 px-4 rounded-xl bg-slate-800/60 text-slate-500 font-bold text-xs flex items-center justify-center gap-2 cursor-not-allowed border border-slate-800"
-                  title="अगले पाठ के लिए 90%+ शुद्धता आवश्यक है"
-                >
-                  <Lock size={14} /> अगला पाठ बंद (Locked)
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
+        <LessonCompletionScoreboard
+          result={completionResult}
+          lesson={activeLesson}
+          language={language}
+          onRetry={handleRestart}
+          onNext={handleNextLesson}
+        />
       )}
     </div>
   );
