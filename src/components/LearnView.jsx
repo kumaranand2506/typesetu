@@ -52,15 +52,6 @@ export default function LearnView({
     }
   });
 
-  // Hindi Keyboard Layout: 'inscript' (BIS IS 16350) or 'krutiDev' (Remington)
-  const [hindiLayout, setHindiLayout] = useState(() => {
-    try {
-      return localStorage.getItem('typesetu_hindi_layout') || 'inscript';
-    } catch (e) {
-      return 'inscript';
-    }
-  });
-
   const [activeLessonId, setActiveLessonId] = useState(null);
   const [pendingIntroLesson, setPendingIntroLesson] = useState(null);
   const [inputMode, setInputMode] = useState('mapper'); // 'mapper' | 'native'
@@ -77,13 +68,6 @@ export default function LearnView({
     setPendingIntroLesson(null);
     try {
       localStorage.setItem('typesetu_course_mode', mode);
-    } catch (e) {}
-  };
-
-  const handleHindiLayoutChange = (layout) => {
-    setHindiLayout(layout);
-    try {
-      localStorage.setItem('typesetu_hindi_layout', layout);
     } catch (e) {}
   };
 
@@ -175,7 +159,6 @@ export default function LearnView({
   } = useTypingEngine({
     targetText: activeLesson ? activeLesson.text : '',
     language,
-    hindiLayout,
     inputMode,
     initialErrorMode: 'strict', // Pedagogical default: enforce correction
     onComplete: handleLessonComplete,
@@ -301,34 +284,11 @@ export default function LearnView({
 
           {/* Quick Metrics & Settings Cards */}
           <div className="flex flex-wrap items-center gap-2.5">
-            {/* Hindi Layout Switcher Pill */}
+            {/* Hindi Official Layout Badge (Locked to Kruti Dev 010) */}
             {language === 'hindi' && (
-              <div className="flex items-center bg-slate-900 border border-slate-800 rounded-2xl p-1 text-xs">
-                <button
-                  type="button"
-                  onClick={() => handleHindiLayoutChange('inscript')}
-                  className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer flex items-center gap-1.5 ${
-                    hindiLayout === 'inscript'
-                      ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md'
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                  title="Official Indian Standard BIS IS 16350 InScript Layout"
-                >
-                  <ShieldCheck size={14} />
-                  <span>इनस्क्रिप्ट (BIS IS 16350)</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleHindiLayoutChange('krutiDev')}
-                  className={`px-3 py-1.5 rounded-xl font-bold transition cursor-pointer flex items-center gap-1.5 ${
-                    hindiLayout === 'krutiDev'
-                      ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-md'
-                      : 'text-slate-400 hover:text-slate-200'
-                  }`}
-                  title="Kruti Dev 010 Remington Typewriter Layout"
-                >
-                  <span>कुर्ती देव ०१०</span>
-                </button>
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold font-hindi shadow-sm">
+                <ShieldCheck size={14} className="text-emerald-400" />
+                <span>कुर्ती देव ०१० (Kruti Dev 010 Remington)</span>
               </div>
             )}
 
@@ -664,7 +624,7 @@ export default function LearnView({
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                {hindiLayout === 'inscript' ? 'इनस्क्रिप्ट मैपर' : 'रेमिंगटन मैपर'}
+                रेमिंगटन मैपर
               </button>
               <button
                 onClick={() => setInputMode('native')}
@@ -693,7 +653,7 @@ export default function LearnView({
       </div>
 
       {/* SPECIAL HINDI INSTRUCTIONAL BANNER */}
-      {language === 'hindi' && hindiLayout === 'krutiDev' && activeLesson.phaseId === 4 && (
+      {language === 'hindi' && activeLesson?.phaseId === 4 && (
         <div className="flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs font-hindi">
           <Info size={16} className="text-amber-400 shrink-0" />
           <span>
@@ -729,8 +689,8 @@ export default function LearnView({
       <IntegratedKeyboardHands
         targetKey={targetKeyInfo?.key || null}
         targetShift={targetKeyInfo?.shift || false}
+        targetGlyph={targetChar || targetKeyInfo?.glyph || null}
         language={language}
-        hindiLayout={hindiLayout}
         pressedKey={lastPressedPhysicalKey}
       />
 

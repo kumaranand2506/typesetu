@@ -5,18 +5,11 @@ import {
   tokenizeDevanagariToKrutiDev,
   findKeyForChar,
 } from '../data/krutiDevMap';
-import {
-  INSCRIPT_NORMAL,
-  INSCRIPT_SHIFT,
-  tokenizeDevanagariToInscript,
-  findInscriptKeyForChar,
-} from '../data/inscriptMap';
 import { soundManager } from '../utils/soundEffects';
 
 export function useTypingEngine({
   targetText = '',
   language = 'hindi',
-  hindiLayout = 'inscript', // 'inscript' | 'krutiDev'
   inputMode = 'mapper', // 'mapper' | 'native'
   initialErrorMode = null, // 'strict' | 'casual'
   backspaceRule = 'allowed', // 'allowed' | 'currentWord' | 'disabled'
@@ -64,17 +57,12 @@ export function useTypingEngine({
   }, [targetText]);
 
   // Tokenize target into exact sequential keystroke units:
-  // For Hindi InScript: Tokenized into Unicode sequential Devanagari units
-  // For Hindi Kruti Dev: Tokenized into Kruti Dev 010 Remington typing sequence
+  // For Hindi: Tokenized strictly into Kruti Dev 010 Remington typewriter sequence (f before consonant for 'ि')
   // For English: Tokenized character-by-character
   const tokens = useMemo(() => {
     if (!normalizedTarget) return [];
     if (language === 'hindi') {
-      if (hindiLayout === 'inscript') {
-        return tokenizeDevanagariToInscript(normalizedTarget);
-      } else {
-        return tokenizeDevanagariToKrutiDev(normalizedTarget);
-      }
+      return tokenizeDevanagariToKrutiDev(normalizedTarget);
     } else {
       return Array.from(normalizedTarget).map((ch) => {
         const info = findKeyForChar(ch, 'english');
@@ -87,7 +75,7 @@ export function useTypingEngine({
         };
       });
     }
-  }, [normalizedTarget, language, hindiLayout]);
+  }, [normalizedTarget, language]);
 
   const totalTokens = tokens.length;
 
@@ -117,7 +105,7 @@ export function useTypingEngine({
     consecutiveKeyMistakesRef.current = 0;
     setRemainingSeconds(timeLimitSeconds || null);
     if (timerRef.current) clearInterval(timerRef.current);
-  }, [normalizedTarget, language, hindiLayout, timeLimitSeconds]);
+  }, [normalizedTarget, language, timeLimitSeconds]);
 
   // Finish typing test / exam helper
   const finalizeTest = useCallback((isTimeUp = false) => {
@@ -326,21 +314,13 @@ export function useTypingEngine({
 
       let producedChar = e.key;
 
-      // Hindi Typing (InScript or Kruti Dev)
+      // Hindi Typing strictly powered by Kruti Dev 010 Remington Typewriter
       if (language === 'hindi' && inputMode === 'mapper') {
         e.preventDefault();
-        if (hindiLayout === 'inscript') {
-          if (e.shiftKey) {
-            producedChar = INSCRIPT_SHIFT[e.key] || INSCRIPT_SHIFT[e.code] || e.key;
-          } else {
-            producedChar = INSCRIPT_NORMAL[e.key] || INSCRIPT_NORMAL[e.code] || e.key;
-          }
+        if (e.shiftKey) {
+          producedChar = KRUTI_DEV_SHIFT[e.key] || KRUTI_DEV_SHIFT[e.code] || e.key;
         } else {
-          if (e.shiftKey) {
-            producedChar = KRUTI_DEV_SHIFT[e.key] || KRUTI_DEV_SHIFT[e.code] || e.key;
-          } else {
-            producedChar = KRUTI_DEV_NORMAL[e.key] || KRUTI_DEV_NORMAL[e.code] || e.key;
-          }
+          producedChar = KRUTI_DEV_NORMAL[e.key] || KRUTI_DEV_NORMAL[e.code] || e.key;
         }
       }
 
@@ -362,7 +342,7 @@ export function useTypingEngine({
         (e.code === 'Space' || e.key === ' ') &&
         (expectedKey === ' ' || expectedGlyph === ' ');
 
-      // Purna Viram (।) tolerance: in Kruti Dev, Shift+A is । ; in InScript Shift+. is ।
+      // Purna Viram (।) tolerance: in Kruti Dev, Shift+A is ।
       const isDandaMatch =
         (normExpectedGlyph === '।' || normExpectedGlyph === '|') &&
         (normProduced === '।' || (e.shiftKey && (e.key === 'A' || e.key === 'a' || e.key === '.' || e.key === '>')) || normProduced === '|');
@@ -378,8 +358,24 @@ export function useTypingEngine({
         (normExpectedGlyph === '—' || normExpectedGlyph === '–' || normExpectedGlyph === '-') &&
         (normProduced === '-' || normProduced === '—' || normProduced === '–');
 
-      const isCorrect =
+      let isCorrect =
         isGlyphMatch || isKeyMatch || isSpaceMatch || isDandaMatch || isQuoteMatch || isSingleQuoteMatch || isDashMatch;
+
+      // Kruti Dev 'Chhoti Ee Ki Matra' (ि / f) Typewriter Sequential Preparation Logic:
+      // In Kruti Dev 010, the user MUST press the 'f' key (ि) FIRST before the consonant (e.g., 'कि' = 'f' then 'd').
+      // If user typed 'f' (ि) and the current token is a consonant but the immediately next token is 'f' (ि),
+      // do NOT mark 'f' as a typo! Automatically swap the tokens so 'f' is accepted now and the consonant is ready next!
+      if (
+        language === 'hindi' &&
+        !isCorrect &&
+        (e.key.toLowerCase() === 'f' || producedChar === 'ि') &&
+        (tokens[typedIndex + 1]?.key === 'f' || tokens[typedIndex + 1]?.glyph === 'ि')
+      ) {
+        const temp = tokens[typedIndex];
+        tokens[typedIndex] = tokens[typedIndex + 1];
+        tokens[typedIndex + 1] = temp;
+        isCorrect = true;
+      }
 
       if (isCorrect) {
         soundManager.playClick();
@@ -460,7 +456,6 @@ export function useTypingEngine({
       totalKeystrokes,
       startTime,
       language,
-      hindiLayout,
       inputMode,
       errorMode,
       strictError,

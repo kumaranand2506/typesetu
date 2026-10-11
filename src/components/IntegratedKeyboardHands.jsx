@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { KEYBOARD_ROWS, FINGER_INFO } from '../data/krutiDevMap';
-import { INSCRIPT_KEYBOARD_ROWS } from '../data/inscriptMap';
+import FingerInstructionPrompt from './FingerInstructionPrompt';
 import { soundManager } from '../utils/soundEffects';
 import { Volume2, Settings, X, ShieldCheck, Sliders, Eye } from 'lucide-react';
 
@@ -116,8 +116,8 @@ function createOrganicFingerPath(kx, ky, tx, ty, baseWidth = 14, tipWidth = 10) 
 export default function IntegratedKeyboardHands({
   targetKey = null,
   targetShift = false,
+  targetGlyph = null,
   language = 'hindi',
-  hindiLayout = 'inscript', // 'inscript' | 'krutiDev'
   pressedKey = null,
 }) {
   // High-Contrast Hand Overlay Mode: 'visible' | 'outline' | 'hidden'
@@ -162,8 +162,24 @@ export default function IntegratedKeyboardHands({
   };
 
   const isHindi = language === 'hindi';
-  const isHindiInscript = isHindi && hindiLayout === 'inscript';
-  const activeRows = isHindiInscript ? INSCRIPT_KEYBOARD_ROWS : KEYBOARD_ROWS;
+  const activeRows = KEYBOARD_ROWS;
+
+  // Derive target glyph if not provided directly
+  let currentGlyph = targetGlyph;
+  if (!currentGlyph && targetKey) {
+    for (const row of KEYBOARD_ROWS) {
+      for (const k of row) {
+        if (
+          k.key?.toLowerCase() === targetKey?.toLowerCase() ||
+          k.code?.toLowerCase() === targetKey?.toLowerCase()
+        ) {
+          currentGlyph = targetShift ? k.krutiDevShift : k.krutiDev;
+          break;
+        }
+      }
+      if (currentGlyph) break;
+    }
+  }
 
   // Find target key coordinates and responsible finger
   let activeFingerId = null;
@@ -212,10 +228,11 @@ export default function IntegratedKeyboardHands({
   }, []);
 
   // 10 Organic Human Fingers Configuration resting over Home Row (ASDF & JKL; + Space)
-  // Standard Pedagogy: Pinky = Orange (#f97316), Ring = Blue (#3b82f6), Middle = Green (#10b981), Index = Purple (#a855f7), Thumb = Gray (#64748b)
+  // Precise glowing color coding:
+  // Pinky = Amber (#f59e0b), Ring = Sky Blue (#0ea5e9), Middle = Emerald (#10b981), Index = Purple (#a855f7), Thumb = Spacebar (#64748b)
   const leftFingers = [
-    { id: 'LP', name: 'Pinky', restX: 128, restY: 128, kx: 150, ky: 200, baseW: 13, tipW: 10, color: '#f97316' },
-    { id: 'LR', name: 'Ring', restX: 184, restY: 128, kx: 192, ky: 195, baseW: 14, tipW: 11, color: '#3b82f6' },
+    { id: 'LP', name: 'Pinky', restX: 128, restY: 128, kx: 150, ky: 200, baseW: 13, tipW: 10, color: '#f59e0b' },
+    { id: 'LR', name: 'Ring', restX: 184, restY: 128, kx: 192, ky: 195, baseW: 14, tipW: 11, color: '#0ea5e9' },
     { id: 'LM', name: 'Middle', restX: 240, restY: 128, kx: 236, ky: 190, baseW: 15, tipW: 11.5, color: '#10b981' },
     { id: 'LI', name: 'Index', restX: 296, restY: 128, kx: 278, ky: 195, baseW: 14.5, tipW: 11, color: '#a855f7' },
     { id: 'LT', name: 'Thumb', restX: 410, restY: 228, kx: 320, ky: 225, baseW: 16, tipW: 12.5, color: '#64748b' },
@@ -225,8 +242,8 @@ export default function IntegratedKeyboardHands({
     { id: 'RT', name: 'Thumb', restX: 530, restY: 228, kx: 620, ky: 225, baseW: 16, tipW: 12.5, color: '#64748b' },
     { id: 'RI', name: 'Index', restX: 464, restY: 128, kx: 482, ky: 195, baseW: 14.5, tipW: 11, color: '#a855f7' },
     { id: 'RM', name: 'Middle', restX: 520, restY: 128, kx: 524, ky: 190, baseW: 15, tipW: 11.5, color: '#10b981' },
-    { id: 'RR', name: 'Ring', restX: 576, restY: 128, kx: 568, ky: 195, baseW: 14, tipW: 11, color: '#3b82f6' },
-    { id: 'RP', name: 'Pinky', restX: 632, restY: 128, kx: 610, ky: 200, baseW: 13, tipW: 10, color: '#f97316' },
+    { id: 'RR', name: 'Ring', restX: 576, restY: 128, kx: 568, ky: 195, baseW: 14, tipW: 11, color: '#0ea5e9' },
+    { id: 'RP', name: 'Pinky', restX: 632, restY: 128, kx: 610, ky: 200, baseW: 13, tipW: 10, color: '#f59e0b' },
   ];
 
   const ACCENT_COLOR = '#06b6d4'; // Cyan neon
@@ -239,15 +256,13 @@ export default function IntegratedKeyboardHands({
     <div className="flex flex-col items-center w-full max-w-5xl mx-auto mt-1 sm:mt-1.5 space-y-1.5 select-none">
       {/* STREAMLINED COMPACT HEADER: LAYOUT INDICATOR + SETTINGS MODAL TRIGGER */}
       <div className="w-full flex items-center justify-between px-3 py-1 bg-slate-900/70 border border-slate-800/80 rounded-xl backdrop-blur-sm text-xs">
-        {/* Left: Official Layout Indicator (Strictly Separated) */}
+        {/* Left: Official Layout Indicator (Strictly Kruti Dev 010) */}
         <div className="flex items-center gap-1.5">
           {isHindi ? (
             <div className="flex items-center gap-1.5 text-slate-300">
               <ShieldCheck size={14} className="text-emerald-400" />
               <span className="font-bold text-white text-[11px] font-hindi">
-                {hindiLayout === 'inscript'
-                  ? 'भारतीय मानक इनस्क्रिप्ट (BIS IS 16350 Hindi InScript)'
-                  : 'कुर्ती देव ०१० (Kruti Dev 010 Remington Typewriter)'}
+                कुर्ती देव ०१० (Kruti Dev 010 Remington Typewriter)
               </span>
             </div>
           ) : (
@@ -411,6 +426,14 @@ export default function IntegratedKeyboardHands({
         </div>
       )}
 
+      {/* EMBEDDED HUMANIZED FINGER INSTRUCTION PROMPT OVERLAY */}
+      <FingerInstructionPrompt
+        targetKey={targetKey}
+        targetShift={targetShift}
+        targetGlyph={currentGlyph}
+        language={language}
+      />
+
       {/* COMPACT VIRTUAL KEYBOARD WITH STRICT LANGUAGE SEPARATION */}
       <div className="relative flex flex-col gap-1 w-full min-w-[700px] max-w-[920px] px-2 py-2 bg-slate-950/95 rounded-2xl border border-slate-800 shadow-2xl overflow-hidden select-none">
         {activeRows.map((row, rowIdx) => (
@@ -438,8 +461,8 @@ export default function IntegratedKeyboardHands({
               const engPrimary = k.key || '';
               const engShift = k.shiftKey || '';
 
-              const hindiPrimary = isHindiInscript ? (k.inscript || '') : (k.krutiDev || k.inscript || '');
-              const hindiShift = isHindiInscript ? (k.inscriptShift || '') : (k.krutiDevShift || k.inscriptShift || '');
+              const hindiPrimary = k.krutiDev || '';
+              const hindiShift = k.krutiDevShift || '';
 
               const fingerColor = finger ? finger.color : '#334155';
 

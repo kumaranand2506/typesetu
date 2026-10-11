@@ -175,8 +175,8 @@ export const KRUTI_DEV_SHIFT: Record<string, string> = {
 // 3. FINGER DEFINITIONS & REMINGTON TOUCH-TYPING ASSIGNMENTS
 // ---------------------------------------------------------------------------
 export const FINGER_INFO: Record<string, FingerInfo> = {
-  LP: { id: 'LP', name: 'Left Pinky', hindiName: 'बायाँ कनिष्ठिका', color: '#f97316', bg: 'bg-orange-500', text: 'text-orange-400', hand: 'left' },
-  LR: { id: 'LR', name: 'Left Ring', hindiName: 'बायाँ अनामिका', color: '#3b82f6', bg: 'bg-blue-500', text: 'text-blue-400', hand: 'left' },
+  LP: { id: 'LP', name: 'Left Pinky', hindiName: 'बायाँ कनिष्ठिका', color: '#f59e0b', bg: 'bg-amber-500', text: 'text-amber-400', hand: 'left' },
+  LR: { id: 'LR', name: 'Left Ring', hindiName: 'बायाँ अनामिका', color: '#0ea5e9', bg: 'bg-sky-500', text: 'text-sky-400', hand: 'left' },
   LM: { id: 'LM', name: 'Left Middle', hindiName: 'बायाँ मध्यमा', color: '#10b981', bg: 'bg-emerald-500', text: 'text-emerald-400', hand: 'left' },
   LI: { id: 'LI', name: 'Left Index', hindiName: 'बायाँ तर्जनी', color: '#a855f7', bg: 'bg-purple-500', text: 'text-purple-400', hand: 'left' },
   LT: { id: 'LT', name: 'Left Thumb', hindiName: 'बायाँ अँगूठा', color: '#64748b', bg: 'bg-slate-500', text: 'text-slate-400', hand: 'left' },
@@ -184,8 +184,8 @@ export const FINGER_INFO: Record<string, FingerInfo> = {
   SPACE: { id: 'SPACE', name: 'Thumb (Space)', hindiName: 'अँगूठा (स्पेस)', color: '#64748b', bg: 'bg-slate-500', text: 'text-slate-400', hand: 'both' },
   RI: { id: 'RI', name: 'Right Index', hindiName: 'दायाँ तर्जनी', color: '#a855f7', bg: 'bg-purple-500', text: 'text-purple-400', hand: 'right' },
   RM: { id: 'RM', name: 'Right Middle', hindiName: 'दायाँ मध्यमा', color: '#10b981', bg: 'bg-emerald-500', text: 'text-emerald-400', hand: 'right' },
-  RR: { id: 'RR', name: 'Right Ring', hindiName: 'दायाँ अनामिका', color: '#3b82f6', bg: 'bg-blue-500', text: 'text-blue-400', hand: 'right' },
-  RP: { id: 'RP', name: 'Right Pinky', hindiName: 'दायाँ कनिष्ठिका', color: '#f97316', bg: 'bg-orange-500', text: 'text-orange-400', hand: 'right' },
+  RR: { id: 'RR', name: 'Right Ring', hindiName: 'दायाँ अनामिका', color: '#0ea5e9', bg: 'bg-sky-500', text: 'text-sky-400', hand: 'right' },
+  RP: { id: 'RP', name: 'Right Pinky', hindiName: 'दायाँ कनिष्ठिका', color: '#f59e0b', bg: 'bg-amber-500', text: 'text-amber-400', hand: 'right' },
 };
 
 export const FINGER_MAP: Record<string, string> = {
