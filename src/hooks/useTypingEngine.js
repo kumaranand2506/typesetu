@@ -28,7 +28,12 @@ export function useTypingEngine({
   const [currentGrossWpm, setCurrentGrossWpm] = useState(0); // Gross WPM
   const [currentAccuracy, setCurrentAccuracy] = useState(100);
   const [strictError, setStrictError] = useState(false); // When true in strict mode, cursor is halted
+  const [streak, setStreak] = useState(0); // Live consecutive correct keystrokes
+  const [hesitationPrompt, setHesitationPrompt] = useState(false); // Alert when user hesitates or repeats mistakes
   const [remainingSeconds, setRemainingSeconds] = useState(timeLimitSeconds || null);
+
+  const lastKeystrokeTimeRef = useRef(Date.now());
+  const consecutiveKeyMistakesRef = useRef(0);
 
   const [errorMode, setErrorModeState] = useState(() => {
     if (initialErrorMode) return initialErrorMode;
@@ -93,6 +98,10 @@ export function useTypingEngine({
     setCurrentGrossWpm(0);
     setCurrentAccuracy(100);
     setStrictError(false);
+    setStreak(0);
+    setHesitationPrompt(false);
+    lastKeystrokeTimeRef.current = Date.now();
+    consecutiveKeyMistakesRef.current = 0;
     setRemainingSeconds(timeLimitSeconds || null);
     if (timerRef.current) clearInterval(timerRef.current);
   }, [normalizedTarget, language, timeLimitSeconds]);
@@ -168,6 +177,11 @@ export function useTypingEngine({
               ? Math.max(0, Math.round(((totalKeystrokes - mistakes) / totalKeystrokes) * 100))
               : 100;
           setCurrentAccuracy(acc);
+
+          // Subtle alert if user hesitates > 3.5 seconds on a key
+          if (Date.now() - lastKeystrokeTimeRef.current > 3500 && typedIndex < totalTokens) {
+            setHesitationPrompt(true);
+          }
         }
       }, 250);
     } else {
@@ -271,14 +285,23 @@ export function useTypingEngine({
         // 3. Clear halted strict error on current char if present
         if (errorMode === 'strict' && strictError) {
           setStrictError(false);
+          setHesitationPrompt(false);
           return;
         }
 
         if (typedIndex > 0) {
           setStrictError(false);
+          setHesitationPrompt(false);
           setTypedIndex((prev) => prev - 1);
           setHistory((prev) => prev.slice(0, -1));
         }
+        return;
+      }
+
+      // Force error correction in strict mode: Users must hit Backspace to fix mistake before continuing
+      if (errorMode === 'strict' && strictError) {
+        soundManager.playError();
+        setHesitationPrompt(true);
         return;
       }
 
@@ -339,6 +362,10 @@ export function useTypingEngine({
       if (isCorrect) {
         soundManager.playClick();
         setStrictError(false);
+        setStreak((prev) => prev + 1);
+        setHesitationPrompt(false);
+        consecutiveKeyMistakesRef.current = 0;
+        lastKeystrokeTimeRef.current = Date.now();
 
         const newHistoryItem = {
           char: expectedGlyph,
@@ -362,6 +389,13 @@ export function useTypingEngine({
       } else {
         // Keystroke Error
         soundManager.playError();
+        setStreak(0);
+        consecutiveKeyMistakesRef.current += 1;
+        if (consecutiveKeyMistakesRef.current >= 2) {
+          setHesitationPrompt(true);
+        }
+        lastKeystrokeTimeRef.current = Date.now();
+
         const updatedMistakes = mistakes + 1;
         setMistakes(updatedMistakes);
 
@@ -370,7 +404,7 @@ export function useTypingEngine({
         setCurrentAccuracy(acc);
 
         if (errorMode === 'strict') {
-          // Strict Mode: Halts cursor, letter turns red, user must strike correct key
+          // Strict Mode: Halts cursor, letter turns red, user must strike Backspace
           setStrictError(true);
         } else {
           // Casual Mode: Marks letter red and advances cursor
@@ -431,6 +465,8 @@ export function useTypingEngine({
     errorMode,
     setErrorMode,
     strictError,
+    streak,
+    hesitationPrompt,
     remainingSeconds,
     submitExam: () => finalizeTest(false),
     progressPercent:

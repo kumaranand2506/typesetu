@@ -84,6 +84,8 @@ export default function RollingTextDisplay({
   accuracy = null,
   progressPercent = null,
   mistakes = null,
+  streak = null,
+  hesitationPrompt = false,
   onRestart = null,
 }) {
   const containerRef = useRef(null);
@@ -183,6 +185,15 @@ export default function RollingTextDisplay({
             </span>
           </div>
 
+          {/* Streak pill (TypingMaster / TypingClub style) */}
+          {streak !== null && streak > 2 && (
+            <div className="flex items-center gap-1 font-bold text-amber-400 font-mono text-xs bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-lg shadow-sm">
+              <span className="text-xs">🔥</span>
+              <span>{streak}</span>
+              <span className="text-[10px] text-amber-400/80 uppercase font-semibold">streak</span>
+            </div>
+          )}
+
           {/* Mistakes count (if any) */}
           {mistakes > 0 && (
             <div className="flex items-center gap-1 text-rose-400 text-[11px] font-bold">
@@ -244,6 +255,27 @@ export default function RollingTextDisplay({
           )}
         </div>
       </div>
+
+      {/* PEDAGOGICAL SAFEGUARD BANNERS */}
+      {strictError ? (
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-300 text-xs font-semibold animate-pulse mb-3">
+          <AlertCircle size={15} className="text-rose-400 shrink-0" />
+          <span>
+            {isHindi
+              ? 'त्रुटि! आगे बढ़ने के लिए पहले बैकस्पेस (Backspace) दबाकर गलती सुधारें।'
+              : 'Error! Press Backspace to fix your mistake before continuing.'}
+          </span>
+        </div>
+      ) : hesitationPrompt ? (
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-xs font-semibold mb-3">
+          <span className="text-sm shrink-0">👀</span>
+          <span>
+            {isHindi
+              ? 'स्क्रीन पर देखें! कीबोर्ड पर नहीं — ऊपर दिए वर्चुअल हाथ गाइड का पालन करें।'
+              : 'Keep your eyes on the screen! Look at the on-screen hands, not your keyboard.'}
+          </span>
+        </div>
+      ) : null}
 
       {/* TWO-LINE ROLLING CAROUSEL TEXT VIEWPORT */}
       <div className="flex flex-col gap-3 min-h-[130px] justify-center">

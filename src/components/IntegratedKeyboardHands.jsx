@@ -188,26 +188,45 @@ export default function IntegratedKeyboardHands({
   // Coordinates of target key
   const targetKeyCoord = targetKey ? KEY_COORD_MAP[targetKey] || KEY_COORD_MAP[targetKey.toLowerCase()] : null;
 
+  const [physicalShiftActive, setPhysicalShiftActive] = useState(false);
+
+  React.useEffect(() => {
+    const handleShiftDown = (e) => {
+      if (e.key === 'Shift') setPhysicalShiftActive(true);
+    };
+    const handleShiftUp = (e) => {
+      if (e.key === 'Shift') setPhysicalShiftActive(false);
+    };
+    window.addEventListener('keydown', handleShiftDown);
+    window.addEventListener('keyup', handleShiftUp);
+    return () => {
+      window.removeEventListener('keydown', handleShiftDown);
+      window.removeEventListener('keyup', handleShiftUp);
+    };
+  }, []);
+
   // 10 Organic Human Fingers Configuration resting over Home Row (ASDF & JKL; + Space)
+  // Standard Pedagogy: Pinky = Orange (#f97316), Ring = Blue (#3b82f6), Middle = Green (#10b981), Index = Purple (#a855f7), Thumb = Gray (#64748b)
   const leftFingers = [
-    { id: 'LP', name: 'Pinky', restX: 128, restY: 128, kx: 150, ky: 200, baseW: 13, tipW: 10 },
-    { id: 'LR', name: 'Ring', restX: 184, restY: 128, kx: 192, ky: 195, baseW: 14, tipW: 11 },
-    { id: 'LM', name: 'Middle', restX: 240, restY: 128, kx: 236, ky: 190, baseW: 15, tipW: 11.5 },
-    { id: 'LI', name: 'Index', restX: 296, restY: 128, kx: 278, ky: 195, baseW: 14.5, tipW: 11 },
-    { id: 'LT', name: 'Thumb', restX: 410, restY: 228, kx: 320, ky: 225, baseW: 16, tipW: 12.5 },
+    { id: 'LP', name: 'Pinky', restX: 128, restY: 128, kx: 150, ky: 200, baseW: 13, tipW: 10, color: '#f97316' },
+    { id: 'LR', name: 'Ring', restX: 184, restY: 128, kx: 192, ky: 195, baseW: 14, tipW: 11, color: '#3b82f6' },
+    { id: 'LM', name: 'Middle', restX: 240, restY: 128, kx: 236, ky: 190, baseW: 15, tipW: 11.5, color: '#10b981' },
+    { id: 'LI', name: 'Index', restX: 296, restY: 128, kx: 278, ky: 195, baseW: 14.5, tipW: 11, color: '#a855f7' },
+    { id: 'LT', name: 'Thumb', restX: 410, restY: 228, kx: 320, ky: 225, baseW: 16, tipW: 12.5, color: '#64748b' },
   ];
 
   const rightFingers = [
-    { id: 'RT', name: 'Thumb', restX: 530, restY: 228, kx: 620, ky: 225, baseW: 16, tipW: 12.5 },
-    { id: 'RI', name: 'Index', restX: 464, restY: 128, kx: 482, ky: 195, baseW: 14.5, tipW: 11 },
-    { id: 'RM', name: 'Middle', restX: 520, restY: 128, kx: 524, ky: 190, baseW: 15, tipW: 11.5 },
-    { id: 'RR', name: 'Ring', restX: 576, restY: 128, kx: 568, ky: 195, baseW: 14, tipW: 11 },
-    { id: 'RP', name: 'Pinky', restX: 632, restY: 128, kx: 610, ky: 200, baseW: 13, tipW: 10 },
+    { id: 'RT', name: 'Thumb', restX: 530, restY: 228, kx: 620, ky: 225, baseW: 16, tipW: 12.5, color: '#64748b' },
+    { id: 'RI', name: 'Index', restX: 464, restY: 128, kx: 482, ky: 195, baseW: 14.5, tipW: 11, color: '#a855f7' },
+    { id: 'RM', name: 'Middle', restX: 520, restY: 128, kx: 524, ky: 190, baseW: 15, tipW: 11.5, color: '#10b981' },
+    { id: 'RR', name: 'Ring', restX: 576, restY: 128, kx: 568, ky: 195, baseW: 14, tipW: 11, color: '#3b82f6' },
+    { id: 'RP', name: 'Pinky', restX: 632, restY: 128, kx: 610, ky: 200, baseW: 13, tipW: 10, color: '#f97316' },
   ];
 
   const ACCENT_COLOR = '#06b6d4'; // Cyan neon
   const SHIFT_COLOR = '#fbbf24';  // Amber neon
 
+  const isShiftActive = Boolean(targetShift || physicalShiftActive);
   const currentOpacity = handMode === 'hidden' ? 0 : handOpacity / 100;
   const isHindi = language === 'hindi';
 
@@ -469,54 +488,53 @@ export default function IntegratedKeyboardHands({
                       </span>
                     </div>
                   ) : (
-                    /* DUAL KEYCAP WITH STRICT LANGUAGE SEPARATION */
                     <div className="relative flex flex-col justify-between h-full w-full">
-                      {isHindi ? (
-                        /* HINDI KRUTI DEV 010 REMINGTON TYPEWRITER MODE */
-                        <>
-                          {/* Shifted Kruti Dev glyph in top-left */}
-                          <div className="flex items-center justify-start text-[9px] sm:text-[10px] font-hindi leading-none">
-                            <span className={targetShift && isTargetKey ? 'text-amber-300 font-bold' : 'text-slate-500/80'}>
-                              {targetShift ? hindiPrimary : hindiShift}
-                            </span>
-                          </div>
+                    {isHindi ? (
+                      /* HINDI KRUTI DEV 010 REMINGTON TYPEWRITER MODE */
+                      <>
+                        {/* Shifted Kruti Dev glyph in top-left */}
+                        <div className="flex items-center justify-start text-[9px] sm:text-[10px] font-hindi leading-none">
+                          <span className={isShiftActive && isTargetKey ? 'text-amber-300 font-bold' : 'text-slate-500/80'}>
+                            {isShiftActive ? hindiPrimary : hindiShift}
+                          </span>
+                        </div>
 
-                          {/* Primary Kruti Dev Glyph Centered (Transitions to Shifted when Shift active) */}
-                          <div className="flex items-center justify-center -mt-1 sm:-mt-1.5">
-                            <span
-                              className={`text-base sm:text-lg font-bold font-hindi leading-none transition-transform ${
-                                isTargetKey ? 'text-cyan-200 scale-110 drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]' : 'text-amber-300'
-                              }`}
-                            >
-                              {targetShift ? (hindiShift || hindiPrimary) : hindiPrimary}
-                            </span>
-                          </div>
+                        {/* Primary Kruti Dev Glyph Centered (Transitions to Shifted when Shift active) */}
+                        <div className="flex items-center justify-center -mt-1 sm:-mt-1.5">
+                          <span
+                            className={`text-base sm:text-lg font-bold font-hindi leading-none transition-transform ${
+                              isTargetKey ? 'text-cyan-200 scale-110 drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]' : 'text-amber-300'
+                            }`}
+                          >
+                            {isShiftActive ? (hindiShift || hindiPrimary) : hindiPrimary}
+                          </span>
+                        </div>
 
-                          {/* Subtle QWERTY Letter Subscript in Bottom-Right */}
-                          <div className="flex items-center justify-end text-[8.5px] font-mono-custom text-slate-500/80 uppercase leading-none">
-                            <span>{engPrimary}</span>
-                          </div>
-                        </>
-                      ) : (
-                        /* ENGLISH MODE: PURE QWERTY KEYCAPS (NO HINDI OVERLAYS) */
-                        <>
-                          <div className="flex items-center justify-between text-[9.5px] font-mono-custom text-slate-500 leading-none">
-                            <span>{engShift !== engPrimary ? engShift : ''}</span>
-                          </div>
+                        {/* Subtle QWERTY Letter Subscript in Bottom-Right */}
+                        <div className="flex items-center justify-end text-[8.5px] font-mono-custom text-slate-500/80 uppercase leading-none">
+                          <span>{engPrimary}</span>
+                        </div>
+                      </>
+                    ) : (
+                      /* ENGLISH MODE: PURE QWERTY KEYCAPS (NO HINDI OVERLAYS) */
+                      <>
+                        <div className="flex items-center justify-between text-[9.5px] font-mono-custom text-slate-500 leading-none">
+                          <span>{engShift !== engPrimary ? engShift : ''}</span>
+                        </div>
 
-                          <div className="flex items-center justify-center -mt-1">
-                            <span
-                              className={`text-sm sm:text-base font-bold font-mono-custom leading-none ${
-                                isTargetKey ? 'text-cyan-200 scale-110' : 'text-slate-100'
-                              }`}
-                            >
-                              {targetShift ? engShift : engPrimary.toUpperCase()}
-                            </span>
-                          </div>
+                        <div className="flex items-center justify-center -mt-1">
+                          <span
+                            className={`text-sm sm:text-base font-bold font-mono-custom leading-none ${
+                              isTargetKey ? 'text-cyan-200 scale-110' : 'text-slate-100'
+                            }`}
+                          >
+                            {isShiftActive ? engShift : engPrimary.toUpperCase()}
+                          </span>
+                        </div>
 
-                          <div className="h-1.5" />
-                        </>
-                      )}
+                        <div className="h-1.5" />
+                      </>
+                    )}
 
                       {/* Tactile Home Row Bumps (F & J) */}
                       {k.homeBump && (
@@ -609,7 +627,7 @@ export default function IntegratedKeyboardHands({
               const strokeCol = isShiftTarget
                 ? SHIFT_COLOR
                 : isActive
-                ? ACCENT_COLOR
+                ? (f.color || ACCENT_COLOR)
                 : handMode === 'visible'
                 ? 'rgba(226, 232, 240, 0.50)'
                 : 'rgba(148, 163, 184, 0.65)';
@@ -630,6 +648,7 @@ export default function IntegratedKeyboardHands({
                     fill={fillCol}
                     stroke={strokeCol}
                     strokeWidth={isActive ? '2.5' : '1.4'}
+                    style={{ transition: 'd 140ms ease-out' }}
                   />
 
                   {/* Pulsing Ripple Halo when Active */}
@@ -645,14 +664,15 @@ export default function IntegratedKeyboardHands({
                     />
                   )}
 
-                  {/* Rounded Soft Fingertip Pad */}
+                  {/* Rounded Soft Fingertip Pad with Pedagogical Color Ring */}
                   <circle
                     cx={curX}
                     cy={curY}
-                    r={isActive ? 10 : 7.5}
-                    fill={isActive ? strokeCol : 'rgba(15, 23, 42, 0.75)'}
-                    stroke={isActive ? '#ffffff' : 'rgba(226, 232, 240, 0.70)'}
-                    strokeWidth={isActive ? 2 : 1}
+                    r={isActive ? 10.5 : 7.5}
+                    fill={isActive ? (isShiftTarget ? SHIFT_COLOR : f.color) : `${f.color}45`}
+                    stroke={isActive ? '#ffffff' : f.color}
+                    strokeWidth={isActive ? 2.5 : 1.4}
+                    style={{ transition: 'cx 140ms ease-out, cy 140ms ease-out' }}
                   />
 
                   {/* Soft subtle indicator icon on active fingertip */}
@@ -698,7 +718,7 @@ export default function IntegratedKeyboardHands({
               const strokeCol = isShiftTarget
                 ? SHIFT_COLOR
                 : isActive
-                ? ACCENT_COLOR
+                ? (f.color || ACCENT_COLOR)
                 : handMode === 'visible'
                 ? 'rgba(226, 232, 240, 0.50)'
                 : 'rgba(148, 163, 184, 0.65)';
@@ -719,6 +739,7 @@ export default function IntegratedKeyboardHands({
                     fill={fillCol}
                     stroke={strokeCol}
                     strokeWidth={isActive ? '2.5' : '1.4'}
+                    style={{ transition: 'd 140ms ease-out' }}
                   />
 
                   {/* Pulsing Ripple Halo when Active */}
@@ -734,14 +755,15 @@ export default function IntegratedKeyboardHands({
                     />
                   )}
 
-                  {/* Rounded Soft Fingertip Pad */}
+                  {/* Rounded Soft Fingertip Pad with Pedagogical Color Ring */}
                   <circle
                     cx={curX}
                     cy={curY}
-                    r={isActive ? 10 : 7.5}
-                    fill={isActive ? strokeCol : 'rgba(15, 23, 42, 0.75)'}
-                    stroke={isActive ? '#ffffff' : 'rgba(226, 232, 240, 0.70)'}
-                    strokeWidth={isActive ? 2 : 1}
+                    r={isActive ? 10.5 : 7.5}
+                    fill={isActive ? (isShiftTarget ? SHIFT_COLOR : f.color) : `${f.color}45`}
+                    stroke={isActive ? '#ffffff' : f.color}
+                    strokeWidth={isActive ? 2.5 : 1.4}
+                    style={{ transition: 'cx 140ms ease-out, cy 140ms ease-out' }}
                   />
 
                   {/* Soft subtle indicator icon on active fingertip */}

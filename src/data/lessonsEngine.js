@@ -1,360 +1,496 @@
-// TypeSetu Enterprise Lesson Engine
-// Generates 300 progressive, pedagogically-sound lessons per language across 5 distinct stages
+// TypeSetu Pedagogy & Progressive Lesson Engine
+// Muscle-memory-first curriculum inspired by TypingClub & TypingMaster
+import lessonsData from './lessonsData.json';
 
-export const STAGES = [
+export const ENGLISH_PHASES = [
   {
     id: 1,
-    name: 'Stage 1: Alphabet & Row Mastery',
-    hindiName: 'चरण 1: वर्णमाला एवं पंक्ति दक्षता',
-    range: [1, 60],
-    description: 'Home row, top row, and bottom row lowercase fundamentals.',
-    hindiDescription: 'गृह पंक्ति, ऊपरी पंक्ति और निचली पंक्ति का मूल अभ्यास (बिना शिफ्ट)।',
-    icon: '⌨️',
+    name: 'Phase 1: Home Row Anchor',
+    range: [1, 40],
+    description: 'F & J bumps, D & K, S & L, A & ;, then G & H center stretches.',
+    icon: '🏠',
   },
   {
     id: 2,
-    name: 'Stage 2: Capitalization & Shift Mechanics',
-    hindiName: 'चरण 2: शिफ्ट कुँजी एवं महाप्राण व्यंजन',
-    range: [61, 120],
-    description: 'Opposite-hand Shift mechanics, proper nouns, and Kruti Dev 010 shifted characters.',
-    hindiDescription: 'शिफ्ट कुँजी से स्वतंत्र स्वर (अ, आ, इ...), महाप्राण व्यंजन (ख, घ, छ...), एवं संयुक्ताक्षर।',
-    icon: '⬆️',
+    name: 'Phase 2: Spacebar Rhythm',
+    range: [41, 70],
+    description: 'Spacebar rhythm, word pacing, and thumb discipline (Right thumb primary).',
+    icon: '␣',
   },
   {
     id: 3,
-    name: 'Stage 3: Numbers & Punctuation',
-    hindiName: 'चरण 3: संख्याएं एवं विराम चिह्न',
-    range: [121, 180],
-    description: 'Number row (1-0), dates, prices, commas, periods, exclamation, and Purna Viram (।).',
-    hindiDescription: 'संख्या पंक्ति (1-0), अल्पविराम, पूर्णविराम (।), उद्धरण चिह्न एवं प्रश्नवाचक चिह्न।',
-    icon: '🔢',
+    name: 'Phase 3: Top Row Reach',
+    range: [71, 120],
+    description: 'E & I, R & U, T & Y, W & O, Q & P reach and two-row vocabulary.',
+    icon: '⬆️',
   },
   {
     id: 4,
-    name: 'Stage 4: Extended Symbols & Functional Keys',
-    hindiName: 'चरण 4: विस्तारित प्रतीक एवं तकनीकी कुंजियाँ',
-    range: [181, 240],
-    description: 'Slashes (/ \), Pipes (|), Math symbols (+ - * =), Markdown, and File paths.',
-    hindiDescription: 'गणितीय चिह्न, बैकस्लैश, पाइप, हाइफ़न, अंडरस्कोर एवं पथ (Paths)।',
-    icon: '⚡',
+    name: 'Phase 4: Bottom Row Reach',
+    range: [121, 170],
+    description: 'C & M, V & N, X & ,, Z & ., / downward slides and tri-row mastery.',
+    icon: '⬇️',
   },
   {
     id: 5,
-    name: 'Stage 5: Web Developer & Programmer Syntax',
-    hindiName: 'चरण 5: प्रोग्रामर सिंटैक्स एवं कोडिंग अभ्यास',
-    range: [241, 300],
-    description: 'Braces {}, brackets [], logic (&&, ||, ===, =>), HTML/XML tags, JS, Python & SQL snippets.',
-    hindiDescription: 'कोडिंग कोष्ठक {}, [], लॉजिक ऑपरेटर्स (&&, ||, ===, =>), HTML टैग्स एवं कोड स्निपेट्स।',
+    name: 'Phase 5: Capital Letters & Shift Mechanics',
+    range: [171, 210],
+    description: 'Opposite-hand Shift rule (Left Shift for right keys, Right Shift for left keys).',
+    icon: '⇧',
+  },
+  {
+    id: 6,
+    name: 'Phase 6: Punctuation & Function Keys',
+    range: [211, 250],
+    description: 'Period, comma, apostrophe, quotation marks, enter, tab, and backspace control.',
+    icon: '🔤',
+  },
+  {
+    id: 7,
+    name: 'Phase 7: Number Row Reach & Developer Syntax',
+    range: [251, 300],
+    description: 'Numbers 1-0, coding braces {}, [], logic (&&, ||, ===, =>), HTML tags, JS & Python.',
     icon: '💻',
   },
 ];
 
-// Helper to determine stage for a lesson level
-export function getStageForLevel(level) {
-  if (level <= 60) return STAGES[0];
-  if (level <= 120) return STAGES[1];
-  if (level <= 180) return STAGES[2];
-  if (level <= 240) return STAGES[3];
-  return STAGES[4];
+export const HINDI_PHASES = [
+  {
+    id: 1,
+    name: 'चरण 1: गृह पंक्ति मूल अक्षर (Home Row Basics)',
+    range: [1, 60],
+    description: 'क, ि, ह, ी, र, ा, स, य, श, ं, े (D, F, G, H, J, K, L, ;, \', A, S)',
+    icon: '🏠',
+  },
+  {
+    id: 2,
+    name: 'चरण 2: ऊपरी पंक्ति गमन (Top Row Movement)',
+    range: [61, 120],
+    description: 'म, त, ज, ल, न, प, व, च, ख, अल्पविराम, ु, ू (E, R, T, Y, U, I, O, P, [, ], Q, W)',
+    icon: '⬆️',
+  },
+  {
+    id: 3,
+    name: 'चरण 3: निचली पंक्ति गमन (Bottom Row Movement)',
+    range: [121, 180],
+    description: 'ग, ब, अ, इ, द, उ, ए, ध, हलंत ., रा-फलन ्र (X, C, V, B, N, M, ,, /, ., Z)',
+    icon: '⬇️',
+  },
+  {
+    id: 4,
+    name: 'चरण 4: \'f\' छोटी \'ि\' मात्रा नियम अभ्यास',
+    range: [181, 220],
+    description: 'व्यंजन से पहले \'f\' दबाने का विशेष रेमिंगटन टाइपराइटर नियम अभ्यास (कि, सि, दि, पि)',
+    icon: '⚡',
+  },
+  {
+    id: 5,
+    name: 'चरण 5: शिफ्ट कुँजी एवं आधे अक्षर (Shift & Halves)',
+    range: [221, 270],
+    description: 'क्, थ, भ, भ्, श्र, ज्ञ, स्, म्, त्, ज्, ल्, न्, प्, क्ष, द्व, रेफ़ र्',
+    icon: '⇧',
+  },
+  {
+    id: 6,
+    name: 'चरण 6: शासकीय परीक्षा मानक एवं उच्च गति गद्यांश (Exam Mastery)',
+    range: [271, 300],
+    description: 'हाईकोर्ट, सीपीसीटी एवं एसएससी मानक 35+ WPM गद्यांश टंकण',
+    icon: '🏆',
+  },
+];
+
+// Backwards compatibility STAGES alias
+export const STAGES = ENGLISH_PHASES;
+
+export function getPhases(language = 'english') {
+  return language === 'hindi' ? HINDI_PHASES : ENGLISH_PHASES;
+}
+
+export function getPhaseForLevel(level, language = 'english') {
+  const phases = getPhases(language);
+  for (const p of phases) {
+    if (level >= p.range[0] && level <= p.range[1]) return p;
+  }
+  return phases[phases.length - 1];
+}
+
+export function getStageForLevel(level, language = 'english') {
+  return getPhaseForLevel(level, language);
 }
 
 // -------------------------------------------------------------
-// ENGLISH 300 LESSON GENERATOR & CURATED CORPUS
+// CURATED DRILL BANKS (TIER 1 ISOLATED, TIER 2 WORDS, TIER 3 FLOW)
 // -------------------------------------------------------------
 
-// Base templates for Stage 1 (Lessons 1-60)
-const EN_STAGE_1_CORPUS = [
-  // 1-10: Home Row Micro-steps
-  { title: 'Home Row Foundation: F & J', sub: 'Index home bumps', text: 'f j f j ff jj fj jf fff jjj fjf jfj f j f j ffjj jjff fjdk' },
-  { title: 'Home Row: D & K', sub: 'Middle fingers', text: 'd k d k dd kk dk kd f d j k fd jk dk fj kf dj kd fjdk' },
-  { title: 'Home Row: S & L', sub: 'Ring fingers', text: 's l s l ss ll sl ls as df jk l; fs jl ds kl ls sl fds jkl' },
-  { title: 'Home Row: A & Semicolon', sub: 'Pinky fingers', text: 'a ; a ; aa ;; a; ;a asdf jkl; ;lkj fdsa a; sl dk fj ad ;l' },
-  { title: 'Home Row Stretch: G & H', sub: 'Index reach inward', text: 'g h g h fg jh gf hj gh hg gag had has gas half glad flash' },
-  { title: 'Home Row Short Words', sub: 'All 8 home keys', text: 'all fall hall shall dad glad lad ask flask flag lash dash salad' },
-  { title: 'Home Row Word Combinations', sub: 'Rhythm drill', text: 'sad dad had half a glass of salad ask fall shall glad half dad' },
-  { title: 'Home Row Flow', sub: 'Steady pace', text: 'a lad had a flask all flags fall as dark glass salads dash glad' },
-  { title: 'Home Row Speed Drill', sub: 'Fluency test', text: 'flash flags had fallen glad dads ask all shall fall as half alas' },
-  { title: 'Home Row Mastery Test', sub: 'Benchmark', text: 'salad shall fall as dads ask half glad lads flash dark glass flags' },
-
-  // 11-20: Top Row Essentials
-  { title: 'Top Row: E & I', sub: 'Middle finger reach', text: 'd e k i de ki ed ik see did kid lie die fill kill like life side' },
-  { title: 'Top Row: R & U', sub: 'Index finger reach', text: 'f r j u fr ju rf uj fur run rule rude user pure sure fire four' },
-  { title: 'Top Row: T & Y', sub: 'Index inward stretch', text: 't y t y tr yu ty ru try you yet true rust tyre year turn hurt yard' },
-  { title: 'Top Row: W & O', sub: 'Ring finger reach', text: 's w l o sw lo ws ol how low now cow slow show word work wood' },
-  { title: 'Top Row: Q & P', sub: 'Pinky finger reach', text: 'a q ; p aq ;p qa p; quit pour pop quiet plot quote power point' },
-  { title: 'Top Row Vowel Integration', sub: 'A, E, I, O, U', text: 'rate role read ride road rude rope rule reap ripe roof root ripe' },
-  { title: 'Top Row + Home Words', sub: 'Two full rows', text: 'water people write great their there where would could should first' },
-  { title: 'Top Row Word Flow', sub: 'Fluid motion', text: 'quick writers report true power while players perform tough parts' },
-  { title: 'Top Row Sentences', sub: 'Smooth phrasing', text: 'we write what we see while their power grows pure and true today' },
-  { title: 'Top Row Speed Benchmark', sub: 'Velocity drill', text: 'proper thought produces quiet power without worry or prideful waste' },
-
-  // 21-30: Bottom Row
-  { title: 'Bottom Row: C & M', sub: 'Middle finger slide', text: 'd c k m dc km cd mk came calm camp mice come make time some much' },
-  { title: 'Bottom Row: V & N', sub: 'Index finger slide', text: 'f v j n fv jn vf nj van vine view nine noon name fine vane vent' },
-  { title: 'Bottom Row: B & Space', sub: 'Left index reach', text: 'b b vb bv fb jb best book back blue bird bulb bear baby bring table' },
-  { title: 'Bottom Row: X & Z', sub: 'Ring and pinky slide', text: 's x a z sx az xs za box fox next zinc zero prize size lazy exact' },
-  { title: 'Bottom Row Short Words', sub: 'Bottom row fluency', text: 'can man ban van box zinc next back view calm camp move name zinc' },
-  { title: 'Bottom Row + Home Combinations', sub: 'Row hopping', text: 'black cats come back home making noise near nice calm caves' },
-  { title: 'Bottom Row + Top Combinations', sub: 'Full range', text: 'every visitor must move between novel zones with quiet caution' },
-  { title: 'Bottom Row Sentences', sub: 'Natural rhythm', text: 'brave men make calm moves while many voices call from above' },
-  { title: 'Bottom Row Endurance Drill', sub: 'Stamina builder', text: 'can you combine common verbs with maximum speed and minimum errors' },
-  { title: 'Three Rows Full Integration', sub: 'Complete lowercase', text: 'the quick brown fox jumps over the lazy dog in quiet autumn breeze' },
+const EN_PHASE_1_DRILLS = [
+  // Tier 1: Isolated
+  { t: 1, title: 'Index Fingers: F and J Bumps', sub: 'Tactile bumps & home anchors', keys: ['f', 'j', ' '], text: 'fff jjj ff jj f j f j fjf jfj ffjj jjff f j fj jf' },
+  { t: 1, title: 'Middle Fingers: D and K', sub: 'Adjacent home row reach', keys: ['d', 'k', ' '], text: 'ddd kkk dd kk dk kd f d j k fd jk dk fj kf dj kd fjdk' },
+  { t: 1, title: 'Ring Fingers: S and L', sub: 'Ring finger coordination', keys: ['s', 'l', ' '], text: 'sss lll ss ll sl ls as df jk l; fs jl ds kl ls sl fds jkl' },
+  { t: 1, title: 'Pinky Fingers: A and Semicolon', sub: 'Outer home boundaries', keys: ['a', ';', ' '], text: 'aaa ;;; aa ;; a; ;a asdf jkl; ;lkj fdsa a; sl dk fj ad ;l' },
+  { t: 1, title: 'Center Stretches: G and H', sub: 'Index reaches inward', keys: ['g', 'h', ' '], text: 'ggg hhh gg hh gh hg fg jh gf hj gh hg gag had has gas half' },
+  // Tier 2: Real Words
+  { t: 2, title: 'Home Row Syllables: 3-Letter Words', sub: 'Short word formation', keys: ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ' '], text: 'fad dad ask lad all fall hall shall has gas had hag ash' },
+  { t: 2, title: 'Home Row Words: 4 & 5-Letter Words', sub: 'Continuous muscle memory', keys: ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ' '], text: 'glad half flash salad dash flask lash flag fall hall shall' },
+  { t: 2, title: 'Home Row Word Pairs', sub: 'Cadence pairs', keys: ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ' '], text: 'sad dad glad lad ask dad half flag dark glass flash salad' },
+  // Tier 3: Rhythm & Sentences
+  { t: 3, title: 'Home Row Sentences: Part 1', sub: 'Natural rhythm flow', keys: ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ' '], text: 'a sad dad had a flask and a salad a glad lad asks dad' },
+  { t: 3, title: 'Home Row Sentences: Part 2', sub: 'Fluid sentence flow', keys: ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ' '], text: 'all flags fall as dark glass salads dash glad dads ask all' },
+  { t: 3, title: 'Home Row Speed Benchmark', sub: 'Benchmark test', keys: ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', ' '], text: 'salad shall fall as dads ask half glad lads flash dark glass flags' },
 ];
 
-// Stage 5 syntax bank
-const PROGRAMMER_SNIPPETS = [
-  { title: 'JavaScript Arrow Functions', text: 'const calculateTotal = (items, taxRate) => items.reduce((sum, item) => sum + item.price, 0) * (1 + taxRate);' },
-  { title: 'Async/Await & Promises', text: 'async function fetchUserData(userId) { const res = await fetch(`/api/users/${userId}`); return await res.json(); }' },
-  { title: 'Array Destructuring & Spread', text: 'const [firstItem, secondItem, ...remainingItems] = activeList; const merged = { ...defaultConfig, ...userOptions };' },
-  { title: 'React Component Hook', text: 'const [count, setCount] = useState(0); useEffect(() => { document.title = `Count: ${count}`; }, [count]);' },
-  { title: 'Python List Comprehension', text: 'squares = [x ** 2 for x in range(10) if x % 2 == 0] matrix = [[0 for _ in range(cols)] for _ in range(rows)]' },
-  { title: 'Python Dictionary & Typing', text: 'def process_payload(data: dict[str, any]) -> bool: return data.get("status") == "success" and len(data["items"]) > 0' },
-  { title: 'SQL Aggregate Query', text: 'SELECT department_id, COUNT(*) AS employee_count, AVG(salary) FROM employees GROUP BY department_id HAVING COUNT(*) > 5;' },
-  { title: 'SQL Join & Filter', text: 'SELECT u.id, u.email, o.total FROM users u INNER JOIN orders o ON u.id = o.user_id WHERE o.status = "completed";' },
-  { title: 'HTML5 Semantic Elements', text: '<header className="sticky top-0 z-50 flex items-center justify-between px-6 py-4 bg-slate-900 border-b">' },
-  { title: 'React JSX Input Form', text: '<form onSubmit={handleSubmit}><input type="text" value={query} onChange={(e) => setQuery(e.target.value)} required /></form>' },
-  { title: 'CSS Grid & Flexbox Syntax', text: 'display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; align-items: center;' },
-  { title: 'Regular Expressions: Email', text: 'const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$/; if (!emailRegex.test(input)) throw new Error();' },
-  { title: 'Regular Expressions: Date & URL', text: 'const datePattern = /^\\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\\d|3[01])$/; const urlSlug = text.toLowerCase().replace(/\\s+/g, "-");' },
-  { title: 'TypeScript Interface & Types', text: 'interface UserProfile { readonly id: string; name: string; email: string; roles: Array<"admin" | "editor" | "viewer">; }' },
-  { title: 'Git & Bash Shell Commands', text: 'git checkout -b feature/auth && git add . && git commit -m "feat: add oauth2 login" && git push -u origin feature/auth' },
+const EN_TOP_ROW_DRILLS = [
+  // E and I
+  { t: 1, title: 'Top Vowels: E & I Isolated', sub: 'Middle fingers reach up', keys: ['e', 'i', ' '], text: 'eee iii de ki ed ik see did kid lie die fill kill like' },
+  { t: 2, title: 'Top Vowels: E & I Words', sub: 'Common word integration', keys: ['e', 'i', 'd', 'k', 's', 'l', 'f', 'j', ' '], text: 'like life side fill kill idea file die feed feel hide ride' },
+  { t: 3, title: 'Top Vowels: E & I Flow', sub: 'Sentence rhythm', keys: ['e', 'i', ' '], text: 'he likes his life as fresh ideas fill his side each day' },
+  // R and U
+  { t: 1, title: 'Top Keys: R & U Isolated', sub: 'Index fingers reach up', keys: ['r', 'u', ' '], text: 'rrr uuu fr ju rf uj fur run rule rude user pure sure' },
+  { t: 2, title: 'Top Keys: R & U Words', sub: 'Word formation', keys: ['r', 'u', ' '], text: 'pure sure fire four user turn hurt rust rail real read' },
+  { t: 3, title: 'Top Keys: R & U Flow', sub: 'Sentence rhythm', keys: ['r', 'u', ' '], text: 'true friends run four miles under pure summer rain' },
+  // T and Y
+  { t: 1, title: 'Top Keys: T & Y Isolated', sub: 'Index inward upward reach', keys: ['t', 'y', ' '], text: 'ttt yyy tr yu ty ru try you yet tyre year turn yard' },
+  { t: 2, title: 'Top Keys: T & Y Words', sub: 'Word formation', keys: ['t', 'y', ' '], text: 'they stay year yard city story party easy try that this' },
+  { t: 3, title: 'Top Keys: T & Y Flow', sub: 'Sentence cadence', keys: ['t', 'y', ' '], text: 'they try to stay yet the story starts today with you' },
+  // W and O
+  { t: 1, title: 'Top Keys: W & O Isolated', sub: 'Ring fingers reach up', keys: ['w', 'o', ' '], text: 'www ooo sw lo ws ol how low now cow slow show word' },
+  { t: 2, title: 'Top Keys: W & O Words', sub: 'Word formation', keys: ['w', 'o', ' '], text: 'slow show word work wood know grow blow flow throw down' },
+  { t: 3, title: 'Top Keys: W & O Flow', sub: 'Sentence cadence', keys: ['w', 'o', ' '], text: 'show how good words work without slow flow or waste' },
+  // Q and P
+  { t: 1, title: 'Top Keys: Q & P Isolated', sub: 'Pinky fingers reach up', keys: ['q', 'p', ' '], text: 'qqq ppp aq ;p qa p; quit pour pop pipe quiet plot quote' },
+  { t: 2, title: 'Top Keys: Q & P Words', sub: 'Word formation', keys: ['q', 'p', ' '], text: 'quiet plot quote power point pure equip quick proper part' },
+  { t: 3, title: 'Top Keys: Q & P Flow', sub: 'Sentence flow', keys: ['q', 'p', ' '], text: 'proper thought produces quiet power without prideful waste' },
 ];
+
+const EN_BOTTOM_ROW_DRILLS = [
+  // C and M
+  { t: 1, title: 'Bottom Keys: C & M Isolated', sub: 'Middle fingers slide down', keys: ['c', 'm', ' '], text: 'ccc mmm dc km cd mk came calm camp mice come make time' },
+  { t: 2, title: 'Bottom Keys: C & M Words', sub: 'Word formation', keys: ['c', 'm', ' '], text: 'come make time some much music dream claim match come' },
+  { t: 3, title: 'Bottom Keys: C & M Flow', sub: 'Sentence cadence', keys: ['c', 'm', ' '], text: 'calm minds make much music come from simple dreams' },
+  // V and N
+  { t: 1, title: 'Bottom Keys: V & N Isolated', sub: 'Index fingers slide down', keys: ['v', 'n', ' '], text: 'vvv nnn fv jn vf nj van vine view nine noon name fine' },
+  { t: 2, title: 'Bottom Keys: V & N Words', sub: 'Word formation', keys: ['v', 'n', ' '], text: 'noon name fine vane vent river never novel seven move' },
+  { t: 3, title: 'Bottom Keys: V & N Flow', sub: 'Sentence cadence', keys: ['v', 'n', ' '], text: 'seven new vans move near nine fine river vines today' },
+  // X and ,
+  { t: 1, title: 'Bottom Keys: X & Comma Isolated', sub: 'Ring fingers slide down', keys: ['x', ',', ' '], text: 'xxx ,,, sx k, xs ,k box fox next six fix mix lax' },
+  { t: 2, title: 'Bottom Keys: X & Comma Words', sub: 'Pauses & syntax', keys: ['x', ',', ' '], text: 'exact, fixed, flex, taxi, axis, index, text, mix, next,' },
+  { t: 3, title: 'Bottom Keys: X & Comma Flow', sub: 'Cadence with commas', keys: ['x', ',', ' '], text: 'next box, six foxes, calm text, exact match, fine view' },
+  // Z and . /
+  { t: 1, title: 'Bottom Keys: Z, Period & Slash', sub: 'Pinky and ring slide down', keys: ['z', '.', '/', ' '], text: 'zzz ... /// az l. ;/ zero size prize lazy maze gaze' },
+  { t: 2, title: 'Bottom Keys: Z & Period Words', sub: 'Sentence closers', keys: ['z', '.', ' '], text: 'zoom. zone. maze. gaze. blaze. freeze. breeze. size.' },
+  { t: 3, title: 'Full Tri-Row Integration', sub: 'All 26 letters in motion', keys: ['ALL'], text: 'the quick brown fox jumps over the lazy dog in autumn' },
+];
+
+const EN_DEVELOPER_SNIPPETS = [
+  { title: 'JavaScript Arrow Functions', text: 'const sum = (a, b) => a + b; const double = (arr) => arr.map((x) => x * 2);' },
+  { title: 'Array Filter & Reduce', text: 'const evens = list.filter((n) => n % 2 === 0).reduce((acc, curr) => acc + curr, 0);' },
+  { title: 'Async Fetch Request', text: 'async function loadData(url) { const res = await fetch(url); return await res.json(); }' },
+  { title: 'React JSX Button Component', text: '<button onClick={() => setCount((c) => c + 1)} className="px-4 py-2 bg-blue-600">Click</button>' },
+  { title: 'HTML5 Semantic Card', text: '<article className="p-4 rounded-xl border border-slate-800 bg-slate-900"><h3>Title</h3></article>' },
+  { title: 'Python List Comprehension', text: 'squares = [x ** 2 for x in range(20) if x % 3 == 0] primes = [p for p in numbers if is_prime(p)]' },
+  { title: 'Python Function & Types', text: 'def get_user_by_id(user_id: int) -> dict[str, str]: return db.query(User).filter_by(id=user_id).first()' },
+  { title: 'SQL Select & Inner Join', text: 'SELECT u.id, u.username, o.amount FROM users u INNER JOIN orders o ON u.id = o.user_id WHERE o.paid = true;' },
+  { title: 'SQL Group By & Aggregation', text: 'SELECT country, COUNT(*) AS total_users, AVG(score) FROM profiles GROUP BY country HAVING COUNT(*) > 10;' },
+  { title: 'TypeScript Interface', text: 'interface SessionState { readonly token: string; user: { id: number; role: "admin" | "user" }; }' },
+  { title: 'Regular Expression: URL Slug', text: 'const slugify = (text) => text.toLowerCase().trim().replace(/[^\\w\\s-]/g, "").replace(/[\\s_-]+/g, "-");' },
+  { title: 'Git Terminal Commands', text: 'git checkout -b feature/auth && git add . && git commit -m "feat: complete login" && git push origin main' },
+];
+
+// -------------------------------------------------------------
+// HINDI KRUTI DEV 010 CURATED DRILL BANKS
+// -------------------------------------------------------------
+
+const HI_PHASE_1_DRILLS = [
+  // Tier 1: Isolated
+  { t: 1, title: 'गृह पंक्ति: क और र (D & J Keys)', sub: 'बायाँ मध्यमा (D) एवं दायाँ तर्जनी (J)', keys: ['क', 'र', ' '], text: 'क र क र कर रक कक रर कर रक करक रकक करर रकक' },
+  { t: 1, title: 'गृह पंक्ति: ा और े (K & S Keys)', sub: 'दायाँ मध्यमा (K) एवं बायाँ अनामिका (S)', keys: ['ा', 'े', ' '], text: 'ा े ा े का के रा रे कार केर कारा केरे राका केरा' },
+  { t: 1, title: 'गृह पंक्ति: स और य (L & ; Keys)', sub: 'दायाँ अनामिका (L) एवं कनिष्ठिका (;)', keys: ['स', 'य', ' '], text: 'स य स य सय यस सर कस करस रसक सारा सेवा साय' },
+  { t: 1, title: 'गृह पंक्ति: ि और ी (F & H Keys)', sub: 'बायाँ तर्जनी (F) एवं दायाँ तर्जनी (H)', keys: ['ि', 'ी', ' '], text: 'ि ी ि ी कि की रि री सिर सीख किया दिया सीरा' },
+  { t: 1, title: 'गृह पंक्ति: ह और श (G & \' Keys)', sub: 'बायाँ तर्जनी विस्तार (G) एवं दायाँ कनिष्ठिका (\')', keys: ['ह', 'श', ' '], text: 'ह श ह श हर हक शहर कहा सही शीश हरा शरम शहर कह' },
+  { t: 1, title: 'गृह पंक्ति: अनुस्वार बिंदी ं (A Key)', sub: 'बायाँ कनिष्ठिका (A)', keys: ['ं', ' '], text: 'ं कं सं रं हंस कंस रंग संग सारा संसार शंकर' },
+  // Tier 2: Real Words
+  { t: 2, title: 'गृह पंक्ति सार्थक शब्द रचना', sub: 'सभी गृह कुंजियों का संगम', keys: ['क', 'र', 'स', 'य', 'ह', 'श', 'ा', 'े', 'ि', 'ी', 'ं', ' '], text: 'कर सर हर यश शहर कह करस रसक सारा सेवा सारा शहर सही' },
+  { t: 2, title: 'गृह पंक्ति द्वयक्षर एवं त्र्यक्षर शब्द', sub: 'शब्द प्रवाह', keys: ['क', 'र', 'स', 'य', 'ह', 'श', 'ा', 'े', 'ि', 'ी', 'ं', ' '], text: 'कार केरा सीख सीरा हंस रंग संग सारा संसार शंकर सही कह' },
+  // Tier 3: Rhythm & Sentences
+  { t: 3, title: 'गृह पंक्ति वाक्य एवं लय प्रवाह', sub: 'पूर्ण वाक्य रचना', keys: ['क', 'र', 'स', 'य', 'ह', 'श', 'ा', 'े', 'ि', 'ी', 'ं', ' '], text: 'कहा सही शहर सारा संसार एक सुंदर परिवार है सारा शहर सही राह पर चले' },
+  { t: 3, title: 'गृह पंक्ति प्रवाह परीक्षा', sub: 'दक्षता मानक', keys: ['क', 'र', 'स', 'य', 'ह', 'श', 'ा', 'े', 'ि', 'ी', 'ं', ' '], text: 'संसार में सदा सही मार्ग पर चलकर ही मानव जीवन सार्थक बनता है' },
+];
+
+const HI_PHASE_4_F_MATRA_DRILLS = [
+  // The 'f' matra (ि) rule drills: 'f' must be typed BEFORE the consonant!
+  { t: 1, title: 'नियम ड्रिल: छोटी \'ि\' बुनियादी जोड़', sub: 'F Key फिर व्यंजन (f+d=कि, f+l=सि)', keys: ['कि', 'सि', 'दि', 'पि', ' '], text: 'कि कि सि सि दि दि पि पि मि मि ति ति जि जि लि लि' },
+  { t: 1, title: 'नियम ड्रिल: \'ि\' युगल अक्षर', sub: 'f दबाएँ फिर वर्ण', keys: ['ि'], text: 'कि सि दि पि मि ति जि लि कि सि दि पि मि ति जि लि' },
+  { t: 2, title: 'छोटी \'ि\' व्यावहारिक शब्द रचना', sub: 'दिन, किताब, विचार, कविता', keys: ['ि'], text: 'किताब दिन विचार कविता शिक्षा किरण विकास स्थिति किसान मिल दिल सिर' },
+  { t: 2, title: 'छोटी \'ि\' एवं \'ी\' का अंतर', sub: 'f (ि) बनाम h (ी)', keys: ['ि', 'ी'], text: 'दिन दीन किया कीया सिर सीरा मिल मील किसान कीमत शिक्षा शीत' },
+  { t: 3, title: 'छोटी \'ि\' वाक्य एवं गद्यांश प्रवाह', sub: 'धाराप्रवाह टंकण', keys: ['ि'], text: 'शिक्षक ने विद्यार्थी से कहा कि प्रतिदिन नियमित अभ्यास करने से ही सफलता मिलेगी' },
+  { t: 3, title: 'छोटी \'ि\' परीक्षा मानक ड्रिल', sub: 'उच्च गति शुद्धता', keys: ['ि'], text: 'विकास और प्रगति के लिए शिक्षा एक महत्वपूर्ण किरण है जिससे समाज में नई दिशा मिलती है' },
+];
+
+// -------------------------------------------------------------
+// 300 PROGRESSIVE LESSONS GENERATOR (ENGLISH & HINDI)
+// -------------------------------------------------------------
 
 export function generateEnglishLessons() {
   const lessons = [];
 
   for (let i = 1; i <= 300; i++) {
-    const stage = getStageForLevel(i);
+    const phase = getPhaseForLevel(i, 'english');
     let title = `English Lesson ${i}`;
     let subtitle = '';
     let description = '';
     let text = '';
+    let targetKeys = [];
+    let tier = 1;
     let targetWpm = 15 + Math.floor(i / 10) * 2;
-    let minAccuracy = 88 + (i % 5);
+    let minAccuracy = 90;
 
-    if (i <= 60) {
-      // STAGE 1: Lowercase Fundamentals (1-60)
-      if (i <= 30) {
-        const item = EN_STAGE_1_CORPUS[(i - 1) % EN_STAGE_1_CORPUS.length];
-        title = `Level ${i}: ${item.title}`;
-        subtitle = item.sub;
-        description = `Master lowercase keys with continuous precision and relaxed wrist posture.`;
-        text = item.text;
-      } else {
-        const pool = [
-          'pack my box with five dozen liquor jugs for the next great journey across town',
-          'bright foxes jump swiftly over lazy dogs while children laugh and play under green trees',
-          'every morning brings fresh light and silent hope to those who work with patience',
-          'quiet waters flow between ancient stones carrying fallen leaves into the wide open lake',
-          'brave travelers discover peaceful valleys beyond high mountain ridges in distant lands',
-        ];
-        title = `Level ${i}: Lowercase Tri-Row Fluency Drill ${i - 30}`;
-        subtitle = 'Full three-row dexterity';
-        description = 'Combine home, upper, and bottom row letters in fluent rhythm.';
-        text = pool[(i - 31) % pool.length] + ' ' + pool[(i + 2) % pool.length].slice(0, 45);
-      }
+    if (i <= 40) {
+      // Phase 1: Home Row Anchor (1-40)
+      const drill = EN_PHASE_1_DRILLS[(i - 1) % EN_PHASE_1_DRILLS.length];
+      tier = drill.t;
+      title = `Level ${i}: ${drill.title}`;
+      subtitle = drill.sub;
+      description = `Master home-row touch anchor. Wrists elevated, eyes strictly on screen.`;
+      targetKeys = drill.keys;
+      text = drill.text;
+    } else if (i <= 70) {
+      // Phase 2: Spacebar Rhythm (41-70)
+      const sub = i - 40;
+      tier = sub <= 10 ? 1 : sub <= 20 ? 2 : 3;
+      title = `Level ${i}: Spacebar Rhythm & Thumb Cadence ${sub}`;
+      subtitle = 'Right thumb primary discipline';
+      description = 'Hit spacebar crisply with your thumb after every word without breaking rhythm.';
+      targetKeys = [' '];
+      const spaceTexts = [
+        'f j f j d k d k s l s l a ; a ; as df jk l; gf hj',
+        'fad dad ask lad all fall hall shall dad glad lad ask flask',
+        'a sad dad had a flask and a salad a glad lad asks dad as flags fall fast',
+        'half a glass of salad shall fall as a lad asks dad for flags',
+      ];
+      text = spaceTexts[(sub - 1) % spaceTexts.length];
     } else if (i <= 120) {
-      // STAGE 2: Capitalization & Shift Mechanics (61-120)
-      const subIdx = i - 60;
-      if (subIdx <= 20) {
-        title = `Level ${i}: Left Shift Drills (Right-hand Capitals)`;
+      // Phase 3: Top Row Reach (71-120)
+      const sub = i - 70;
+      const drill = EN_TOP_ROW_DRILLS[(sub - 1) % EN_TOP_ROW_DRILLS.length];
+      tier = drill.t;
+      title = `Level ${i}: ${drill.title}`;
+      subtitle = drill.sub;
+      description = `Reach upward with precision. Always snap fingers back to home row rest keys.`;
+      targetKeys = drill.keys;
+      text = drill.text;
+    } else if (i <= 170) {
+      // Phase 4: Bottom Row Reach (121-170)
+      const sub = i - 120;
+      const drill = EN_BOTTOM_ROW_DRILLS[(sub - 1) % EN_BOTTOM_ROW_DRILLS.length];
+      tier = drill.t;
+      title = `Level ${i}: ${drill.title}`;
+      subtitle = drill.sub;
+      description = `Slide fingers diagonally down to bottom row keys with minimal palm displacement.`;
+      targetKeys = drill.keys;
+      text = drill.text;
+    } else if (i <= 210) {
+      // Phase 5: Capital Letters & Shift Mechanics (171-210)
+      const sub = i - 170;
+      tier = sub <= 15 ? 1 : sub <= 28 ? 2 : 3;
+      if (sub <= 14) {
+        title = `Level ${i}: Left Shift (Right-Hand Capitals)`;
         subtitle = 'Hold Left Shift with Pinky for J, K, L, U, I, O, P, N, M';
-        description = 'Opposite hand rule: Left Pinky holds Shift while right hand strikes.';
-        text = 'John, Karl, Larry, Paul, Oliver, Mary, Nancy, Utah, India, Japan, Korea, Peru, Norway, Mexico, Milan';
-      } else if (subIdx <= 40) {
-        title = `Level ${i}: Right Shift Drills (Left-hand Capitals)`;
-        subtitle = 'Hold Right Shift with Pinky for F, D, S, A, R, E, W, Q, T, G, B';
-        description = 'Opposite hand rule: Right Pinky holds Shift while left hand strikes.';
-        text = 'Frank, David, Sarah, Alice, Robert, Emma, William, Queen, Thomas, George, Brian, Texas, Florida, Rome, Spain';
+        description = 'Opposite-hand Shift: Left Pinky holds Shift while right hand strikes the key.';
+        text = 'John, Karl, Larry, Paul, Oliver, Mary, Nancy, Utah, India, Japan, Korea, Peru, Norway, Mexico';
+      } else if (sub <= 28) {
+        title = `Level ${i}: Right Shift (Left-Hand Capitals)`;
+        subtitle = 'Hold Right Shift with Pinky for F, D, S, A, R, E, W, Q, T, G, B, V, C';
+        description = 'Opposite-hand Shift: Right Pinky holds Shift while left hand strikes the key.';
+        text = 'Frank, David, Sarah, Alice, Robert, Emma, William, Queen, Thomas, George, Brian, Texas, Florida, Rome';
       } else {
-        title = `Level ${i}: TitleCase & Proper Noun Phrasing ${subIdx - 40}`;
-        subtitle = 'Alternating Shift cadence';
-        description = 'Seamlessly alternate left and right shift keys in full sentences.';
-        text = 'The United Nations, World Health Organization, Silicon Valley Bank, Oxford University, Nobel Peace Prize Committee.';
+        title = `Level ${i}: Alternating Shift Flow & Proper Nouns`;
+        subtitle = 'Seamless alternating capitalization';
+        description = 'Switch fluidly between Left Shift and Right Shift across full sentences.';
+        text = 'The United Nations, World Health Organization, Silicon Valley Bank, and Oxford University meet today.';
       }
-    } else if (i <= 180) {
-      // STAGE 3: Numbers & Basic Punctuation (121-180)
-      const subIdx = i - 120;
-      if (subIdx <= 20) {
-        title = `Level ${i}: Top Number Row Reach (1 to 0)`;
-        subtitle = 'Index, middle, ring, pinky top-row elevation';
-        description = 'Reach straight up from home row to hit numbers accurately.';
-        text = `Invoice #4902: 12 units at $34.50 each, total 414 dollars. Room 809, Flight 732, Code 2026.`;
-      } else if (subIdx <= 40) {
-        title = `Level ${i}: Punctuation Mechanics (Comma, Period, Quotes)`;
-        subtitle = ', . ; : " \' ! ? drills';
-        description = 'Precision strikes for punctuation marks without breaking flow.';
+    } else if (i <= 250) {
+      // Phase 6: Punctuation & Function Keys (211-250)
+      const sub = i - 210;
+      tier = sub <= 15 ? 1 : sub <= 28 ? 2 : 3;
+      if (sub <= 14) {
+        title = `Level ${i}: Punctuation Mechanics (. , ' " ? !)`;
+        subtitle = 'Precise right pinky & ring reach';
+        description = 'Strike punctuation marks with cadence without halting between words.';
         text = '"Wait!" she cried, "Did you see that?" He replied: "Yes, exactly at 10:30 PM; let\'s go!"';
+      } else if (sub <= 28) {
+        title = `Level ${i}: Dialogue & Conversational Cadence`;
+        subtitle = 'Quotations, commas, and questions';
+        description = 'Flow through direct speech, contractions, and question marks.';
+        text = "It's a bright day, isn't it? She asked: 'Why shouldn't we go ahead?' Don't hesitate now.";
       } else {
-        title = `Level ${i}: Narrative Flow with Mixed Numbers & Dialogue`;
-        subtitle = 'Real-world conversational typing';
-        description = 'Combine direct speech, time formats, statistics, and narrative pace.';
-        text = 'In 2026, over 78% of engineers reported: "Continuous touch typing saved 2.5 hours every day." It is remarkable!';
-      }
-    } else if (i <= 240) {
-      // STAGE 4: Extended Symbols & Functional Keys (181-240)
-      const subIdx = i - 180;
-      if (subIdx <= 20) {
-        title = `Level ${i}: Slashing, Piping & Math Symbols`;
-        subtitle = '/ \\ | + - * = _ ~ ^ drills';
-        description = 'Forward slash, backslash, vertical pipe, and mathematical equations.';
-        text = 'x = (a + b) / (c - d); PATH="C:\\Users\\Admin\\AppData|/usr/local/bin"; delta_val = 100 * 2.5;';
-      } else if (subIdx <= 40) {
-        title = `Level ${i}: URLs, Emails & Markdown Formats`;
-        subtitle = 'Web and documentation syntax';
-        description = 'Type web endpoints, email patterns, and markdown headers.';
-        text = 'Contact support@typesetu.app or visit https://github.com/kumaranand2506/typesetu#getting-started for v2.0!';
-      } else {
-        title = `Level ${i}: Strict Zero-Backspace Discipline ${subIdx - 40}`;
-        subtitle = 'Deliberate speed without corrective backspaces';
-        description = 'Train finger confidence by typing continuously without looking at keys.';
-        text = 'Build muscle memory through deliberate repetition. Every key struck cleanly reinforces neural velocity.';
+        title = `Level ${i}: Zero-Backspace Rhythm Flow`;
+        subtitle = 'Rhythm discipline and accuracy';
+        description = 'Maintain unbroken flow. If an error happens, tap Backspace cleanly once.';
+        text = 'Precision builds velocity. When every keystroke lands true, muscle memory becomes effortless speed.';
       }
     } else {
-      // STAGE 5: Web Developer & Programmer Syntax (241-300)
-      const snippet = PROGRAMMER_SNIPPETS[(i - 241) % PROGRAMMER_SNIPPETS.length];
+      // Phase 7: Number Row & Developer Syntax (251-300)
+      const sub = i - 250;
+      const snippet = EN_DEVELOPER_SNIPPETS[(sub - 1) % EN_DEVELOPER_SNIPPETS.length];
+      tier = 3;
       title = `Level ${i}: ${snippet.title}`;
       subtitle = 'Developer Syntax Benchmark';
-      description = 'Master braces, brackets, logic operators, and language syntax.';
+      description = 'Master braces {}, brackets [], logic operators, and language syntax with speed.';
       text = snippet.text;
-      targetWpm = 35 + Math.floor((i - 240) / 10) * 3;
-      minAccuracy = 95;
+      targetWpm = 35 + Math.floor(sub / 10) * 3;
+      minAccuracy = 92;
     }
 
     lessons.push({
       id: `en-${i}`,
       level: i,
-      stageId: stage.id,
-      stageName: stage.name,
+      phase: phase.name,
+      phaseId: phase.id,
+      stageId: phase.id,
+      stageName: phase.name,
+      tier,
       title,
       subtitle,
       description,
+      targetKeys,
+      exercises: [text],
       text,
       targetWpm,
       minAccuracy,
+      passingAccuracy: minAccuracy,
     });
   }
 
   return lessons;
 }
 
-// -------------------------------------------------------------
-// HINDI KRUTI DEV 010 (REMINGTON TYPEWRITER) 300 LESSON GENERATOR & CURATED CORPUS
-// -------------------------------------------------------------
-
 export function generateHindiLessons() {
   const lessons = [];
 
   for (let i = 1; i <= 300; i++) {
-    const stage = getStageForLevel(i);
+    const phase = getPhaseForLevel(i, 'hindi');
     let title = `हिंदी पाठ ${i}`;
     let subtitle = '';
     let description = '';
     let text = '';
+    let targetKeys = [];
+    let tier = 1;
     let targetWpm = 12 + Math.floor(i / 12) * 2;
-    let minAccuracy = 88 + (i % 5);
+    let minAccuracy = 90;
 
     if (i <= 60) {
-      // STAGE 1: Lowercase Fundamentals (1-60)
-      if (i <= 10) {
-        title = `पाठ ${i}: गृह पंक्ति मूल अक्षर (क, र, स, य, ह, श)`;
-        subtitle = 'D (क), J (र), L (स), ; (य), G (ह), \' (श)';
-        description = 'बाएँ हाथ से D (क), G (ह) और दाएँ हाथ से J (र), L (स), ; (य), \' (श) का अभ्यास करें।';
-        text = 'क र स य ह श कर सर हर यश शहर कह करस रसक सही शीश हरक यशक';
-      } else if (i <= 20) {
-        title = `पाठ ${i}: गृह पंक्ति मात्राएँ (ा, े, ि, ी, ं)`;
-        subtitle = 'K (ा), S (े), F (ि), H (ी), A (ं)';
-        description = 'F (ि) हमेशा व्यंजन से पहले दबाई जाती है! K (ा), S (े), H (ी), A (ं) का अभ्यास।';
-        text = 'का के कि की कंग सिर सीख किया दिया सेवा सारा शहर सही किया सीरा हंस';
-      } else if (i <= 35) {
-        title = `पाठ ${i}: ऊपरी पंक्ति अक्षर व मात्राएँ (म, त, ज, ल, न, प, व, च, ख, ु, ू)`;
-        subtitle = 'E (म), R (त), T (ज), Y (ल), U (न), I (प), O (व), P (च), [ (ख), Q (ु), W (ू)';
-        description = 'ऊपरी पंक्ति के व्यंजन और उ/ऊ मात्राओं का संगम।';
-        text = 'भारत देश पानी गीत फूल सुबह खेल धूप बाग हवा नदी तीर वीर जीत मीत बात हाथ पूरा पुल';
-      } else if (i <= 50) {
-        title = `पाठ ${i}: निचली पंक्ति के अक्षर (ग, ब, अ, इ, द, उ, ए, ध, ्र, ्)`;
-        subtitle = 'X (ग), C (ब), V (अ), B (इ), N (द), M (उ), , (ए), / (ध), Z (्र), . (्)';
-        description = 'निचली पंक्ति के स्पर्श और स्वर कुंजियों का अभ्यास।';
-        text = 'समय समाज विचार पुस्तक मित्र सत्य जीवन विद्या मंदिर संसार सुंदर पवन गगन नगर स्वयं';
-      } else {
-        title = `पाठ ${i}: तीनों पंक्तियों का द्रुत प्रवाह ड्रिल ${i - 50}`;
-        subtitle = 'बिना शिफ्ट वाले सभी अक्षरों का संगम';
-        description = 'लगातार और बिना रुके सभी पंक्तियों के अक्षरों से सार्थक शब्द बनाएँ।';
-        text = 'सत्य और अहिंसा के मार्ग पर चलकर ही मानव जीवन सार्थक बनता है ज्ञान की ज्योति अमर है';
-      }
+      // Phase 1: Home Row Basics (1-60)
+      const drill = HI_PHASE_1_DRILLS[(i - 1) % HI_PHASE_1_DRILLS.length];
+      tier = drill.t;
+      title = `पाठ ${i}: ${drill.title}`;
+      subtitle = drill.sub;
+      description = `कुर्ती देव ०१० गृह पंक्ति। उँगलियों को D-F-G-H एवं J-K-L-; पर रखें।`;
+      targetKeys = drill.keys;
+      text = drill.text;
     } else if (i <= 120) {
-      // STAGE 2: Capitalization & Shift Mechanics (61-120)
+      // Phase 2: Top Row Movement (61-120)
       const sub = i - 60;
+      tier = sub <= 20 ? 1 : sub <= 40 ? 2 : 3;
       if (sub <= 20) {
-        title = `पाठ ${i}: शिफ्ट कुँजी से आधे अक्षर (क्, म्, त्, ज्, ल्, न्, प्, थ, भ, स्, ध्)`;
-        subtitle = 'Shift + D (क्), E (म्), R (त्), T (ज्), Y (ल्), U (न्), I (प्), F (थ), G (भ), L (स्), / (ध्)';
-        description = 'Shift दबाकर सीधे आधे अक्षर टाइप करें।';
-        text = 'क्या त्याग ज्वाला कल्याण न्याय प्यार प्यारा पुष्प स्थान धर्म कर्म मुख्य द्वितीय';
+        title = `पाठ ${i}: ऊपरी पंक्ति म, त, ज, ल, न, प (E, R, T, Y, U, I)`;
+        subtitle = 'बाएँ हाथ से E(म), R(त), T(ज) एवं दाएँ से Y(ल), U(न), I(प)';
+        description = 'गृह पंक्ति से ऊपर उँगलियाँ ले जाकर अक्षर दबाएँ और तुरंत वापस गृह पंक्ति पर आएँ।';
+        text = 'म त ज ल न प मत तम जल कलम नल पल नाम पान नया पानी पीना पिता';
       } else if (sub <= 40) {
-        title = `पाठ ${i}: शिफ्ट कुँजी से महाप्राण एवं पूर्ण विराम (फ, थ, भ, भ्, रू, ष्, ।)`;
-        subtitle = 'Shift + Q (फ), F (थ), G (भ), H (भ्), ; (रू), \' (ष्), A (।)';
-        description = 'महाप्राण व्यंजन और पूर्ण विराम (।) का अभ्यास।';
-        text = 'फल भारत भाई भाषा शांति शुभ विशेष रूप रूचि । सत्य की सदा जय होती है ।';
+        title = `पाठ ${i}: ऊपरी पंक्ति व, च, ख, ु, ू (O, P, [, Q, W)`;
+        subtitle = 'O(व), P(च), [(ख), Q(ु), W(ू)';
+        description = 'उ और ऊ की मात्राएँ तथा व, च, ख का द्रुत अभ्यास।';
+        text = 'व च ख कुल कूट सुख सूत पूरा पुल मूल पूजा वर चर वचन चाल विचार खेल';
       } else {
-        title = `पाठ ${i}: संयुक्ताक्षर एवं रेफ़ (क्ष, त्र, ज्ञ, श्र, द्व, र्, ।)`;
-        subtitle = 'Shift + { (क्ष), + (त्र), K (ज्ञ), J (श्र), } (द्व), Z (र्), A (।)';
-        description = 'कुर्ती देव ०१० विशेष संयुक्ताक्षर और रेफ़ का अभ्यास।';
-        text = 'ज्ञान क्षमा त्रिशूल श्रम धर्म कर्म सूर्य । भारत हमारा देश है । विद्या सर्वधनं प्रधानम् ।';
+        title = `पाठ ${i}: ऊपरी एवं गृह पंक्ति शब्द प्रवाह`;
+        subtitle = 'दो पंक्तियों का द्रुत संगम';
+        description = 'भारत देश पानी गीत फूल सुबह खेल धूप बाग हवा नदी तीर वीर जीत मीत बात हाथ';
+        text = 'भारत देश पानी गीत फूल सुबह खेल धूप बाग हवा नदी तीर वीर जीत मीत बात हाथ पूरा पुल';
       }
     } else if (i <= 180) {
-      // STAGE 3: Numbers & Basic Punctuation (121-180)
+      // Phase 3: Bottom Row Movement (121-180)
       const sub = i - 120;
-      if (sub <= 30) {
-        title = `पाठ ${i}: संख्या पंक्ति एवं शासकीय प्रारूप`;
-        subtitle = '1 2 3 4 5 6 7 8 9 0 एवं दिनांक';
-        description = 'दिनांक, समय, और अंकों का आधिकारिक प्रारूप में टंकण।';
-        text = 'वर्ष 2026 में 85 प्रतिशत से अधिक शासकीय कार्य ऑनलाइन सम्पन्न हुए । क्रमांक 90210 दिनांक 15 अगस्त ।';
+      tier = sub <= 20 ? 1 : sub <= 40 ? 2 : 3;
+      if (sub <= 20) {
+        title = `पाठ ${i}: निचली पंक्ति ग, ब, अ, इ, द, उ (X, C, V, B, N, M)`;
+        subtitle = 'X(ग), C(ब), V(अ), B(इ), N(द), M(उ)';
+        description = 'निचली पंक्ति के व्यंजन और स्वतंत्र स्वर (अ, इ, उ) का अभ्यास।';
+        text = 'गम बस गगन बात गीत बाग बाल बार अब इस अमर इधर अपना दिन दिल उधर ऊपर';
+      } else if (sub <= 40) {
+        title = `पाठ ${i}: निचली पंक्ति ए, ध, रा-फलन ्र, हलंत ् (, / Z .)`;
+        subtitle = ',(ए), /(ध), Z(्र), .(्)';
+        description = 'ए, ध, क्रम-प्रेम वाला रा-फलन (्र), और हलंत (्) का अभ्यास।';
+        text = 'एक ऐसा धन धर्म धार धाम क्रम प्रेम ग्राम प्रकाश विद्या सत्य त्याग राष्ट्र';
       } else {
-        title = `पाठ ${i}: पूर्ण विराम, उद्धरण एवं संवाद शैली`;
-        subtitle = 'संवाद एवं जटिल वाक्य रचना';
-        description = 'गांधी जी ने कहा था: "सत्य ही ईश्वर है।" हमें समय का सदुपयोग करना चाहिए ।';
-        text = 'शिक्षक ने कहा: "परिश्रम ही सफलता की एकमात्र कुंजी है ।" विद्यार्थी ने उत्तर दिया: "हम अवश्य सफल होंगे ।"';
+        title = `पाठ ${i}: तीनों पंक्तियों का संगम एवं वाक्य प्रवाह`;
+        subtitle = 'त्रि-पंक्ति गति प्रवाह';
+        description = 'सत्य और अहिंसा के मार्ग पर चलकर ही मानव जीवन सार्थक बनता है ज्ञान की ज्योति अमर है';
+        text = 'समय समाज विचार पुस्तक मित्र सत्य जीवन विद्या मंदिर संसार सुंदर पवन गगन नगर स्वयं';
       }
-    } else if (i <= 240) {
-      // STAGE 4: Extended Symbols & Functional Keys (181-240)
+    } else if (i <= 220) {
+      // Phase 4: 'f' Matra (ि) Rule Drills (181-220)
       const sub = i - 180;
-      title = `पाठ ${i}: तकनीकी चिह्न एवं शासकीय संक्षेप (${sub})`;
-      subtitle = 'हाइफ़न, कोष्ठक, एवं संक्षेप चिह्न';
-      description = 'शासकीय आदेशों और नियमों में प्रयुक्त होने वाले विशेष चिह्नों का अभ्यास।';
-      text = 'क्रमांक: प्रशा/2026-27 (गोपनीय) [अनुभाग-4]; विषय: ई-गवर्नेंस एवं टंकण दक्षता प्रशिक्षण शिविर ।';
+      const drill = HI_PHASE_4_F_MATRA_DRILLS[(sub - 1) % HI_PHASE_4_F_MATRA_DRILLS.length];
+      tier = drill.t;
+      title = `पाठ ${i}: ${drill.title}`;
+      subtitle = drill.sub;
+      description = `रेमिंगटन टाइपराइटर नियम: छोटी 'ि' (F) हमेशा व्यंजन से पहले टाइप की जाती है!`;
+      targetKeys = drill.keys;
+      text = drill.text;
+    } else if (i <= 270) {
+      // Phase 5: Shift Key & Half Letters (221-270)
+      const sub = i - 220;
+      tier = sub <= 15 ? 1 : sub <= 35 ? 2 : 3;
+      if (sub <= 15) {
+        title = `पाठ ${i}: शिफ्ट कुँजी से आधे अक्षर (क्, थ, भ, भ्, श्र, ज्ञ, स्)`;
+        subtitle = 'Shift + D(क्), F(थ), G(भ), H(भ्), J(श्र), K(ज्ञ), L(स्)';
+        description = 'Shift दबाकर सीधे आधे अक्षर टाइप करें। विपरीत हाथ की पिंकी से Shift दबाएँ।';
+        text = 'क्या क्यों थाली थोड़ा कथा स्थान तथा भारत भाई श्रीमान श्रम ज्ञान ज्ञानी अभ्यास स्पष्ट';
+      } else if (sub <= 35) {
+        title = `पाठ ${i}: शिफ्ट ऊपरी पंक्ति (म्, त्, ज्, ल्, न्, प्, क्ष, द्व)`;
+        subtitle = 'Shift + E(म्), R(त्), T(ज्), Y(ल्), U(न्), I(प्), [(क्ष), ](द्व)';
+        description = 'ऊपरी पंक्ति के आधे अक्षर और क्ष, द्व संयुक्ताक्षर।';
+        text = 'फल मुख्य त्याग ज्वाला कल्याण न्याय प्यार प्यारा पुष्प क्षमा क्षेत्र द्वार द्वितीय विद्वान';
+      } else {
+        title = `पाठ ${i}: रेफ़ 'र्' ऊपर अभ्यास (Shift + Z Key)`;
+        subtitle = 'Z कुँजी (Shift) से व्यंजन के ऊपर रेफ़';
+        description = 'व्यंजन के बाद Shift+Z दबाने पर ऊपर रेफ़ (र्) लगता है (उदा. धर्म, कर्म, सूर्य)।';
+        text = 'धर्म कर्म सूर्य कार्य मार्ग पर्व वर्ष गर्व पर्वत निर्णय दर्शन हर्ष आशीर्वाद';
+      }
     } else {
-      // STAGE 5: Web Developer & Programmer Syntax in Hindi (241-300)
-      const sub = i - 240;
-      const devSnippetsHi = [
-        '// डेटाबेस कनेक्शन एवं प्रमाणीकरण: const dbClient = await connectPool({ host: "localhost", port: 5432 });',
-        '/* उपयोगकर्ता प्रपत्र सत्यापन */ function validateForm(payload) { return payload.isValid && payload.score >= 95; }',
-        '// हिंदी कुर्ती देव ०१० मैपर लॉजिक: const krutiDevMap = { d: "क", j: "र", k: "ा", s: "े", f: "ि" };',
-        'SELECT कर्मचारी_आईडी, नाम, पद, वेतन FROM कर्मचारी_विवरण WHERE विभाग = "आई_टी" ORDER BY वेतन DESC;',
-        'const response = await fetch("/api/v1/hindi-lessons", { method: "POST", headers: { "Content-Type": "application/json" } });',
-        '<div className="w-full max-w-5xl bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl">',
-        'export const computeAccuracy = (total, errors) => Math.max(0, Math.round(((total - errors) / total) * 100));',
+      // Phase 6: Exam Fluency & Speed Paragraphs (271-300)
+      const sub = i - 270;
+      tier = 3;
+      const examPassages = [
+        'आधुनिक सूचना प्रौद्योगिकी ने शासकीय और प्रशासनिक कार्यों में अभूतपूर्व पारदर्शिता ला दी है । आज आम नागरिक अपने घर बैठे अनेक जनकल्याणकारी योजनाओं का लाभ उठा रहे हैं । डिजिटल भारत अभियान ने ग्रामीण क्षेत्रों तक कनेक्टिविटी पहुँचाकर आर्थिक विकास को नई गति प्रदान की है । निरंतर अभ्यास ही टंकण परीक्षा में उच्चतम अंक प्राप्त करने का एकमात्र मार्ग है ।',
+        'परिश्रम ही सफलता की एकमात्र कुंजी है । जो व्यक्ति समय के मूल्य को पहचानकर अपने लक्ष्य की ओर निरंतर अग्रसर रहता है, सफलता उसके कदम चूमती है । विद्या और ज्ञान का प्रकाश मनुष्य के जीवन से अज्ञानता के अंधकार को समाप्त कर देता है । हमें सदैव सत्य, कर्तव्यनिष्ठा और अनुशासन के मार्ग पर चलना चाहिए ।',
+        'भारत एक विशाल एवं समृद्ध सांस्कृतिक धरोहर वाला राष्ट्र है । यहाँ विभिन्न भाषाएं, बोलियाँ और संस्कृतियाँ आपस में मिलकर एक सुंदर गुलदस्ता बनाती हैं । हमारे देश के युवाओं ने विज्ञान, तकनीक और उद्योग के क्षेत्र में पूरे विश्व में अपना परचम लहराया है । सतत अभ्यास से कठिन से कठिन कार्य भी सरल बन जाता है ।',
       ];
-      const snippet = devSnippetsHi[(sub - 1) % devSnippetsHi.length];
-      title = `पाठ ${i}: द्विभाषी कोडिंग एवं डेवलपर सिंटैक्स (${sub})`;
-      subtitle = 'प्रोग्रामर कुर्ती देव ०१० एवं कोड अभ्यास';
-      description = 'प्रोग्रामिंग चिह्नों ({ }, [], =>, ===) के साथ द्विभाषी टिप्पणियाँ और कोड स्निपेट्स।';
-      text = snippet;
-      targetWpm = 25 + Math.floor(sub / 10) * 2;
+      title = `पाठ ${i}: शासकीय परीक्षा मानक गद्यांश (CPCT / SSC / High Court Mock)`;
+      subtitle = '35+ WPM रेमिंगटन टाइपराइटर परीक्षा मानक';
+      description = 'पूर्णविराम (।), अल्पविराम (,) एवं सभी संयुक्ताक्षरों के साथ परीक्षा मानक गति अभ्यास।';
+      text = examPassages[(sub - 1) % examPassages.length];
+      targetWpm = 30 + Math.floor(sub / 10) * 2;
       minAccuracy = 95;
     }
-
 
     lessons.push({
       id: `hi-${i}`,
       level: i,
-      stageId: stage.id,
-      stageName: stage.hindiName,
+      phase: phase.name,
+      phaseId: phase.id,
+      stageId: phase.id,
+      stageName: phase.name,
+      tier,
       title,
       subtitle,
       description,
+      targetKeys,
+      exercises: [text],
       text,
       targetWpm,
       minAccuracy,
+      passingAccuracy: minAccuracy,
     });
   }
 

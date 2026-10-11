@@ -175,17 +175,17 @@ export const KRUTI_DEV_SHIFT: Record<string, string> = {
 // 3. FINGER DEFINITIONS & REMINGTON TOUCH-TYPING ASSIGNMENTS
 // ---------------------------------------------------------------------------
 export const FINGER_INFO: Record<string, FingerInfo> = {
-  LP: { id: 'LP', name: 'Left Pinky', hindiName: 'बायाँ कनिष्ठिका', color: '#f43f5e', bg: 'bg-rose-500', text: 'text-rose-400', hand: 'left' },
-  LR: { id: 'LR', name: 'Left Ring', hindiName: 'बायाँ अनामिका', color: '#fb923c', bg: 'bg-orange-500', text: 'text-orange-400', hand: 'left' },
-  LM: { id: 'LM', name: 'Left Middle', hindiName: 'बायाँ मध्यमा', color: '#facc15', bg: 'bg-yellow-500', text: 'text-yellow-400', hand: 'left' },
-  LI: { id: 'LI', name: 'Left Index', hindiName: 'बायाँ तर्जनी', color: '#4ade80', bg: 'bg-green-500', text: 'text-green-400', hand: 'left' },
-  LT: { id: 'LT', name: 'Left Thumb', hindiName: 'बायाँ अँगूठा', color: '#38bdf8', bg: 'bg-sky-500', text: 'text-sky-400', hand: 'left' },
-  RT: { id: 'RT', name: 'Right Thumb', hindiName: 'दायाँ अँगूठा', color: '#38bdf8', bg: 'bg-sky-500', text: 'text-sky-400', hand: 'right' },
-  SPACE: { id: 'SPACE', name: 'Thumb (Space)', hindiName: 'अँगूठा (स्पेस)', color: '#38bdf8', bg: 'bg-sky-500', text: 'text-sky-400', hand: 'both' },
-  RI: { id: 'RI', name: 'Right Index', hindiName: 'दायाँ तर्जनी', color: '#818cf8', bg: 'bg-indigo-500', text: 'text-indigo-400', hand: 'right' },
-  RM: { id: 'RM', name: 'Right Middle', hindiName: 'दायाँ मध्यमा', color: '#a855f7', bg: 'bg-purple-500', text: 'text-purple-400', hand: 'right' },
-  RR: { id: 'RR', name: 'Right Ring', hindiName: 'दायाँ अनामिका', color: '#ec4899', bg: 'bg-pink-500', text: 'text-pink-400', hand: 'right' },
-  RP: { id: 'RP', name: 'Right Pinky', hindiName: 'दायाँ कनिष्ठिका', color: '#14b8a6', bg: 'bg-teal-500', text: 'text-teal-400', hand: 'right' },
+  LP: { id: 'LP', name: 'Left Pinky', hindiName: 'बायाँ कनिष्ठिका', color: '#f97316', bg: 'bg-orange-500', text: 'text-orange-400', hand: 'left' },
+  LR: { id: 'LR', name: 'Left Ring', hindiName: 'बायाँ अनामिका', color: '#3b82f6', bg: 'bg-blue-500', text: 'text-blue-400', hand: 'left' },
+  LM: { id: 'LM', name: 'Left Middle', hindiName: 'बायाँ मध्यमा', color: '#10b981', bg: 'bg-emerald-500', text: 'text-emerald-400', hand: 'left' },
+  LI: { id: 'LI', name: 'Left Index', hindiName: 'बायाँ तर्जनी', color: '#a855f7', bg: 'bg-purple-500', text: 'text-purple-400', hand: 'left' },
+  LT: { id: 'LT', name: 'Left Thumb', hindiName: 'बायाँ अँगूठा', color: '#64748b', bg: 'bg-slate-500', text: 'text-slate-400', hand: 'left' },
+  RT: { id: 'RT', name: 'Right Thumb', hindiName: 'दायाँ अँगूठा', color: '#64748b', bg: 'bg-slate-500', text: 'text-slate-400', hand: 'right' },
+  SPACE: { id: 'SPACE', name: 'Thumb (Space)', hindiName: 'अँगूठा (स्पेस)', color: '#64748b', bg: 'bg-slate-500', text: 'text-slate-400', hand: 'both' },
+  RI: { id: 'RI', name: 'Right Index', hindiName: 'दायाँ तर्जनी', color: '#a855f7', bg: 'bg-purple-500', text: 'text-purple-400', hand: 'right' },
+  RM: { id: 'RM', name: 'Right Middle', hindiName: 'दायाँ मध्यमा', color: '#10b981', bg: 'bg-emerald-500', text: 'text-emerald-400', hand: 'right' },
+  RR: { id: 'RR', name: 'Right Ring', hindiName: 'दायाँ अनामिका', color: '#3b82f6', bg: 'bg-blue-500', text: 'text-blue-400', hand: 'right' },
+  RP: { id: 'RP', name: 'Right Pinky', hindiName: 'दायाँ कनिष्ठिका', color: '#f97316', bg: 'bg-orange-500', text: 'text-orange-400', hand: 'right' },
 };
 
 export const FINGER_MAP: Record<string, string> = {
