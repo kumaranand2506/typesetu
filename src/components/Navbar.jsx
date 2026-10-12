@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Volume2, VolumeX, Sparkles, Award, BookOpen, GraduationCap, Grid, Info, DollarSign, Sun, Moon, Library, Shield, Maximize2 } from 'lucide-react';
+import { Volume2, VolumeX, Sparkles, Award, BookOpen, GraduationCap, Grid, Info, Sun, Moon, Library, Shield, Maximize2 } from 'lucide-react';
 import { soundManager } from '../utils/soundEffects';
 
 export default function Navbar({
@@ -186,16 +186,6 @@ export default function Navbar({
             <span className="hidden sm:inline font-mono text-[10px] uppercase">
               {switchProfile === 'blue' ? 'MX Blue 🔵' : switchProfile === 'brown' ? 'MX Brown 🟤' : switchProfile === 'red' ? 'MX Red 🔴' : 'Mute 🔇'}
             </span>
-          </button>
-
-          {/* Monetize & Ads Guide */}
-          <button
-            onClick={onOpenAdSettings}
-            className="px-2.5 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
-            title="Configure Google AdSense or Adsterra Ads"
-          >
-            <DollarSign size={14} />
-            <span className="hidden sm:inline">Earn / Ads</span>
           </button>
 
           {/* Legal / Policy */}

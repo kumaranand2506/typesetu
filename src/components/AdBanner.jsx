@@ -1,6 +1,58 @@
 import React, { useEffect, useState } from 'react';
 import { getAdConfig } from '../data/adConfig';
 
+function Adsterra728x90({ bannerKey = 'baa681aa9f1b8413e4f557ee3107cc9b' }) {
+  const adHtml = `<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: transparent;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="text/javascript">
+      atOptions = {
+        'key' : '${bannerKey}',
+        'format' : 'iframe',
+        'height' : 90,
+        'width' : 728,
+        'params' : {}
+      };
+    </script>
+    <script type="text/javascript" src="https://reelparentaltrembling.com/${bannerKey}/invoke.js"></script>
+  </body>
+</html>`;
+
+  return (
+    <iframe
+      title="Adsterra 728x90 Banner"
+      width="728"
+      height="90"
+      className="border-0 overflow-hidden max-w-full rounded-lg"
+      style={{
+        border: 'none',
+        overflow: 'hidden',
+        width: '728px',
+        height: '90px',
+        maxWidth: '100%',
+        minHeight: '90px',
+      }}
+      srcDoc={adHtml}
+    />
+  );
+}
+
 export default function AdBanner({ position = 'header', onOpenSettings }) {
   const [config, setConfig] = useState(getAdConfig());
 
@@ -13,7 +65,7 @@ export default function AdBanner({ position = 'header', onOpenSettings }) {
   }, []);
 
   const hasAdSense = config.isProduction && config.googleAdsenseClientId && config.activeNetwork === 'adsense';
-  const hasAdsterra = config.isProduction && (config.adsterraBannerKey || config.adsterraScriptUrl) && config.activeNetwork === 'adsterra';
+  const hasAdsterra = config.isProduction && config.activeNetwork === 'adsterra';
 
   // Sizing definitions by position
   const sizeMap = {
@@ -49,45 +101,21 @@ export default function AdBanner({ position = 'header', onOpenSettings }) {
 
   // Live Adsterra Container
   if (hasAdsterra) {
+    const key = config.adsterraBannerKey || 'baa681aa9f1b8413e4f557ee3107cc9b';
     return (
       <div className="w-full flex flex-col items-center my-3 overflow-hidden select-none">
-        <span className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold mb-1">
-          Advertisement
-        </span>
-        <div className={`${currentSize.dims} bg-slate-900/40 border border-slate-800 rounded-xl flex items-center justify-center p-2 text-center`}>
-          <div id={`adsterra-${position}`}>
-            <span className="text-xs text-slate-500">Adsterra Sponsored Unit</span>
-          </div>
+        <div className="w-full max-w-[728px] flex items-center justify-between px-1 mb-1">
+          <span className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold">
+            Sponsored / Advertisement
+          </span>
+        </div>
+        <div className="w-full max-w-[728px] min-h-[94px] bg-slate-900/40 border border-slate-800 rounded-xl flex items-center justify-center p-0.5 overflow-hidden shadow-sm">
+          <Adsterra728x90 bannerKey={key} />
         </div>
       </div>
     );
   }
 
-  // Clean, Non-Intrusive Ad Placeholder (Monetization Ready)
-  return (
-    <div className="w-full flex justify-center my-3 px-2 select-none">
-      <div className={`${currentSize.dims} bg-slate-900/40 dark:bg-slate-900/40 light:bg-slate-100/70 border border-dashed border-slate-800 dark:border-slate-800 light:border-slate-300 rounded-xl p-3 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400 transition-all`}>
-        <div className="flex items-center gap-2.5">
-          <div className="w-6 h-6 rounded-md bg-indigo-500/10 text-indigo-400 flex items-center justify-center font-bold text-[10px] shrink-0 border border-indigo-500/20">
-            Ad
-          </div>
-          <div>
-            <span className="font-semibold text-slate-300 dark:text-slate-300 light:text-slate-700 block">
-              {currentSize.label}
-            </span>
-            <p className="text-[11px] text-slate-500">
-              Google AdSense & Adsterra ready placement.
-            </p>
-          </div>
-        </div>
-
-        <button
-          onClick={onOpenSettings}
-          className="shrink-0 px-2.5 py-1 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 hover:text-white border border-indigo-500/30 font-medium transition cursor-pointer text-[11px] flex items-center gap-1"
-        >
-          ⚙️ Setup Ads
-        </button>
-      </div>
-    </div>
-  );
+  // When no ad network is active, return null to maintain clean distraction-free UI
+  return null;
 }

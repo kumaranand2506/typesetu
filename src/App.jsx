@@ -9,7 +9,7 @@ import PolicyModal from './components/PolicyModal';
 import KrutiDevChartModal from './components/KrutiDevChartModal';
 import BadgeModal from './components/BadgeModal';
 import { getUserStats, saveUserStats } from './data/badgeSystem';
-import { Heart, Sparkles, BookOpen, GraduationCap, Award, Grid, ShieldCheck, DollarSign, Library } from 'lucide-react';
+import { Heart, Sparkles, BookOpen, GraduationCap, Award, Grid, ShieldCheck, Library } from 'lucide-react';
 
 import ExamView from './components/ExamView';
 
@@ -237,12 +237,6 @@ export default function App() {
                 className="hover:text-indigo-400 transition cursor-pointer"
               >
                 Kruti Dev Chart
-              </button>
-              <button
-                onClick={() => setIsAdSettingsOpen(true)}
-                className="text-emerald-400 hover:text-emerald-300 transition cursor-pointer font-semibold flex items-center gap-1"
-              >
-                <DollarSign size={13} /> Ads & Domain
               </button>
               <button
                 onClick={() => setIsPolicyOpen(true)}
